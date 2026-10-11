@@ -241,6 +241,16 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
   void set_gwg_write_eot_before_payload(bool eot_first) { optolink::gwgWriteEotBeforePayload = eot_first; }
   bool gwg_write_eot_before_payload() const { return optolink::gwgWriteEotBeforePayload; }
 
+  // GWG BURST frame switch, diagnostic. Selects whether a burst-sent request
+  // carries the leading 0x01 -- see optolink::gwgBurstOmitsEnqAck in
+  // constants.h for the two candidate behaviours and the evidence. Same shape,
+  // same reasoning and the same not-a-YAML-key rule as the layout flag above:
+  // exactly one is correct, and a real unit is what decides.
+  //
+  // Takes effect on the next burst-sent request, so one session can A/B it.
+  void set_gwg_burst_omits_enq_ack(bool omit) { optolink::gwgBurstOmitsEnqAck = omit; }
+  bool gwg_burst_omits_enq_ack() const { return optolink::gwgBurstOmitsEnqAck; }
+
   void queue_raw_read(uint16_t address, uint8_t length,
                       optolink::GWGAccessMode access = optolink::GWGAccessMode::PHYSICAL);
   // Two write overloads: the pointer/length form is the no-allocation path for
@@ -377,6 +387,18 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
 
   static constexpr uint8_t LINK_OFFLINE_AFTER_ERRORS = 3;
 
+#ifdef VITOHOME_PROTOCOL_GWG
+  // All-0xFF response detector -- see gwg_note_all_ff_() for why GWG needs one
+  // and why the threshold is deliberately high.
+  uint8_t gwg_all_ff_streak_{0};
+  bool gwg_all_ff_warned_{false};
+
+  // Eight consecutive whole responses of nothing but 0xFF. Chosen above the
+  // longest plausible run of genuinely-0xFF datapoints in a real catalog, so
+  // the warning does not fire on a device that merely has a few unset enums.
+  static constexpr uint8_t GWG_ALL_FF_WARN_AFTER = 8;
+#endif
+
   uint32_t last_refresh_all_ms_{0};
 
   static constexpr uint32_t REFRESH_ALL_MIN_INTERVAL_MS = 5000;
@@ -390,6 +412,9 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
   // Record one no-response/lost-callback observation. OFFLINE is edge-published
   // once the threshold is reached.
   void link_note_error_();
+#ifdef VITOHOME_PROTOCOL_GWG
+  void gwg_note_all_ff_(const uint8_t *data, uint8_t length);
+#endif
 
   // --- entity queues and in-flight state ------------------------------------
   //

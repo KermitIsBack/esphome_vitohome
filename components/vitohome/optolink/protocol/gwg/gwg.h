@@ -88,6 +88,21 @@ class GWGEngine {
   // snapshots already needed internally.
   typedef std::function<void(uint32_t enq_age_ms, uint32_t send_to_response_ms, uint16_t address)> OnTimingCallback;
 
+  // Burst fallback notification, GWG-only (2026-10-10). Fires exactly once per
+  // session, at the moment BURST_FAILURES_BEFORE_FALLBACK is reached and
+  // bursting is switched off for good.
+  //
+  // Why a callback rather than a log line in the engine: the engine's own
+  // optolink_log_w() is compiled out unless VITOHOME_DEBUG_OPTOLINK is defined
+  // (see ../../logging.h), so the warning this replaces was unreachable from
+  // YAML at ANY logger level -- it was gated by the preprocessor, not by the
+  // log level. Hardware capture 2026-10-10 (GWG_VBEM SW=0x7A) hit the fallback
+  // after two reads and nothing said so; the poll ceiling silently dropped to
+  // one datapoint per ENQ for the rest of the session. Routing it through the
+  // hub puts it on the `vitohome` tag like every other operator-visible
+  // message. Mirrors OnTimingCallback exactly.
+  typedef std::function<void(uint8_t consecutive_failures)> OnBurstFallbackCallback;
+
   // Named timeout (ms). GWG deliberately uses a 3000ms request watchdog,
   // distinct from VS2/VS1's 4000ms - value byte-identical to upstream. It is
   // measured from read()/write() (i.e. it also covers the ENQ wait in INIT),
@@ -216,7 +231,8 @@ class GWGEngine {
         _responseBuffer{},
         _onResponseCallback(nullptr),
         _onErrorCallback(nullptr),
-        _onTimingCallback(nullptr) {
+        _onTimingCallback(nullptr),
+        _onBurstFallbackCallback(nullptr) {
     assert(interface != nullptr);
     _interface = new (std::nothrow) internals::GenericInterface<C>(interface);
     if (!_interface) {
@@ -236,6 +252,7 @@ class GWGEngine {
   void onResponse(OnResponseCallback callback);
   void onError(OnErrorCallback callback);
   void onTiming(OnTimingCallback callback);
+  void onBurstFallback(OnBurstFallbackCallback callback);
 
   // access is additive (default GWGAccessMode::PHYSICAL): every existing
   // 2-argument call site is source- and behaviour-compatible, and produces
@@ -291,6 +308,7 @@ class GWGEngine {
   OnResponseCallback _onResponseCallback;
   OnErrorCallback _onErrorCallback;
   OnTimingCallback _onTimingCallback;
+  OnBurstFallbackCallback _onBurstFallbackCallback;
 
   inline void _setState(State state);
 

@@ -169,6 +169,9 @@ void VitoHomeComponent::setup() {
     // A complete valid response proves link liveness and validates the
     // configured protocol for start-up verification.
     this->link_note_alive_();
+#ifdef VITOHOME_PROTOCOL_GWG
+    this->gwg_note_all_ff_(data, length);
+#endif
     this->on_response_(ResponseView{data, length, address}, address);
   });
 
@@ -216,6 +219,20 @@ void VitoHomeComponent::setup() {
   this->vito_->onTiming([this](uint32_t enq_age_ms, uint32_t send_to_response_ms, uint16_t address) {
     ESP_LOGD(TAG, "GWG timing: 0x%04X enq age <=%" PRIu32 " ms, send->response %" PRIu32 " ms", address, enq_age_ms,
              send_to_response_ms);
+  });
+
+  // Burst fallback (2026-10-10). WARNING, not DEBUG: this permanently caps the
+  // poll rate at one datapoint per ENQ interval -- 749-2070 ms on the captures
+  // so far -- for the rest of the session, and until now it happened in total
+  // silence because the engine's own warning is compiled out of normal builds
+  // (see GWGEngine::OnBurstFallbackCallback).
+  this->vito_->onBurstFallback([this](uint8_t consecutive_failures) {
+    ESP_LOGW(TAG,
+             "GWG burst disabled after %u unanswered burst-sent request(s); polling is now one "
+             "telegram per ENQ for the rest of this session. If this unit is expected to burst, "
+             "the leading 0x01 may be the ENQ acknowledgement rather than part of the request "
+             "(see gwgBurstOmitsEnqAck).",
+             static_cast<unsigned>(consecutive_failures));
   });
 #endif
 
@@ -1152,6 +1169,56 @@ void VitoHomeComponent::link_note_alive_() {
   // component-status diagnostic in Home Assistant.
   this->status_clear_warning();
 }
+
+#ifdef VITOHOME_PROTOCOL_GWG
+void VitoHomeComponent::gwg_note_all_ff_(const uint8_t *data, uint8_t length) {
+  // "Link established" is true and useless when every datapoint reads 0xFF.
+  //
+  // GWG has no error telegram: a request for an address the unit does not
+  // serve in the requested access mode is answered with 0xFF rather than
+  // refused, so the engine completes the transaction, the hub marks the link
+  // alive, and the operator is told the protocol works. Hardware capture
+  // 2026-10-10 (GWG_VBEM SW=0x7A) read 13 BE-mode addresses that the device's
+  // own Vitosoft catalog lists by name and got 0xFF from every one, under a
+  // cheerful "GWG link established".
+  //
+  // uwen70/esphome_vitoconnect reaches the same reading from the other
+  // direction: its EEPROM path treats a returned FF FF pair as "address not in
+  // use" rather than as data.
+  //
+  // Deliberately conservative. The streak counts only whole responses that are
+  // 0xFF in every byte, resets on the first response that is not, and warns
+  // once per session at the threshold. A datapoint that legitimately reads
+  // 0xFF (an unset enum, a disconnected sensor) will not trip it unless the
+  // configured catalog is ENTIRELY such datapoints, in which case the warning
+  // is earned.
+  if (length == 0)
+    return;
+
+  for (uint8_t i = 0; i < length; i++) {
+    if (data[i] != 0xFF) {
+      this->gwg_all_ff_streak_ = 0;
+      return;
+    }
+  }
+
+  if (this->gwg_all_ff_warned_)
+    return;
+
+  if (this->gwg_all_ff_streak_ < GWG_ALL_FF_WARN_AFTER)
+    ++this->gwg_all_ff_streak_;
+
+  if (this->gwg_all_ff_streak_ == GWG_ALL_FF_WARN_AFTER) {
+    this->gwg_all_ff_warned_ = true;
+    ESP_LOGW(TAG,
+             "GWG: the last %u responses were 0xFF in every byte. The link is up, but the unit is "
+             "most likely not serving these addresses in the requested access mode -- GWG answers "
+             "an unserved address with 0xFF rather than an error. Check the `access:` mode before "
+             "trusting any of these values, and do not write to them.",
+             static_cast<unsigned>(GWG_ALL_FF_WARN_AFTER));
+  }
+}
+#endif
 
 void VitoHomeComponent::link_note_error_() {
   if (this->link_error_streak_ < LINK_OFFLINE_AFTER_ERRORS)

@@ -238,6 +238,111 @@ int main() {
   uart.feed({0x33});
   pump(adapter);
 
+  // --- (7) the fallback notifies the hub, exactly once ---------------------
+  // Until 2026-10-10 the fallback above happened in total silence: the
+  // engine's optolink_log_w() is compiled out unless VITOHOME_DEBUG_OPTOLINK
+  // is defined, so no logger level could surface it. A hardware capture hit
+  // the fallback after two reads and the operator was never told the poll
+  // ceiling had dropped. The callback is what the hub logs from, so the thing
+  // worth pinning is that it fires -- and that it fires ONCE, not on every
+  // subsequent timeout.
+  //
+  // Fresh engine: the one above has already latched _burstDisabled.
+  {
+    FakeOptolink u2;
+    Engine a2(&u2);
+    int fallbacks = 0;
+    unsigned reported = 0;
+    a2.onResponse([](const uint8_t *, uint8_t, uint16_t) {});
+    a2.onError([](optolink::OptolinkResult, uint16_t) {});
+    a2.onBurstFallback([&](uint8_t n) {
+      fallbacks++;
+      reported = n;
+    });
+    a2.begin();
+
+    for (uint8_t i = 0; i < optolink::GWGEngine::BURST_FAILURES_BEFORE_FALLBACK; ++i) {
+      sync_and_complete(a2, u2, static_cast<uint8_t>(0x50 + i), 0x01);
+      a2.read(static_cast<uint8_t>(0x60 + i), 1);
+      pump(a2);
+      u2.clear_written();
+      optolink::optolink_test_clock_advance(400);
+      pump(a2);
+    }
+    check(fallbacks == 1, "burst fallback notified the hub");
+    check(reported == optolink::GWGEngine::BURST_FAILURES_BEFORE_FALLBACK, "  reported the failure count");
+
+    // Drive more failures; _burstDisabled is latched, so no second callback.
+    for (int i = 0; i < 3; ++i) {
+      sync_and_complete(a2, u2, static_cast<uint8_t>(0x80 + i), 0x01);
+      a2.read(static_cast<uint8_t>(0x90 + i), 1);
+      pump(a2);
+      optolink::optolink_test_clock_advance(400);
+      pump(a2);
+    }
+    check(fallbacks == 1, "  and only once, however many follow");
+  }
+
+  // --- (8) gwgBurstOmitsEnqAck: the leading 0x01 on a burst-sent request ----
+  // Frame byte 0 is ENQ_ACK. dannerph and uwen70 both treat it as the reply to
+  // the device's 0x05 rather than part of the request, and both therefore omit
+  // it when sending inside an already-open window. This project has always
+  // included it unconditionally, and the 2026-10-10 capture's only two
+  // unanswered requests were exactly its two burst-sent ones.
+  //
+  // Pinned here: the flag changes the burst frame and NOTHING else. An
+  // ENQ-paced request keeps the 0x01 under both settings -- it is a genuine
+  // acknowledgement there -- so flipping this can only ever affect a frame
+  // that answers no ENQ.
+  {
+    const bool saved = optolink::gwgBurstOmitsEnqAck;
+    for (const bool omit : {false, true}) {
+      optolink::gwgBurstOmitsEnqAck = omit;
+
+      FakeOptolink u3;
+      Engine a3(&u3);
+      a3.onResponse([](const uint8_t *, uint8_t, uint16_t) {});
+      a3.onError([](optolink::OptolinkResult, uint16_t) {});
+      a3.begin();
+
+      // ENQ-paced: the ACK is real, so it is present either way.
+      a3.read(0x006F, 1);
+      u3.feed({0x05});
+      a3.loop();
+      const std::vector<uint8_t> enq_paced = {0x01, 0xCB, 0x6F, 0x01, 0x04};
+      check(u3.written() == enq_paced,
+            omit ? "omit=1: ENQ-paced read keeps the 0x01" : "omit=0: ENQ-paced read keeps the 0x01");
+      u3.clear_written();
+      u3.feed({0x26});
+      pump(a3);
+
+      // Burst-sent: no ENQ answered, so the 0x01 is dropped under omit=true.
+      a3.read(0x0070, 1);
+      pump(a3);
+      const std::vector<uint8_t> with_ack = {0x01, 0xCB, 0x70, 0x01, 0x04};
+      const std::vector<uint8_t> without = {0xCB, 0x70, 0x01, 0x04};
+      check(u3.written() == (omit ? without : with_ack),
+            omit ? "omit=1: burst read drops the 0x01" : "omit=0: burst read keeps the 0x01");
+      u3.clear_written();
+      u3.feed({0x5F});
+      pump(a3);
+
+      // And the same for a write, payload intact under both settings.
+      const uint8_t payload[] = {0x2A};
+      a3.write(0x0076, payload, 1);
+      pump(a3);
+      const std::vector<uint8_t> w_ack = {0x01, 0xC8, 0x76, 0x01, 0x2A, 0x04};
+      const std::vector<uint8_t> w_no = {0xC8, 0x76, 0x01, 0x2A, 0x04};
+      check(u3.written() == (omit ? w_no : w_ack), omit ? "omit=1: burst write drops the 0x01, payload intact"
+                                                        : "omit=0: burst write keeps the 0x01, payload intact");
+      u3.clear_written();
+      u3.feed({0x00});
+      pump(a3);
+    }
+    optolink::gwgBurstOmitsEnqAck = saved;
+    check(optolink::gwgBurstOmitsEnqAck == false, "flag restored to its default");
+  }
+
   std::printf("gwg burst: %d failure(s)\n", failures);
   return failures == 0 ? 0 : 1;
 }

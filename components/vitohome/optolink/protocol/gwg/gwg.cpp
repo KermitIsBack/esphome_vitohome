@@ -16,6 +16,7 @@ GWGEngine::~GWGEngine() { delete _interface; }
 void GWGEngine::onResponse(OnResponseCallback callback) { _onResponseCallback = callback; }
 void GWGEngine::onError(OnErrorCallback callback) { _onErrorCallback = callback; }
 void GWGEngine::onTiming(OnTimingCallback callback) { _onTimingCallback = callback; }
+void GWGEngine::onBurstFallback(OnBurstFallbackCallback callback) { _onBurstFallbackCallback = callback; }
 
 bool GWGEngine::read(uint16_t address, uint8_t length, GWGAccessMode access) {
   if (_busy) {
@@ -144,7 +145,13 @@ void GWGEngine::_init() {
   // this needs no drain. It is also what bounds the window in practice: it can
   // only be ridden while the device has not spoken since the last answer.
   if (_busy && _canBurst()) {
-    _bytesTransferred = 0;
+    // Frame byte 0 is ENQ_ACK (0x01). Under gwgBurstOmitsEnqAck it is the
+    // acknowledgement of the device's ENQ rather than part of the request, so
+    // a burst-sent request -- which answers no ENQ -- must not carry it.
+    // Starting the transfer index at 1 skips it; _send() indexes the frame by
+    // _bytesTransferred and completes at length(), so it needs no change and
+    // stays re-entrant across loop iterations on a partial write.
+    _bytesTransferred = gwgBurstOmitsEnqAck ? 1 : 0;
     _enqAgeMillis = _currentMillis - _lastSyncMillis;  // age of the sync we are riding
     _sentInBurst = true;
     _setState(State::SEND);
@@ -208,6 +215,11 @@ void GWGEngine::_receive() {
       optolink_log_w("GWG burst disabled: %u consecutive burst-sent requests went unanswered; "
                      "falling back to one telegram per ENQ",
                      static_cast<unsigned>(_burstFailures));
+      // The log above is compiled out in every normal build (see
+      // OnBurstFallbackCallback); the callback is what the operator actually
+      // sees. Fires once -- _burstDisabled is latched just above.
+      if (_onBurstFallbackCallback)
+        _onBurstFallbackCallback(_burstFailures);
     }
     _setState(State::INIT);
     _tryOnError(OptolinkResult::TIMEOUT);

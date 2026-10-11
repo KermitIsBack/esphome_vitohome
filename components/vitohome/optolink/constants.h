@@ -209,6 +209,47 @@ constexpr uint8_t kNoGwgWriteType = 0x00;
 // real unit.
 extern bool gwgWriteEotBeforePayload;
 
+// GWG BURST frame switch: is the leading 0x01 part of the request, or the
+// acknowledgement of the device's ENQ?
+//
+//   false (default, this project's pre-existing behaviour):
+//       every request carries 01 as its first byte, ENQ-paced or burst-sent
+//   true (dannerph / uwen70):
+//       01 is written in IDLE as the reply to the device's 0x05 and is NOT
+//       part of the request; a burst-sent request therefore starts at TYPE
+//
+// Reads and writes are byte-identical under both when the request answers a
+// fresh ENQ -- the ACK immediately precedes the frame either way. The two
+// differ ONLY for a burst-sent request, where `true` omits the 0x01 entirely.
+//
+// Evidence that this, not burst itself, is what fails here. Both external
+// implementations state the rule in prose and implement it:
+//   dannerph, _send(): "No ACK (0x01) is sent here. ACK belongs exclusively to
+//     IDLE as a reaction to READY (0x05). In burst mode, SEND is entered
+//     without a new READY (0x05) event and therefore without ACK."
+//   uwen70 eeprom branch, chaining EEPROM sub-reads: "Burst mode is naturally
+//     satisfied here: we do NOT wait for READY (0x05), and we do NOT send ACK
+//     (0x01), because ACK is only used to acknowledge READY."
+// The uwen70 branch is a working EEPROM read path that chains byte-wise
+// sub-requests back-to-back with no ENQ between them -- i.e. a positive
+// hardware control for bursting WITHOUT the ACK.
+//
+// Against that, hardware capture 2026-10-10 (GWG_VBEM, ident 0x2053 HW=0x01
+// SW=0x7A, 15-address BE sweep): 13 ENQ-paced requests answered, 31-48 ms
+// after the ENQ they acknowledged; the only 2 requests sent inside an already
+// consumed window -- both carrying the leading 0x01 -- went unanswered and hit
+// BURST_FAILURES_BEFORE_FALLBACK. So this project has a negative control for
+// bursting WITH the ACK on the same protocol family.
+//
+// That is suggestive, not decisive: "this unit does not burst at all" explains
+// the same two timeouts. Settling it needs both variants tried against one
+// address on one unit in one session, which is why this is runtime and not
+// constexpr -- same reasoning as gwgWriteEotBeforePayload above.
+// VitoHomeComponent::set_gwg_burst_omits_enq_ack() flips it from a lambda.
+//
+// Default UNCHANGED (false): no wire format moves ahead of a hardware reading.
+extern bool gwgBurstOmitsEnqAck;
+
 constexpr uint8_t gwgWriteTypeByte(GWGAccessMode mode) {
   switch (mode) {
     case GWGAccessMode::VIRTUAL:

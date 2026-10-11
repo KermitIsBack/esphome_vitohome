@@ -3082,6 +3082,22 @@ def main(argv=None):
             print(f"could not resolve device: {why}", file=sys.stderr)
             return 1
         print(f"resolved {args.identify}/HW{args.hw}/SW{args.sw} -> {token}  [{why}]", file=sys.stderr)
+        # A "floor" match means the live software index is past every range the
+        # catalog knows, so the newest revision was picked as a best guess
+        # rather than matched. Both real GWG units seen so far land here --
+        # SW 0x2B -> GWG_VBEM_21 and SW 0x7A -> GWG_VBEM_36 -- because every
+        # GWG_VBEM row has an empty IdentificationExtensionTill, making each
+        # range a single point. Silent until now, and it matters: those two
+        # tokens disagree about what lives at 0x001B, 0x001C and 0x0024.
+        if "floor" in why:
+            print(
+                f"  WARNING: SW 0x{int(str(args.sw), 0):02X} is beyond every range this catalog "
+                f"declares for identification {args.identify}, so {token} is the newest known "
+                f"revision rather than a match. Datapoints that changed meaning in a later "
+                f"revision may be wrong. Verify any address you intend to WRITE against the "
+                f"unit itself before trusting it.",
+                file=sys.stderr,
+            )
         device = token
 
     if not device:
