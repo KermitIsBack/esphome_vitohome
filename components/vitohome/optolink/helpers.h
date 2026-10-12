@@ -104,6 +104,11 @@ inline void optolink_test_clock_release() { internals::optolink_host_clock().fro
 #include "freertos/FreeRTOS.h"
 #define optolink_millis() (xTaskGetTickCount() * portTICK_PERIOD_MS)
 #elif defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+// Must be included explicitly: the optolink library TUs are compiled
+// standalone (no ESPHome header pulls Arduino.h in transitively), so without
+// it millis() is undeclared. Reached only on ESP8266 in practice -- Arduino
+// on ESP32 also defines ESP_PLATFORM and takes the FreeRTOS branch above.
+#include <Arduino.h>
 #define optolink_millis() millis()
 #else
 #error "Unsupported target platform"

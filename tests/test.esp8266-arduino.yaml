@@ -1,0 +1,32 @@
+# ESP8266 compile gate (Arduino, the only ESP8266 framework).
+#
+# PINS
+# ----
+# common.yaml's pins are ESP32 pins (GPIO16/17/21/22), several of which do not
+# exist on an ESP8266. The i2c: and uart: keys below override the merged ones
+# (explicit keys win over a `<<:` merge), so common.yaml stays the single
+# source of entity coverage while this file only swaps the wiring.
+
+substitutions:
+  name: vitohome-test-esp8266
+  protocol: P300
+  log_frames: "false"
+  identify_device: "true"
+
+esp8266:
+  board: d1_mini
+
+i2c:
+  sda: GPIO4
+  scl: GPIO5
+
+uart:
+  - id: uart_optolink
+    rx_pin: GPIO13
+    tx_pin: GPIO15
+    baud_rate: 4800
+    data_bits: 8
+    parity: EVEN
+    stop_bits: 2
+
+<<: !include common.yaml
