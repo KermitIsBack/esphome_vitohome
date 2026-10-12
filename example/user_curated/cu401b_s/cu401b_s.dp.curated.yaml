@@ -1,0 +1,773 @@
+# Vitocal 222-S (Vitotronic 200 WO1C, device 0x204D) datapoint package; device file: cu401b_s.vitohome.yaml.
+# All addresses return plausible values on a 0x204D HW=01 SW=41 unit (2026-10). Writes to 0x6000, 0x2006, 0x2001 and
+# 0xB000 were confirmed by controller ACK and read-back; 0x2000 and 0x2007 share the format but were not write-tested.
+# The 0x0Exx refrigerant block is not in the Vitosoft CU401B_S catalog (source: openv "Vitocal 200-S (Bj. 2018)").
+
+# 3-byte heat-pump values are a little-endian int16 plus a status byte.
+sensor:
+  # ---- hydraulics ----
+  - platform: vitohome
+    id: outside
+    name: "Outside Temperature"
+    address: 0x0101
+    length: 2
+    converter: div10
+    update_interval: 30s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    id: flow
+    name: "Flow Temperature"
+    address: 0x0105
+    length: 2
+    converter: div10
+    update_interval: 20s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    id: flow_return
+    name: "Flow Return Temperature"
+    address: 0x0106
+    length: 2
+    converter: div10
+    update_interval: 20s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    name: "Flow Target Temperature"
+    address: 0x1800
+    length: 2
+    converter: div10
+    update_interval: 60s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    id: hot_water_above
+    name: "Hot Water Above Temperature"
+    address: 0x010D
+    length: 2
+    converter: div10
+    update_interval: 60s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+
+  # ---- refrigerant circuit ----
+  - platform: vitohome
+    name: "Suction Pressure"
+    address: 0xB410
+    length: 3
+    byte_offset: 0
+    byte_length: 2
+    converter: div10
+    signed: false
+    update_interval: 20s
+    unit_of_measurement: "bar"
+    device_class: pressure
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    name: "High Pressure"
+    address: 0xB411
+    length: 3
+    byte_offset: 0
+    byte_length: 2
+    converter: div10
+    signed: false
+    update_interval: 20s
+    unit_of_measurement: "bar"
+    device_class: pressure
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    id: evap
+    name: "Evaporating Temperature"
+    address: 0x0E10
+    length: 3
+    byte_offset: 0
+    byte_length: 2
+    converter: div10
+    update_interval: 20s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    id: cond
+    name: "Condensing Temperature"
+    address: 0x0E12
+    length: 3
+    byte_offset: 0
+    byte_length: 2
+    converter: div10
+    update_interval: 20s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    name: "Suction Gas Temperature"
+    address: 0x0E04
+    length: 3
+    byte_offset: 0
+    byte_length: 2
+    converter: div10
+    update_interval: 20s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    name: "Compressor Suction Temperature"
+    address: 0x0E03
+    length: 3
+    byte_offset: 0
+    byte_length: 2
+    converter: div10
+    update_interval: 20s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    name: "Superheat"
+    address: 0x0E08
+    length: 3
+    byte_offset: 0
+    byte_length: 2
+    converter: div10
+    update_interval: 20s
+    unit_of_measurement: "K"
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    name: "Superheat Setpoint"
+    address: 0x0E09
+    length: 3
+    byte_offset: 0
+    byte_length: 2
+    converter: div10
+    update_interval: 300s
+    unit_of_measurement: "K"
+    state_class: measurement
+    accuracy_decimals: 1
+    entity_category: diagnostic
+  - platform: vitohome
+    id: discharge
+    name: "Discharge Temperature"
+    address: 0x0E1B
+    length: 3
+    byte_offset: 0
+    byte_length: 2
+    converter: div10
+    update_interval: 20s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    id: liquid
+    name: "Liquid Line Temperature"
+    address: 0xB404
+    length: 3
+    byte_offset: 0
+    byte_length: 2
+    converter: div10
+    update_interval: 20s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  # Gas line at the indoor unit: hot gas in heating/DHW, suction in reverse mode (cooling, defrost). Fault 2C.
+  - platform: vitohome
+    name: "Gas Line Temperature"
+    address: 0x013C
+    length: 2
+    converter: div10
+    update_interval: 20s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  # Liquid gas sensor on the WPR board (terminals X25.17/X25.18). Fault 2D.
+  - platform: vitohome
+    name: "Liquid Gas Temperature"
+    address: 0x013B
+    length: 2
+    converter: div10
+    update_interval: 20s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    name: "Indoor Evaporator Suction Temperature"
+    address: 0x0E52
+    length: 3
+    byte_offset: 0
+    byte_length: 2
+    converter: div10
+    update_interval: 20s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    name: "Inverter IPM Temperature"
+    address: 0x0E74
+    length: 3
+    byte_offset: 0
+    byte_length: 2
+    converter: div10
+    update_interval: 60s
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+    entity_category: diagnostic
+  - platform: vitohome
+    name: "Compressor Output"
+    address: 0xB423
+    length: 2
+    byte_offset: 0
+    byte_length: 1
+    converter: noconv
+    update_interval: 20s
+    unit_of_measurement: "%"
+    state_class: measurement
+    accuracy_decimals: 0
+  - platform: vitohome
+    name: "Expansion Valve"
+    address: 0xB424
+    length: 2
+    byte_offset: 0
+    byte_length: 1
+    converter: noconv
+    update_interval: 20s
+    unit_of_measurement: "%"
+    state_class: measurement
+    accuracy_decimals: 0
+  - platform: vitohome
+    name: "Outdoor Fan"
+    address: 0xB420
+    length: 2
+    byte_offset: 0
+    byte_length: 1
+    converter: noconv
+    update_interval: 20s
+    unit_of_measurement: "%"
+    state_class: measurement
+    accuracy_decimals: 0
+  - platform: vitohome
+    name: "Secondary Pump"
+    address: 0xB421
+    length: 2
+    byte_offset: 0
+    byte_length: 1
+    converter: noconv
+    update_interval: 20s
+    unit_of_measurement: "%"
+    state_class: measurement
+    accuracy_decimals: 0
+
+  # ---- derived on the device ----
+  - platform: template
+    name: "Subcooling"
+    unit_of_measurement: "K"
+    state_class: measurement
+    accuracy_decimals: 1
+    update_interval: 20s
+    lambda: |-
+      if (!id(cond).has_state() || !id(liquid).has_state()) return {};
+      return id(cond).state - id(liquid).state;
+  - platform: template
+    name: "Discharge Superheat"
+    unit_of_measurement: "K"
+    state_class: measurement
+    accuracy_decimals: 1
+    update_interval: 20s
+    lambda: |-
+      if (!id(discharge).has_state() || !id(cond).has_state()) return {};
+      return id(discharge).state - id(cond).state;
+  - platform: template
+    name: "Evaporator Approach"
+    unit_of_measurement: "K"
+    state_class: measurement
+    accuracy_decimals: 1
+    update_interval: 20s
+    lambda: |-
+      if (!id(outside).has_state() || !id(evap).has_state()) return {};
+      return id(outside).state - id(evap).state;
+  # Flow/return split by the 3-way valve; each series only updates while its circuit is served.
+  - platform: template
+    name: "Heating Flow Temperature"
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+    update_interval: 20s
+    lambda: |-
+      if (!id(dhw_charging).has_state() || id(dhw_charging).state || !id(flow).has_state()) return {};
+      return id(flow).state;
+  - platform: template
+    name: "Heating Return Temperature"
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+    update_interval: 20s
+    lambda: |-
+      if (!id(dhw_charging).has_state() || id(dhw_charging).state || !id(flow_return).has_state()) return {};
+      return id(flow_return).state;
+  - platform: template
+    name: "Hot Water Flow Temperature"
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+    update_interval: 20s
+    lambda: |-
+      if (!id(dhw_charging).has_state() || !id(dhw_charging).state || !id(flow).has_state()) return {};
+      return id(flow).state;
+  - platform: template
+    name: "Hot Water Return Temperature"
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+    update_interval: 20s
+    lambda: |-
+      if (!id(dhw_charging).has_state() || !id(dhw_charging).state || !id(flow_return).has_state()) return {};
+      return id(flow_return).state;
+
+  # ---- configuration, read-only ----
+  - platform: vitohome
+    name: "Electric Heater Max Stage"
+    address: 0x7907
+    length: 1
+    converter: noconv
+    update_interval: 600s
+    entity_category: diagnostic
+  - platform: vitohome
+    name: "Electric Heater Stage During Utility Lock"
+    address: 0x790A
+    length: 1
+    converter: noconv
+    update_interval: 600s
+    entity_category: diagnostic
+  - platform: vitohome
+    name: "Electric Heater Stage 1 Power"
+    address: 0x790C
+    length: 2
+    converter: div10
+    update_interval: 600s
+    unit_of_measurement: "kW"
+    accuracy_decimals: 1
+    entity_category: diagnostic
+  - platform: vitohome
+    name: "Electric Heater Stage 2 Power"
+    address: 0x790D
+    length: 2
+    converter: div10
+    update_interval: 600s
+    unit_of_measurement: "kW"
+    accuracy_decimals: 1
+    entity_category: diagnostic
+  - platform: vitohome
+    name: "Hot Gas Temperature Limit"
+    address: 0x5095
+    length: 2
+    converter: div10
+    update_interval: 600s
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    entity_category: diagnostic
+  - platform: vitohome
+    name: "High Pressure Limit"
+    address: 0x5098
+    length: 2
+    converter: div10
+    update_interval: 600s
+    unit_of_measurement: "bar"
+    accuracy_decimals: 1
+    entity_category: diagnostic
+  - platform: vitohome
+    name: "Low Pressure Limit"
+    address: 0x5099
+    length: 2
+    converter: div10
+    update_interval: 600s
+    unit_of_measurement: "bar"
+    accuracy_decimals: 1
+    entity_category: diagnostic
+
+binary_sensor:
+  - platform: vitohome
+    id: dhw_charging
+    name: "Hot Water Charging"
+    address: 0x0494
+    length: 1
+    bit_mask: 0x01
+    update_interval: 20s
+  - platform: vitohome
+    name: "Defrost Output"
+    address: 0xB446
+    length: 1
+    bit_mask: 0x01
+    update_interval: 20s
+  - platform: vitohome
+    name: "Electric Heater Installed"
+    address: 0x7900
+    length: 1
+    bit_mask: 0x01
+    update_interval: 600s
+    entity_category: diagnostic
+  - platform: vitohome
+    name: "Electric Heater For Heating"
+    address: 0x7902
+    length: 1
+    bit_mask: 0x01
+    update_interval: 600s
+    entity_category: diagnostic
+  - platform: vitohome
+    name: "Electric Heater For Hot Water"
+    address: 0x6015
+    length: 1
+    bit_mask: 0x01
+    update_interval: 600s
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: vitohome
+    type: enum
+    name: "Heat Pump State"
+    address: 0x130B
+    length: 1
+    update_interval: 20s
+    options:
+      0: "Off"
+      1: "Prepare"
+      2: "Heating"
+      3: "Shutdown pause"
+      4: "Cooling"
+      5: "Defrost preparation"
+      6: "Defrosting"
+  # 0x2002 belongs to the heating-circuit time program; read-only until its write semantics are known.
+  - platform: vitohome
+    type: enum
+    name: "Room Operating Mode"
+    address: 0x2002
+    length: 1
+    update_interval: 60s
+    options:
+      0: "Standby"
+      1: "Reduced"
+      2: "Standard (time program)"
+      3: "Fixed value"
+  - platform: vitohome
+    type: error_history
+    name: "Last Message"
+    address: 0x0710
+    update_interval: 60s
+    # Vitosoft CU401B_S texts (blanks translated from German); 2C/2D from the WO1C service manual.
+    codes:
+      0x00: "No faults in the system"
+      0x01: "System fault"
+      0x02: "Factory settings restored after data error"
+      0x03: "Configuration fault"
+      0x05: "Fault EEV"
+      0x06: "Fault EEV2"
+      0x07: "Message EEV"
+      0x08: "Message EEV2"
+      0x09: "Fault energy meter"
+      0x0A: "Outdoor unit fault"
+      0x0B: "Outdoor unit warning"
+      0x0C: "Outdoor unit notice"
+      0x0D: "Outdoor unit in test mode"
+      0x0E: "Fault message from the ventilation unit"
+      0x0F: "Message from ventilation unit"
+      0x10: "Short circuit outside temperature sensor"
+      0x18: "Lead break outside temperature sensor"
+      0x20: "Short circuit, secondary flow temperature sensor"
+      0x21: "Short circuit, secondary return temperature sensor 1"
+      0x22: "Short circuit, secondary return temperature sensor 2"
+      0x23: "Short circuit, secondary flow temperature sensor 2"
+      0x28: "Lead break, secondary flow temperature sensor"
+      0x29: "Lead break, secondary return temperature sensor 1"
+      0x2A: "Lead break, secondary return temperature sensor 2"
+      0x2B: "Lead break, secondary flow temperature sensor 2"
+      0x2C: "Suction gas temperature (reverse)"
+      0x2D: "Liquid gas temperature sensor"
+      0x30: "Short circuit, primary flow temperature sensor"
+      0x31: "Short circuit, primary return temperature sensor"
+      0x32: "Short circuit, evaporator temperature sensor"
+      0x33: "Short circuit, hot gas temperature sensor"
+      0x34: "Short circuit, hot gas temperature sensor 2"
+      0x35: "Short circuit, evaporator sensor 2"
+      0x38: "Lead break, primary flow temperature sensor"
+      0x39: "Lead break, primary return temperature sensor"
+      0x3A: "Lead break, evaporator temperature sensor"
+      0x3B: "Lead break, hot gas temperature sensor"
+      0x3C: "Lead break, hot gas temperature sensor 2"
+      0x3D: "Lead break, evaporator temperature sensor 2"
+      0x40: "Short circuit, flow sensor HC2"
+      0x41: "Short circuit, flow sensor HC3"
+      0x43: "Short circuit, system flow temperature sensor"
+      0x44: "Short circuit, cooling circuit flow temperature sensor"
+      0x45: "Short circuit, separate cooling circuit flow temperature sensor"
+      0x48: "Lead break, flow sensor HC2"
+      0x49: "Lead break, flow sensor HC3"
+      0x4B: "Lead break, system flow temperature sensor"
+      0x4C: "Lead break, cooling circuit flow temperature sensor"
+      0x4D: "Lead break, separate cooling circuit flow temperature sensor"
+      0x50: "Short circuit, cylinder temperature sensor top"
+      0x52: "Short circuit, cylinder temperature sensor bottom"
+      0x53: "Short circuit, DHW sensor at outlet"
+      0x54: "Cylinder temperature sensor solar"
+      0x58: "Lead break, cylinder temperature sensor top"
+      0x5A: "Lead break, cylinder temperature sensor bottom"
+      0x5B: "Lead break, DHW sensor at outlet"
+      0x5C: "Cylinder temperature sensor solar"
+      0x60: "Short circuit, heating buffer temperature sensor"
+      0x61: "Short circuit, cooling buffer temperature sensor"
+      0x63: "Short circuit, external heat source boiler temperature sensor"
+      0x64: "Short circuit, mixer external heat source"
+      0x65: "Buffer outlet sensor"
+      0x66: "Swimming pool flow"
+      0x68: "Lead break, heating buffer temperature sensor"
+      0x69: "Lead break, cooling buffer temperature sensor"
+      0x6B: "Lead break, external heat source boiler temperature sensor"
+      0x6C: "Lead break, mixer external heat source"
+      0x70: "Short circuit room temperature sensor HC1"
+      0x71: "Short circuit room temperature sensor HC2"
+      0x72: "Short circuit room temperature sensor HC3"
+      0x73: "Short circuit, cooling circuit room temperature sensor"
+      0x78: "Lead break room temperature sensor HC1"
+      0x79: "Lead break room temperature sensor HC2"
+      0x7A: "Lead break room temperature sensor HC3"
+      0x7B: "Lead break, cooling circuit room temperature sensor"
+      0x90: "Solar module: Solar sensor 3"
+      0x91: "Solar module: Solar sensor 4"
+      0x92: "Solar control unit: Short circuit, sensor S1"
+      0x93: "Solar control unit: Short circuit, sensor S3"
+      0x94: "Solar module: cylinder temperature sensor"
+      0x96: "Ice store: Check absorber circuit"
+      0x97: "Vitosolic error"
+      0x98: "Solar module: Solar sensor 3"
+      0x99: "Solar module: Solar sensor 4"
+      0x9A: "Solar control unit: Lead break, sensor S1"
+      0x9B: "Solar control unit: Lead break, sensor S3"
+      0x9C: "Solar module: cylinder temperature sensor"
+      0x9E: "Solar module: Delta T monitoring"
+      0x9F: "Solar module: Internal fault"
+      0xA0: "Ventilation: Check filter"
+      0xA1: "Compressor 1 blocked"
+      0xA2: "Compressor 2 blocked"
+      0xA4: "Check valve"
+      0xA6: "Secondary pump"
+      0xA7: "Solar circuit"
+      0xA8: "Pump HC1"
+      0xA9: "Heat pump faulty"
+      0xAA: "Defrost cancelled due to fault"
+      0xAB: "Electric heater"
+      0xAC: "Compressor blocked by refrigerant circuit controller"
+      0xAD: "3-way diverter valve heating/DHW"
+      0xAE: "Cylinder temperature sensors top/bottom swapped"
+      0xAF: "Cylinder primary pump faulty"
+      0xB0: "Device identification"
+      0xB1: "Communication error, EEV PCB 1"
+      0xB2: "Communication error, EEV PCB 2"
+      0xB4: "Internal fault, A/D converter"
+      0xB5: "Internal fault, EEPROM"
+      0xB7: "Communication error, KM BUS, Airwell external unit"
+      0xB8: "Fault, KM BUS, mixer separate cooling circuit"
+      0xB9: "Fault, KM BUS, solar control unit"
+      0xBA: "Fault, KM BUS, mixer HC"
+      0xBB: "Fault, KM BUS, mixer cooling circuit"
+      0xBC: "Fault, KM BUS, remote control HC1"
+      0xBD: "Fault, KM BUS, remote control HC2"
+      0xBE: "Fault, KM BUS, remote control HC3"
+      0xBF: "LON module incorrect/faulty"
+      0xC1: "Monitoring, compressor power supply"
+      0xC2: "Monitoring, phase monitor power supply"
+      0xC3: "Brine pressure"
+      0xC5: "Utility lock active (power-OFF)"
+      0xC6: "Error, Allengra"
+      0xC7: "Error, fan"
+      0xC8: "Safety chain"
+      0xC9: "Refrigerant circuit"
+      0xCA: "Primary source"
+      0xCB: "Primary temperature"
+      0xCC: "Coding card"
+      0xCD: "Communication error, Vitocom 100"
+      0xCE: "Communication error, fault message module"
+      0xCF: "Communication error, LON module/HV module"
+      0xD0: "Impressed current anode"
+      0xD1: "Compressor"
+      0xD3: "Low pressure"
+      0xD4: "Control high pressure"
+      0xD5: "Water/water SHK"
+      0xD6: "Paddle switch (1)"
+      0xD7: "Instantaneous heating water heater, high limit cut-out stage 1"
+      0xD8: "Instantaneous heating water heater, high limit cut-out stage 2"
+      0xD9: "Instantaneous heating water heater, high limit cut-out stage 3"
+      0xDA: "Compressor 2"
+      0xDB: "Refrigerant circuit 2"
+      0xDC: "Low pressure 2"
+      0xDD: "Control high pressure 2"
+      0xDE: "Primary source 2"
+      0xE0: "Fault, external LON subscriber"
+      0xE1: "Fault on the external heat source"
+      0xE2: "Fault, lag heat pump"
+      0xE3: "Fault at the auxiliary heat source (hybrid)"
+      0xE4: "GBCU locked (hybrid)"
+      0xE5: "Flue gas temperature sensor placement check active (hybrid)"
+      0xE6: "Error, external subscriber on LON"
+      0xE8: "Heat management hybrid"
+      0xE9: "Warning: Auxiliary heat source locked"
+      0xEE: "Subscriber failure at the KM BUS"
+      0xEF: "Subscriber failure at the Modbus"
+      0xF0: "Compressor shutdown due to a fault"
+      0xF1: "Compressor shutdown due to a fault"
+      0xF2: "Select output"
+      0xFF: "Control unit restart"
+
+# ---- controls ----
+number:
+  - platform: vitohome
+    id: room_normal
+    internal: true
+    address: 0x2000
+    length: 2
+    converter: div10
+    min_value: 10
+    max_value: 30
+    step: 1
+  - platform: vitohome
+    id: room_reduced
+    internal: true
+    address: 0x2001
+    length: 2
+    converter: div10
+    min_value: 10
+    max_value: 30
+    step: 1
+  - platform: vitohome
+    id: dhw_setpoint
+    internal: true
+    address: 0x6000
+    length: 2
+    converter: div10
+    min_value: 10
+    max_value: 60
+    step: 1
+  - platform: vitohome
+    name: "Heating Curve Inclination"
+    icon: mdi:chart-bell-curve-cumulative
+    address: 0x2007
+    length: 2
+    converter: div10
+    min_value: 0
+    max_value: 1
+    step: 0.1
+    mode: box
+  - platform: vitohome
+    name: "Heating Curve Level"
+    icon: mdi:temperature-kelvin
+    address: 0x2006
+    length: 2
+    converter: div10
+    min_value: -10
+    max_value: 10
+    step: 1
+    mode: box
+
+select:
+  - platform: vitohome
+    name: "Operating Mode"
+    address: 0xB000
+    length: 1
+    options:
+      0: "Shutdown"
+      1: "Hot water"
+      2: "Heating and hot water"
+
+water_heater:
+  - platform: template
+    id: wh_hot_water
+    name: "Hot Water"
+    optimistic: true
+    visual:
+      min_temperature: 10
+      max_temperature: 60
+      target_temperature_step: 1
+    current_temperature: |-
+      if (!id(hot_water_above).has_state()) return {};
+      return id(hot_water_above).state;
+    target_temperature: |-
+      if (!id(dhw_setpoint).has_state()) return {};
+      return id(dhw_setpoint).state;
+    set_action:
+      - if:
+          condition:
+            lambda: |-
+              const float t = id(wh_hot_water).get_target_temperature();
+              if (std::isnan(t) || t < 10.0f || t > 60.0f) return false;
+              return !id(dhw_setpoint).has_state() || t != id(dhw_setpoint).state;
+          then:
+            - number.set:
+                id: dhw_setpoint
+                value: !lambda "return id(wh_hot_water).get_target_temperature();"
+  - platform: template
+    id: wh_room_normal
+    name: "Room Temperature Normal"
+    optimistic: true
+    visual:
+      min_temperature: 10
+      max_temperature: 30
+      target_temperature_step: 1
+    target_temperature: |-
+      if (!id(room_normal).has_state()) return {};
+      return id(room_normal).state;
+    set_action:
+      - if:
+          condition:
+            lambda: |-
+              const float t = id(wh_room_normal).get_target_temperature();
+              if (std::isnan(t) || t < 10.0f || t > 30.0f) return false;
+              return !id(room_normal).has_state() || t != id(room_normal).state;
+          then:
+            - number.set:
+                id: room_normal
+                value: !lambda "return id(wh_room_normal).get_target_temperature();"
+  - platform: template
+    id: wh_room_reduced
+    name: "Room Temperature Reduced"
+    optimistic: true
+    visual:
+      min_temperature: 10
+      max_temperature: 30
+      target_temperature_step: 1
+    target_temperature: |-
+      if (!id(room_reduced).has_state()) return {};
+      return id(room_reduced).state;
+    set_action:
+      - if:
+          condition:
+            lambda: |-
+              const float t = id(wh_room_reduced).get_target_temperature();
+              if (std::isnan(t) || t < 10.0f || t > 30.0f) return false;
+              return !id(room_reduced).has_state() || t != id(room_reduced).state;
+          then:
+            - number.set:
+                id: room_reduced
+                value: !lambda "return id(wh_room_reduced).get_target_temperature();"
