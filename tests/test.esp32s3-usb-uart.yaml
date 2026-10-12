@@ -1,0 +1,63 @@
+# usb_uart compile gate: the Optolink head on a USB-serial adapter (CH340)
+# plugged into the ESP32-S3's native USB-OTG port, instead of a native UART.
+#
+# WHY THIS EXISTS
+# ---------------
+# usb_uart channels are uart::UARTComponent subclasses that keep their OWN
+# parity and stop-bits types, which ESPHome's uart helpers mishandled until
+# esphome/esphome#20161 (first released in 2026.10.0):
+#   * final_validate_device_schema(stop_bits=2) compared the channel's string
+#     "2" against the int 2 and rejected every correctly configured channel;
+#   * UARTComponent::get_parity() returned NONE for every usb_uart channel, so
+#     any runtime 8E2 read-back marked a correctly wired head failed
+#     (SoulSolistice/esphome_vitohome#19).
+# vitohome therefore checks 8E2 at config time only, and compares stop bits
+# numerically itself (see _validate_stop_bits in components/vitohome/__init__.py).
+# This config is the gate for that: on any pre-2026.10 ESPHome, a regression to
+# the naive stop_bits check fails `esphome config` here. A regression to a
+# runtime read-back would still compile -- that half is documented, not gated.
+#
+# It also compiles the hub against a non-native UART class and on the S3
+# target, neither of which any other config in this tree does.
+#
+# SHAPE
+# -----
+# common.yaml comes in as a package so every platform is still exercised. Its
+# native uart_optolink is removed with `!remove` and a usb_uart channel takes
+# over the SAME id, so common.yaml's `vitohome: uart_id: uart_optolink` binds
+# to the USB channel unchanged. GPIO22 (common.yaml's I2C SCL) does not exist
+# on the S3, so i2c is re-pinned. Native ESP-IDF toolchain, the default since
+# ESPHome 2026.7.0 and the one a usb_uart user on an unpinned ESPHome gets.
+
+substitutions:
+  name: vitohome-test-usb-uart
+  protocol: P300
+  log_frames: "false"
+  identify_device: "true"
+
+packages:
+  common: !include common.yaml
+
+esp32:
+  variant: esp32s3
+  toolchain: esp-idf
+  framework:
+    type: esp-idf
+
+i2c:
+  sda: GPIO8
+  scl: GPIO9
+
+uart:
+  - id: !remove uart_optolink
+
+usb_uart:
+  - type: ch340
+    channels:
+      - id: uart_optolink
+        baud_rate: 4800
+        data_bits: 8
+        parity: EVEN
+        # Quoted on purpose: usb_uart's own enum keys are strings, and this
+        # string is exactly the value the stop-bits check above must accept.
+        stop_bits: "2"
