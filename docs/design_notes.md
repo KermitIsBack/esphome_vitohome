@@ -108,8 +108,13 @@ signedness rules.
 | KW / VS1 | `KW` | **Hardware-confirmed** on a VScotHO1. |
 | GWG | `GWG` | Implemented; **first hardware evidence 2026-08-23** (single unit, one capture). Read/write path exercised on the wire; the capture also exposed the ENQ-misread defect fixed in THIRD_PARTY.md #18. Still labelled as needing broader verification — the address map for that unit is not established. |
 
-- **4800 8E2 is mandatory.** The hub hard-fails in `validate_uart_()` on any
-  baud/data-bit/stop-bit/parity mismatch rather than emitting silent bus errors.
+- **4800 8E2 is mandatory.** `esphome config` rejects any
+  baud/data-bit/stop-bit/parity mismatch on the referenced `uart:` (final
+  validation in `__init__.py`) rather than letting it surface as silent bus
+  errors. This is a config-time check, not a runtime read-back of the bus:
+  `usb_uart` channels did not report their parity through
+  `UARTComponent::get_parity()` before esphome/esphome#20161, so a runtime
+  check failed correctly wired `usb_uart` heads.
 - **Protocol is selected at compile time.** Codegen emits exactly one
   `VITOHOME_PROTOCOL_*` flag from the `protocol:` option (no flag → P300, the
   default and only hardware-exercised path). `protocol_select.h` resolves this

@@ -93,9 +93,8 @@ void VitoHomeComponent::register_entity(VitoEntityBase *entity) {
 }
 
 void VitoHomeComponent::setup() {
-  this->validate_uart_();
-  if (this->is_failed())
-    return;
+  // 4800 8E2 is enforced at config time (FINAL_VALIDATE_SCHEMA in __init__.py),
+  // not read back from the bus here: see the note there on usb_uart.
 
 #ifdef VITOHOME_TIME_SYNC
   // The clock has no platform, so no codegen registers it -- the hub owns it
@@ -291,44 +290,6 @@ void VitoHomeComponent::setup() {
     this->ident_start_();
 
   ESP_LOGI(TAG, "ready, %zu entities registered", this->entities_.size());
-}
-
-void VitoHomeComponent::validate_uart_() {
-  // The Optolink requires 4800 8E2. Fail loudly here rather than spend an
-  // hour debugging silent bus errors.
-  auto *bus = this->parent_;
-  if (bus == nullptr) {
-    ESP_LOGE(TAG, "UART parent is not configured");
-    this->mark_failed(LOG_STR("no UART parent"));
-    return;
-  }
-
-  bool ok = true;
-
-  if (bus->get_baud_rate() != 4800) {
-    ESP_LOGE(TAG, "UART baud_rate must be 4800, got %" PRIu32, bus->get_baud_rate());
-    ok = false;
-  }
-
-  if (bus->get_data_bits() != 8) {
-    ESP_LOGE(TAG, "UART data_bits must be 8, got %u", bus->get_data_bits());
-    ok = false;
-  }
-
-  if (bus->get_stop_bits() != 2) {
-    ESP_LOGE(TAG, "UART stop_bits must be 2, got %u", bus->get_stop_bits());
-    ok = false;
-  }
-
-  if (bus->get_parity() != uart::UART_CONFIG_PARITY_EVEN) {
-    ESP_LOGE(TAG, "UART parity must be EVEN (8E2), got %d", static_cast<int>(bus->get_parity()));
-    ok = false;
-  }
-
-  if (!ok) {
-    ESP_LOGE(TAG, "Optolink requires 4800 8E2; fix the uart: block.");
-    this->mark_failed(LOG_STR("UART is not 4800 8E2"));
-  }
 }
 
 void VitoHomeComponent::loop() {
@@ -797,8 +758,6 @@ void VitoHomeComponent::dump_config() {
 
   if (ESPHomeUARTInterface::frame_logging_enabled())
     ESP_LOGCONFIG(TAG, "  Frame logging: ON (tag 'vitohome.frames')");
-
-  this->check_uart_settings(4800, 2, uart::UART_CONFIG_PARITY_EVEN, 8);
 
   if (this->is_failed())
     ESP_LOGE(TAG, "  Setup FAILED");

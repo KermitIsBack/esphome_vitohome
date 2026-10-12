@@ -288,7 +288,6 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
     DONE,
   };
 
-  void validate_uart_();
   void dispatch_next_();
 
   // Attempt to dispatch the current raw front item. The operation is removed

@@ -105,8 +105,8 @@ button:
     name: "Safe Mode"
     entity_category: diagnostic
 
-# 4800 8E2 is MANDATORY: vitohome hard-fails in validate_uart_() on any
-# mismatch of baud / data-bits / stop-bits / parity.
+# 4800 8E2 is MANDATORY: `esphome config` rejects any mismatch of
+# baud / data-bits / stop-bits / parity.
 uart:
   - id: uart_optolink
     rx_pin: GPIO05

@@ -27,8 +27,18 @@ from pathlib import Path
 
 import esphome.codegen as cg
 from esphome.components import esp32, time as time_, uart
+from esphome.components.const import CONF_STOP_BITS
 import esphome.config_validation as cv
-from esphome.const import CONF_ID, CONF_INTERVAL, CONF_LENGTH, CONF_NAME, CONF_PROTOCOL, CONF_TIME_ID, CONF_UPDATE_INTERVAL
+from esphome.const import (
+    CONF_ID,
+    CONF_INTERVAL,
+    CONF_LENGTH,
+    CONF_NAME,
+    CONF_PROTOCOL,
+    CONF_TIME_ID,
+    CONF_UART_ID,
+    CONF_UPDATE_INTERVAL,
+)
 from esphome.core import CORE, ID, CoroPriority, coroutine_with_priority
 import esphome.final_validate as fv
 
@@ -969,7 +979,59 @@ def _final_validate(config):
     config[_CONF_ENTITY_CAPACITY] = _entity_capacity_upper_bound(full, hub_id, CONF_TIME_ID in config)
 
 
-FINAL_VALIDATE_SCHEMA = _final_validate
+def _validate_stop_bits(value):
+    # Compared numerically, not via final_validate_device_schema(stop_bits=2):
+    # usb_uart channels store stop bits as the strings "1"/"1.5"/"2", which that
+    # helper compared with `!=` against the int until esphome/esphome#20161
+    # (first released in 2026.10.0). A usb_uart Optolink head configured
+    # correctly for 8E2 would otherwise be rejected on every older ESPHome.
+    if float(value) != 2:
+        raise cv.Invalid(f"vitohome requires 2 stop bits (8E2) for the uart referenced by {CONF_UART_ID}, got {value}")
+    return value
+
+
+# The Optolink line settings are fixed by the protocol (4800 8E2 for every
+# protocol this component speaks), so a mismatched `uart:` block is a config
+# error. This replaces both runtime checks -- UARTDevice::check_uart_settings()
+# in dump_config(), deprecated upstream and removed in ESPHome 2027.3.0, and the
+# hub's own validate_uart_() in setup(). The latter read the bus back through
+# UARTComponent::get_parity(), which on usb_uart channels returned NONE before
+# esphome/esphome#20161 and so mark_failed() a correctly wired 8E2 head
+# (SoulSolistice/esphome_vitohome#19). require_tx/require_rx apply to native
+# UARTs only; usb_uart has no pins to declare.
+_uart_final_validate = uart.final_validate_device_schema(
+    "vitohome",
+    baud_rate=4800,
+    require_tx=True,
+    require_rx=True,
+    data_bits=8,
+    parity="EVEN",
+)
+_uart_stop_bits_final_validate = cv.Schema(
+    {
+        cv.Required(CONF_UART_ID): fv.id_declaration_match_schema(
+            cv.Schema({cv.Required(CONF_STOP_BITS): _validate_stop_bits}, extra=cv.ALLOW_EXTRA)
+        )
+    },
+    extra=cv.ALLOW_EXTRA,
+)
+
+
+def _final_validate_with_uart(config):
+    # Each validator is called on the LIVE config node, never chained through
+    # cv.All: a cv.Schema returns a COPY (in which id_declaration_match_schema
+    # has also replaced uart_id with the bus's config dict), so a chained
+    # successor would see neither the original uart_id nor the live node --
+    # _final_validate would write _CONF_ENTITY_CAPACITY into a throwaway copy
+    # and to_code() would KeyError on it. ESPHome discards final-validate return
+    # values anyway. _final_validate stays callable on its own so the unit
+    # tests can drive it without a uart bus.
+    _uart_final_validate(config)
+    _uart_stop_bits_final_validate(config)
+    _final_validate(config)
+
+
+FINAL_VALIDATE_SCHEMA = _final_validate_with_uart
 
 
 async def to_code(config):
@@ -1052,7 +1114,11 @@ async def to_code(config):
         esp32.add_idf_component(name="optolink", path=str(optolink_dir))
     else:
         cg.add_library("optolink", None, f"file://{optolink_dir}")
-    cg.add_build_flag(f"-I{component_dir}")
+    # as_posix(): on a Windows host str(Path) yields backslashes, which
+    # PlatformIO/SCons mangles inside build_flags, so the include path is lost
+    # and every `#include "optolink/optolink.h"` fails. Forward slashes are
+    # accepted by gcc on every host.
+    cg.add_build_flag(f"-I{component_dir.as_posix()}")
 
     # The VITOHOME_* gates below (protocol select, LOG_FRAMES, TIME_SYNC) are
     # emitted as global -D build flags, not via cg.add_define(). ESPHome's
