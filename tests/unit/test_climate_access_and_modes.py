@@ -44,13 +44,7 @@ from components.vitohome import (  # noqa: E402
     CONF_VITOHOME_ID,
     _final_validate,
 )
-from components.vitohome.climate import (  # noqa: E402
-    CONF_OPERATING_MODE,
-    CONF_READ,
-    CONF_TARGET_ADDRESS,
-    CONF_WRITE,
-    _validate_presets,
-)
+from components.vitohome.climate import CONF_OPERATING_MODE, CONF_READ, CONF_TARGET_ADDRESS, CONF_WRITE, _validate_presets  # noqa: E402
 
 _HUB_ID = "vito_test_hub"
 
