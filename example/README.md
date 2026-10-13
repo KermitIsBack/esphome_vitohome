@@ -57,11 +57,20 @@ per Viessmann unit, produced from the Vitosoft **2026** XML export by
 > Especially on resource-constraint devices this may lead to unwanted
 > behavior.
 
-- **`catalogs/index.csv`** — the manifest, and the place to **find your unit**.
+- **Find your unit with the [catalog finder](https://soulsolistice.github.io/esphome_vitohome/)**: paste the
+  `Device` line the hub logs at boot, or follow the link the hub logs right
+  after it. The finder applies the same matching rules as
+  `gen_catalog.py --identify` and tells you when a match is only approximate.
+
+- **`catalogs/index.csv`** — the manifest behind the finder.
   It has one row per device token in the export (**399** rows): **180** are
-  `status: ok` (a catalog file was written), and **219** are
+  `status: ok` (a catalog file was written), **198** are
   `status: skipped: no Optolink-reachable datapoints` (no file — every datapoint
-  on that unit needs a non-Optolink access method). Columns:
+  on that unit needs a non-Optolink access method), and **21** are
+  `status: missing: …` — the GWG units, whose catalogs are not committed here.
+  `gen_catalog.py --export-all` writes them like any other unit; this one row
+  status is set by hand for the committed set and is never produced by the
+  generator. Columns:
 
   | Column | Meaning |
   |---|---|
@@ -74,11 +83,24 @@ per Viessmann unit, produced from the Vitosoft **2026** XML export by
   | `events` | Datapoints linked to the unit in the export |
   | `entities` | Entities actually emitted (after profile/filters) |
   | `bytes` | File size |
-  | `status` | `ok`, `skipped: …`, or `error: …` |
+  | `status` | `ok`, `skipped: …`, or `error: …` (`missing: …` in the committed set only) |
   | `ext_raw` | Raw identification-extension field |
 
-  Look up your unit by `ident` (the value the hub logs at boot) or `token`, then
-  include the `file` named in that row.
+  Reading it by hand takes three steps, and the device id alone is not enough
+  (most ids have several rows):
+
+  1. Filter by `ident`, the 4-digit value the hub logs (e.g. `0x20CB`).
+  2. Pick the row whose `sw_lo`..`sw_hi` range contains your software index.
+     The hub logs it in **hex** (`SW=0x51`); the columns are **decimal** (81).
+     If no range contains it, take the row with the highest `sw_lo` below it.
+     Use `hw_index` only when the id lists more than one value; a logged `HW`
+     that does not occur for the id is ignored.
+  3. If several rows remain, they differ by `f0_lo`..`f0_hi`, the value at
+     address `0x00F0`, which the hub does not read.
+
+- **`catalogs/resolve.json`** — the same mapping, precomputed for every device
+  id, hardware index and software index. The finder reads this file; it is
+  written by `gen_catalog.py --export-all` together with `index.csv`.
 
 - **`catalogs/README.md`** — a short pointer stub for the directory.
 

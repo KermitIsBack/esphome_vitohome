@@ -145,6 +145,21 @@ controller, complete with units, device classes, fault-code maps and the
 correct converters — see [`scripts/README.md`](scripts/README.md) and the
 `example/` catalogs.
 
+**Finding the catalog for your unit.** At boot the hub logs the controller's
+identification and a link to the [catalog finder](https://soulsolistice.github.io/esphome_vitohome/), for example:
+
+```
+Device identification: 0x20CB (VScotHO1) HW=0x03 SW=0x51
+Find the matching datapoint catalog: https://soulsolistice.github.io/esphome_vitohome/?id=20CB&hw=03&sw=51
+```
+
+Open the link, or paste the `Device` line into the finder, to get the catalog
+file for that controller. The device id alone is not enough: most ids cover
+several catalogs that differ by software index. The finder runs in the browser
+from a generated table; the ESP does not need internet access. Opening the link
+sends the identification bytes in the URL to GitHub Pages, like any page
+request; they are not stored by the finder itself.
+
 ## What you need
 
 - An ESP32-class board.

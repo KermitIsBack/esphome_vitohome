@@ -695,6 +695,14 @@ text sensors. A small built-in table names the families seen on the
 wire (`0x20CB` → VScotHO1, plus `0x2098`/`0x2094`/`0x2053`); everything else is
 reported as raw hex.
 
+Mapping the tuple to a catalog file is done off-device. The hub logs a link to
+the catalog finder (https://soulsolistice.github.io/esphome_vitohome/) with the bytes it
+read as a query string (`?id=20CB&hw=03&sw=51`); the page looks them up in
+`example/catalogs/resolve.json`, which `gen_catalog.py --export-all` writes by
+enumerating `Catalog.resolve_pool()`. The firmware carries the URL and nothing
+of the table, and never contacts the site itself. `0xF0` is not read, so for
+the software-index ranges that F0 subdivides the finder lists the variants.
+
 The load-bearing fact for anyone **adding new datapoints**:
 
 - **A unit is identified by a tuple, not the 2-byte ID.** `0x20CB` = group `0x20`

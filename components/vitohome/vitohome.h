@@ -311,6 +311,9 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
   void ident_handle_error_();
   void ident_finish_();
   std::string ident_string_() const;
+  // Writes the catalog finder URL for the identification read so far. Returns
+  // false, leaving the buffer untouched, when the device id is unknown.
+  bool ident_finder_url_(char *buffer, size_t size) const;
 
   // --- raw scan console -----------------------------------------------------
   //

@@ -67,7 +67,7 @@ reads up to four files from it:
 | `--[no-]error-history` | Emit `error_history` entities for the `FehlerHis*` slots (default: on) |
 | `--[no-]error-codes` | Attach a fault-code map to those entities (default: on) |
 | `--error-code-set {openv,vd200,vd300,union}` | Which fault-code map to attach (default: `vd300`) |
-| `--export-all` | Bulk mode: one catalog per token into `--out` (a directory) plus an `index.csv` manifest — see below |
+| `--export-all` | Bulk mode: one catalog per token into `--out` (a directory) plus an `index.csv` manifest and a `resolve.json` lookup table — see below |
 | `--export-filter <regex>` | With `--export-all`: only export tokens whose ID matches (e.g. `^V`) |
 | `--export-suffix <ext>` | With `--export-all`: catalog file extension (default: `.yaml`) |
 | `--out <file>` | Output file (default: stdout); with `--export-all`, the output **directory** |
@@ -98,6 +98,12 @@ python3 scripts/gen_catalog.py --data <export-dir> \
     --profile standard --out my-heater.vitohome.yaml
 ```
 
+If several device types share the id and the export gives them no
+hardware/software-index range to tell them apart (Dekamatik cascades, M-Bus
+meters, which carry serial-style extensions), `--identify` stops and lists them
+instead of picking the first one; name the token with `--device`. Earlier
+versions silently took the first row.
+
 Or name the datapoint-type token directly:
 
 ```
@@ -120,8 +126,16 @@ python3 scripts/gen_catalog.py --data <export-dir> \
 
 `index.csv` maps every token to its file and identification signature (`ident`,
 `hw_index`, software-index and F0 ranges), the linked-event and emitted-entity
-counts, and a `status` (`ok` / `skipped: …` / `error: …`). Use it to find the
-file for a given unit by its `ident` or `token`.
+counts, and a `status` (`ok` / `skipped: …` / `error: …`).
+
+`resolve.json` is written alongside. It holds the answer of the `--identify`
+matching rules for every device id, hardware index and software index, plus
+each token's file and status. The [catalog finder](https://soulsolistice.github.io/esphome_vitohome/)
+(`web/` in this repository, published by `.github/workflows/pages.yml`) reads
+it, so the page carries no copy of the rules. `tests/unit/test_resolve_index.py`
+runs `web/lookup.js` under Node against `Catalog.resolve()`. To preview the
+page locally, copy `example/catalogs/resolve.json` next to `web/index.html` and
+serve that folder (`python3 -m http.server`).
 
 Bulk mode orders entities by group (`--order group`) unless you say otherwise,
 which is how the catalogs in [`example/catalogs/`](../example/catalogs/) were

@@ -1,0 +1,54 @@
+name: Catalog finder (Pages)
+
+# Publishes the static catalog finder in web/ together with the generated
+# lookup table example/catalogs/resolve.json to GitHub Pages. The hub logs a
+# link to this site (CATALOG_FINDER_URL in components/vitohome/vitohome.cpp).
+#
+# One-time repository setup: Settings -> Pages -> Build and deployment ->
+# Source: "GitHub Actions". Until that is set, the deploy job fails.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'example/catalogs/resolve.json'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push supersedes a queued deployment, but a running one is allowed to
+# finish so the site is never left half-published.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: assemble site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Assemble site
+        run: |
+          mkdir _site
+          cp web/index.html web/lookup.js example/catalogs/resolve.json _site/
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    name: deploy
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

@@ -36,27 +36,27 @@ dekatel_m.yaml,DEKATEL_M,0x2081,,,,,,89,13,6994,ok,37343530353336
 ea2.yaml,EA2,0x20A3,,,,,,81,84,30187,ok,
 ecotronic.yaml,Ecotronic,0x2034,,,,,,1145,1030,336716,ok,
 ecotronic_100.yaml,Ecotronic_100,0x2035,,,,,,885,798,247167,ok,
-gwg_bt2.yaml,GWG_BT2,0x2054,0,255,255,,,111,104,47883,ok,00FF
-gwg_vbem_00.yaml,GWG_VBEM_00,0x2053,1,0,0,,,220,198,82911,ok,0100
-gwg_vbem_03.yaml,GWG_VBEM_03,0x2053,1,3,3,,,220,198,82911,ok,0103
-gwg_vbem_21.yaml,GWG_VBEM_21,0x2053,1,33,33,,,220,198,82911,ok,0121
-gwg_vbem_35.yaml,GWG_VBEM_35,0x2053,1,53,53,,,220,198,82921,ok,0135
-gwg_vbem_36.yaml,GWG_VBEM_36,0x2053,1,54,54,,,221,199,83258,ok,0136
-gwg_vbes_00.yaml,GWG_VBES_00,0x2053,2,0,0,,,195,177,73562,ok,0200
-gwg_vbes_03.yaml,GWG_VBES_03,0x2053,2,3,3,,,195,177,73562,ok,0203
-gwg_vbes_21.yaml,GWG_VBES_21,0x2053,2,33,33,,,195,177,73562,ok,0221
-gwg_vbes_35.yaml,GWG_VBES_35,0x2053,2,53,53,,,195,177,73562,ok,0235
-gwg_vbes_36.yaml,GWG_VBES_36,0x2053,2,54,54,,,196,178,73899,ok,0236
-gwg_vbt2_00.yaml,GWG_VBT2_00,0x2053,16,0,0,,,192,175,72287,ok,1000
-gwg_vbt2_03.yaml,GWG_VBT2_03,0x2053,16,3,3,,,192,175,72287,ok,1003
-gwg_vbt2_21.yaml,GWG_VBT2_21,0x2053,16,33,33,,,192,175,72287,ok,1021
-gwg_vbt2_35.yaml,GWG_VBT2_35,0x2053,16,53,53,,,192,175,72287,ok,1035
-gwg_vbt2_36.yaml,GWG_VBT2_36,0x2053,16,54,54,,,193,176,72624,ok,1036
-gwg_vwms_00.yaml,GWG_VWMS_00,0x2053,8,0,0,,,191,174,72562,ok,0800
-gwg_vwms_03.yaml,GWG_VWMS_03,0x2053,8,3,3,,,191,174,72562,ok,0803
-gwg_vwms_21.yaml,GWG_VWMS_21,0x2053,8,33,33,,,191,174,72562,ok,0821
-gwg_vwms_35.yaml,GWG_VWMS_35,0x2053,8,53,53,,,191,174,72562,ok,0835
-gwg_vwms_36.yaml,GWG_VWMS_36,0x2053,8,54,54,,,192,175,72899,ok,0836
+,GWG_BT2,0x2054,0,255,255,,,111,104,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,00FF
+,GWG_VBEM_00,0x2053,1,0,0,,,220,198,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0100
+,GWG_VBEM_03,0x2053,1,3,3,,,220,198,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0103
+,GWG_VBEM_21,0x2053,1,33,33,,,220,198,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0121
+,GWG_VBEM_35,0x2053,1,53,53,,,220,198,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0135
+,GWG_VBEM_36,0x2053,1,54,54,,,221,199,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0136
+,GWG_VBES_00,0x2053,2,0,0,,,195,177,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0200
+,GWG_VBES_03,0x2053,2,3,3,,,195,177,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0203
+,GWG_VBES_21,0x2053,2,33,33,,,195,177,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0221
+,GWG_VBES_35,0x2053,2,53,53,,,195,177,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0235
+,GWG_VBES_36,0x2053,2,54,54,,,196,178,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0236
+,GWG_VBT2_00,0x2053,16,0,0,,,192,175,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,1000
+,GWG_VBT2_03,0x2053,16,3,3,,,192,175,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,1003
+,GWG_VBT2_21,0x2053,16,33,33,,,192,175,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,1021
+,GWG_VBT2_35,0x2053,16,53,53,,,192,175,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,1035
+,GWG_VBT2_36,0x2053,16,54,54,,,193,176,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,1036
+,GWG_VWMS_00,0x2053,8,0,0,,,191,174,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0800
+,GWG_VWMS_03,0x2053,8,3,3,,,191,174,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0803
+,GWG_VWMS_21,0x2053,8,33,33,,,191,174,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0821
+,GWG_VWMS_35,0x2053,8,53,53,,,191,174,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0835
+,GWG_VWMS_36,0x2053,8,54,54,,,192,175,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0836
 ,HV_GWG,0x2000,,,,,,38,1,,skipped: no Optolink-reachable datapoints,015300
 ,HV_V050HK1M,0x2000,,,,,,19,1,,skipped: no Optolink-reachable datapoints,04b400
 ,HV_V050HK1M_5,0x2000,,,,,,19,1,,skipped: no Optolink-reachable datapoints,05b400

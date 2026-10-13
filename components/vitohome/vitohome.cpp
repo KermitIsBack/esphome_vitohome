@@ -61,6 +61,14 @@ static const char *ident_family_name(uint16_t ident, int hw = -1) {
   }
 }
 
+// Catalog finder (web/ in this repository, published with GitHub Pages). The
+// hub appends the identification bytes as a query string so the page opens on
+// the matching catalog. The page does the matching from the generated
+// example/catalogs/resolve.json; the device itself never fetches it.
+static const char *const CATALOG_FINDER_URL = "https://soulsolistice.github.io/esphome_vitohome/";
+// URL (49) + "?id=XXXX&hw=XX&sw=XX" (20) + NUL.
+static const size_t CATALOG_FINDER_URL_SIZE = 80;
+
 void VitoHomeComponent::reserve_entities(std::size_t capacity) { this->entities_.init(capacity); }
 
 void VitoHomeComponent::register_entity(VitoEntityBase *entity) {
@@ -747,8 +755,12 @@ void VitoHomeComponent::dump_config() {
                 "  Raw queue capacity: %zu",
                 PROTOCOL_NAME, this->entities_.size(), this->raw_queue_capacity_);
 
-  if (this->ident_state_ == IdentState::DONE)
+  if (this->ident_state_ == IdentState::DONE) {
     ESP_LOGCONFIG(TAG, "  Device: %s", this->ident_string_().c_str());
+    char url[CATALOG_FINDER_URL_SIZE];
+    if (this->ident_finder_url_(url, sizeof(url)))
+      ESP_LOGCONFIG(TAG, "  Catalog finder: %s", url);
+  }
 
 #ifdef USE_TEXT_SENSOR
   if (this->raw_result_sensor_count_ > 0) {
@@ -1414,17 +1426,34 @@ std::string VitoHomeComponent::ident_string_() const {
 
     const char *family = ident_family_name(ident, this->ident_hw_);
 
-    const int offset = snprintf(buffer, sizeof(buffer), "0x%04X%s%s%s", ident, family != nullptr ? " (" : "",
-                                family != nullptr ? family : "", family != nullptr ? ")" : "");
+    int offset = snprintf(buffer, sizeof(buffer), "0x%04X%s%s%s", ident, family != nullptr ? " (" : "",
+                          family != nullptr ? family : "", family != nullptr ? ")" : "");
 
-    if (this->ident_hw_ >= 0 && this->ident_sw_ >= 0 && offset > 0 && offset < static_cast<int>(sizeof(buffer))) {
-      snprintf(buffer + offset, sizeof(buffer) - offset, " HW=0x%02X SW=0x%02X", this->ident_hw_, this->ident_sw_);
-    }
+    // HW and SW are printed independently, matching ident_finder_url_(): a
+    // unit that answers 0xFA but not 0xFB still shows its hardware index.
+    if (this->ident_hw_ >= 0 && offset > 0 && offset < static_cast<int>(sizeof(buffer)))
+      offset += snprintf(buffer + offset, sizeof(buffer) - offset, " HW=0x%02X", this->ident_hw_);
+    if (this->ident_sw_ >= 0 && offset > 0 && offset < static_cast<int>(sizeof(buffer)))
+      snprintf(buffer + offset, sizeof(buffer) - offset, " SW=0x%02X", this->ident_sw_);
 
     return std::string(buffer);
   }
 
   return std::string("unknown (identification reads failed)");
+}
+
+bool VitoHomeComponent::ident_finder_url_(char *buffer, size_t size) const {
+  if (this->ident_group_ < 0 || this->ident_controller_ < 0)
+    return false;
+
+  int offset =
+      snprintf(buffer, size, "%s?id=%02X%02X", CATALOG_FINDER_URL, this->ident_group_, this->ident_controller_);
+  if (this->ident_hw_ >= 0 && offset > 0 && offset < static_cast<int>(size))
+    offset += snprintf(buffer + offset, size - offset, "&hw=%02X", this->ident_hw_);
+  if (this->ident_sw_ >= 0 && offset > 0 && offset < static_cast<int>(size))
+    snprintf(buffer + offset, size - offset, "&sw=%02X", this->ident_sw_);
+
+  return true;
 }
 
 void VitoHomeComponent::ident_finish_() {
@@ -1433,6 +1462,10 @@ void VitoHomeComponent::ident_finish_() {
   const std::string identification = this->ident_string_();
 
   ESP_LOGI(TAG, "Device identification: %s", identification.c_str());
+
+  char url[CATALOG_FINDER_URL_SIZE];
+  if (this->ident_finder_url_(url, sizeof(url)))
+    ESP_LOGI(TAG, "Find the matching datapoint catalog: %s", url);
 
   if (this->ident_sw_ < 0 && this->ident_group_ >= 0) {
     ESP_LOGI(TAG, "Software index (0xFB) unavailable - when picking datapoints from the "
