@@ -118,6 +118,9 @@ for d in "$CUR"/*/; do
   done
   while IFS= read -r line; do
     value="$(printf '%s' "$line" | sed -E 's/^[^:]*url:[[:space:]]*//; s/[[:space:]]+#.*$//; s/^["'\'']//; s/["'\'']$//')"
+    # The literal text ${vitohome_repo}, unexpanded: the file must reference
+    # the substitution, not a URL that merely happens to be equal to it.
+    # shellcheck disable=SC2016
     if [ "$value" != '${vitohome_repo}' ]; then
       fail "$name" "source '$value' in $name.vitohome.yaml: curated configs may only" \
         "pull from this repo, written as 'url: \${vitohome_repo}'."
