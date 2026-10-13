@@ -102,6 +102,13 @@ jobs:
       # matrix already covers the C++ under the same component.
       - name: Validate example configs
         run: bash scripts/validate_examples.sh
+      # Contributed configs in example/user_curated/: layout + source/secret
+      # conventions, then `esphome config` with vitohome_repo/vitohome_ref
+      # pointed at THIS checkout (the files otherwise pull GitHub main, which
+      # would validate the published state instead of the PR). Config-only, like
+      # the step above. See the script header.
+      - name: Validate user-curated configs
+        run: bash scripts/validate_user_curated.sh
 
   compile:
     name: ${{ matrix.config }}

@@ -1,10 +1,10 @@
 # ============================================================================
 # vitohome — full device config for the reference unit (device 0x20CB / VScotHO1)
 #
-# Pulls example/vscotho1_72.dp.curated.yaml as its package: the comprehensive
-# monitoring + control set exercising every platform (sensor, binary_sensor
-# incl. connectivity, text_sensor, number, select, switch, climate, text,
-# event, template water_heater). This file adds the board specifics plus
+# Pulls example/user_curated/vscotho1_72/vscotho1_72.dp.curated.yaml as its
+# package: the comprehensive monitoring + control set exercising every
+# platform (sensor, binary_sensor incl. connectivity, text_sensor, number,
+# select, switch, climate, text, event, template water_heater). This file adds the board specifics plus
 # time_sync so the device clock follows Home Assistant time.
 # ============================================================================
 
@@ -20,7 +20,7 @@ substitutions:
   ## This one value drives BOTH the packages include and the C++ component,
   ## so there is nothing else to edit or merge on update.
   vitohome_repo:    "https://github.com/SoulSolistice/esphome_vitohome"
-  vitohome_ref:     "v0.5"      # pin to a tag (e.g. "v0.1") for reproducible builds
+  vitohome_ref:     "main"      # pin to a tag (e.g. "v0.6") for reproducible builds
 
 esphome:
   name:           ${device_name}
@@ -161,4 +161,4 @@ packages:
     ref: ${vitohome_ref}
     refresh: 0s
     files:
-      - example/vscotho1_72.dp.curated.yaml
+      - example/user_curated/vscotho1_72/vscotho1_72.dp.curated.yaml

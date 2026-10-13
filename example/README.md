@@ -12,6 +12,19 @@ configuration files.
 [`example/user_curated`](example/user_curated/) contains contributed device
 configurations that can serve as a starting point.
 
+Contributions there go in `example/user_curated/<device>/` as
+`<device>.vitohome.yaml` (the full device config) plus `*.dp.*.yaml` datapoint
+packages, and CI (`scripts/validate_user_curated.sh`) checks that:
+
+- the device file takes everything from this repo through the
+  `vitohome_repo` / `vitohome_ref` substitutions (`url: ${vitohome_repo}`), so
+  CI can validate the files in the pull request rather than what is on GitHub;
+  no other sources;
+- credentials use `!secret` with the names in
+  [`secrets.example.yaml`](secrets.example.yaml);
+- `esphome config` passes on the ESPHome version pinned in
+  `requirements.txt`, so keep `min_version` at or below it.
+
 ## Feature examples
 
 Each is self-contained (validates on its own). To adopt a feature, lift the
