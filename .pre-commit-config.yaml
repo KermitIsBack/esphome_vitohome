@@ -22,6 +22,15 @@ repos:
       - id: clang-format
         files: \.(c|h|cpp|hpp)$
 
+  # Shell lint for scripts/*.sh and tests/native/*.sh (the CI gates and the
+  # native harness). shellcheck-py ships the upstream ShellCheck binary as a
+  # wheel, so pre-commit installs it on Linux, macOS and Windows alike -- no
+  # system package, no Haskell toolchain.
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1-1
+    hooks:
+      - id: shellcheck
+
   # YAML hygiene (style/whitespace/key duplication). Custom-tag tolerance and
   # line-length come from .yamllint.yaml. This is NOT schema validation.
   - repo: https://github.com/adrienverge/yamllint

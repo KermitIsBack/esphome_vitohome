@@ -38,9 +38,15 @@
 # builds unsanitized for debugging; that does not count as passing the gate.
 set -euo pipefail
 export SAN="${SAN-"-fsanitize=address,undefined -fno-sanitize-recover=all"}"
+# Split into words ONCE, here, rather than expanding $SAN unquoted on every g++
+# line: SAN itself has to stay a plain string (it is exported to the chained
+# script and overridden from the environment, and arrays cannot be exported),
+# but the multi-flag value must reach g++ as separate arguments -- quoting it
+# as "$SAN" would pass one bogus argument. An empty SAN yields an empty array.
+read -r -a SAN_FLAGS <<<"$SAN"
 ROOT="${1:-../../components/vitohome}"
 OPTO="$ROOT/optolink"
-g++ -std=c++17 -Wall -Wextra -Werror $SAN \
+g++ -std=c++17 -Wall -Wextra -Werror "${SAN_FLAGS[@]}" \
   -I"$ROOT" -I"$OPTO" \
   test_vs2_transaction.cpp \
   "$OPTO/constants.cpp" \
@@ -55,7 +61,7 @@ g++ -std=c++17 -Wall -Wextra -Werror $SAN \
 # Parser regression: a zero-payload VS2 frame must not walk past the packet
 # buffer (inherited upstream OOB, fixed in parser_vs2.cpp). Built under
 # AddressSanitizer/UBSan so the pre-fix code would trap here.
-g++ -std=c++17 -Wall -Wextra -Werror $SAN \
+g++ -std=c++17 -Wall -Wextra -Werror "${SAN_FLAGS[@]}" \
   -I"$ROOT" -I"$OPTO" \
   proof_vs2_zero_payload.cpp \
   "$OPTO/protocol/vs2/parser_vs2.cpp" \
@@ -68,7 +74,7 @@ g++ -std=c++17 -Wall -Wextra -Werror $SAN \
 # writes (null-data, len > 250, buffer sizing). Pre-fix, a RESPONSE with len
 # 251-255 wrote past the 256-byte packet array and a null data pointer was
 # dereferenced -- both latent (engines only build REQUESTs) but ASan-trappable.
-g++ -std=c++17 -Wall -Wextra -Werror $SAN \
+g++ -std=c++17 -Wall -Wextra -Werror "${SAN_FLAGS[@]}" \
   -I"$OPTO" \
   proof_packet_vs2_response.cpp \
   "$OPTO/protocol/vs2/packet_vs2.cpp" \
@@ -78,20 +84,20 @@ g++ -std=c++17 -Wall -Wextra -Werror $SAN \
 
 # Decode proof: multi-byte field extraction from a wide block read (the
 # P300-portable pattern gen_catalog emits for interior fields).
-g++ -std=gnu++20 -Wall -Wextra -Werror $SAN -I"$ROOT" -I"$OPTO" proof_extract.cpp -o proof_extract
+g++ -std=gnu++20 -Wall -Wextra -Werror "${SAN_FLAGS[@]}" -I"$ROOT" -I"$OPTO" proof_extract.cpp -o proof_extract
 ./proof_extract
 
 # String-offset proof: ascii/utf16 fields at BytePosition > 0 must be sliced out
 # of an aligned block read, never addressed at base+offset (P300 errors on the
 # interior address at any width; KW returns 0xFF fill, which decodes to "").
-g++ -std=gnu++20 -Wall -Wextra -Werror $SAN \
+g++ -std=gnu++20 -Wall -Wextra -Werror "${SAN_FLAGS[@]}" \
   -I"$ROOT" -I"$OPTO" proof_string_offset.cpp -o proof_string_offset
 ./proof_string_offset
 
 # Scheduler proof: per-entity poll intervals must fire on every hub tick when
 # interval == the hub tick, must not drift, and must survive the millis() wrap.
 # (Anchoring the next due time on `now` made this a jitter-decided coin flip.)
-g++ -std=c++17 -Wall -Wextra -Werror $SAN \
+g++ -std=c++17 -Wall -Wextra -Werror "${SAN_FLAGS[@]}" \
   -I"$ROOT" proof_scheduler.cpp -o proof_scheduler
 ./proof_scheduler
 
@@ -102,7 +108,7 @@ g++ -std=c++17 -Wall -Wextra -Werror $SAN \
 # -DVITOHOME_NATIVE_TEST selects the header's no-op host mutex stand-in
 # (device builds use the real esphome::Mutex; ESPHome headers are not on the
 # host include path).
-g++ -std=c++17 -Wall -Wextra -Werror $SAN \
+g++ -std=c++17 -Wall -Wextra -Werror "${SAN_FLAGS[@]}" \
   -DVITOHOME_NATIVE_TEST \
   -I"$ROOT" proof_ring_buffer.cpp -o proof_ring_buffer
 ./proof_ring_buffer
@@ -112,7 +118,7 @@ g++ -std=c++17 -Wall -Wextra -Werror $SAN \
 # walks the committed seeds in fuzz_corpus_vs2.h, so the oracles CI enforces
 # and the oracles a campaign enforces cannot drift apart. Sub-second, no clang
 # needed. The open-ended search is deliberately not run here -- see fuzz.sh.
-g++ -std=c++17 -Wall -Wextra -Werror $SAN \
+g++ -std=c++17 -Wall -Wextra -Werror "${SAN_FLAGS[@]}" \
   -I"$ROOT" -I"$OPTO" \
   fuzz_parser_vs2.cpp \
   "$OPTO/protocol/vs2/parser_vs2.cpp" \
@@ -127,7 +133,7 @@ g++ -std=c++17 -Wall -Wextra -Werror $SAN \
 # string a PERSON typed into Home Assistant. decode.h is header-only and
 # includes itself relatively (as test_decode.cpp does), so this needs no -I and
 # no extra translation units.
-g++ -std=c++17 -Wall -Wextra -Werror $SAN \
+g++ -std=c++17 -Wall -Wextra -Werror "${SAN_FLAGS[@]}" \
   fuzz_decode.cpp -o fuzz_decode
 ./fuzz_decode
 
