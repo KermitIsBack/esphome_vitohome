@@ -767,10 +767,32 @@ K05 = 75, K08 = 9, K07 = 8); LSB-first swaps every pair and matches none.
 This assumes the unit is at factory settings -- five matching fields make
 coincidence unlikely, but it is a cross-check, not a write test.
 
-**Status: model-derived.** The merge is exhaustively host-tested
-(`test_decode.cpp`: all 36 contiguous masks × 256 bytes × every field value) and
-fuzz-oracled with a negative control. The hub sequencing is host-unprovable
-(§10a, invariant 3) and needs `esphome run`.
+**Status: hardware-confirmed on P300, single-bit masks, idle bus.** The merge is
+exhaustively host-tested (`test_decode.cpp`: all 36 contiguous masks × 256
+bytes × every field value) and fuzz-oracled with a negative control. On
+VScotHO1_72, 2026-10-14, with the frame log on:
+
+| test | wire | result |
+|---|---|---|
+| fail-closed, `0x7362` | read → error frame (`…:03:01:73:62:01:01:E1`) | no write telegram sent |
+| sequence, `0x2330`, mask `0x01` | read `00` → write `01` → ACK → read-back `01` | read and write adjacent, nothing between |
+| preservation, `0x2306` (room setpoint), mask `0x01` | read `14` → write `15` → read-back `15`; then `15` → `14` | bits `0x14` kept, twice each way |
+| 1-byte write at a 2-byte block base, `0x7951` | read `00` → write `01` → ACK → read-back `01`; back to `00` | accepted; byte 1 of the block NOT checked |
+
+Still open: the read and the merged write staying adjacent while polls are
+queued (every successful write above ran on an idle bus; only the fail-closed
+read was dispatched mid-cycle, ahead of the remaining polls), multi-bit masks,
+the read-back warning path, and all of GWG. Note that the `refresh_all()`
+button only marks entities due: they are queued on the next hub tick, so
+pressing it does not by itself produce a busy bus.
+
+**A side effect seen on the same run.** Writing `Sparbetrieb` (`0x2331`) ON
+while party mode was on cleared `0x2330`: the next read-modify-write on it read
+`0x00`, not the `0x01` written 5 s earlier. That is device logic (party and
+economy are mutually exclusive), not a merge problem -- the read-modify-write
+read the device's real state, which is exactly its job -- but HA showed the
+party switch ON for those seconds, because nothing re-reads an entity whose
+register another entity's write changed.
 
 ---
 
@@ -1590,14 +1612,15 @@ happen in production.
 
 ## 11. Open items / forward work
 
-- **Bit-field writes on hardware (§5b).** The read-modify-write is host-proven
-  for the merge and model-derived for the sequencing. To do: on VScotHO1_72
-  (P300), confirm the read / merge / write / read-back sequence on a 1-byte
-  register and the fail-closed path on an address that errors (`0x7362`). On a
-  GWG unit, after its plain EEPROM write is confirmed, confirm that two flags of
-  `0x0005` toggled back-to-back both survive, and that an `FF FF` address is
-  refused. Until a partial-block write is confirmed on P300, fields in byte 0 of
-  a multi-byte block (`Neptun_*`) stay read-only in generated catalogs.
+- **Bit-field writes on hardware (§5b).** Confirmed on VScotHO1_72 (P300) on
+  2026-10-14: fail-closed, the read / merge / write / read-back sequence, and
+  preservation of non-zero neighbouring bits. Still to do: a write issued while
+  polls are queued (read and merged write must stay adjacent), a multi-bit mask,
+  and on a GWG unit -- after its plain EEPROM write is confirmed -- two flags of
+  `0x0005` toggled back-to-back, and an `FF FF` address being refused. A 1-byte
+  write at the base of the 2-byte `Neptun_*` blocks was ACKed and read back, but
+  byte 1 of the block (`*_Drehzahl`) was not checked before and after; until it
+  is, those fields stay read-only in generated catalogs.
 - **GWG hardware verification.** GWG is implemented and host-proven, and as of
   2026-08-23 has one capture from a live GWG unit. That capture confirmed the
   request framing (`01 CB <addr> <len> 04`) and the `RECV $len` completion rule

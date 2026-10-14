@@ -1571,12 +1571,28 @@ def _emit_bit_field(ev: Event, protocol: str, bitfield_writes: bool = True):
     # --- enum fields -----------------------------------------------------------
     enum_opts = _dedup_option_labels(_enum_options(ev))
     if enum_opts:
-        fit = [(v, label) for v, label in enum_opts if 0 <= v <= fmax]
-        if len(fit) < len(enum_opts):
-            notes.append(
-                f"{len(enum_opts) - len(fit)} option value(s) from the export do not fit the {bit_len}-bit "
-                f"field (0..{fmax}) and were omitted"
+        # An option the field cannot hold means the export contradicts itself:
+        # its ValueList describes a wider value than its BitLength. Hardware
+        # (VScotHO1_72, no SM1 module, 2026-10-14): SM1_Sensor_7_Status_GWG is
+        # BitLength 7 (mask 0x7F) but lists 128 = "Nicht verwendet", and the byte
+        # reads 0x82 -- the 0x80 bit is the sibling SM1_Sensor_7_Status_Verwendet
+        # flag ("1: nicht verwendet"). Dropping 128 and masking published
+        # "Unterbrechung" (open circuit) for a sensor that does not exist.
+        # Neither reading is safe to guess, so -- as for a BitPosition that
+        # contradicts BytePosition (docs/design_notes.md SS8f) -- emit a comment.
+        over = sorted({v for v, _ in enum_opts if v > fmax})
+        if over:
+            return (
+                "comment",
+                [
+                    (
+                        f"# {name} @ 0x{addr:04X}: option value(s) {', '.join(str(v) for v in over)} do not fit the "
+                        f"{bit_len}-bit field (0..{fmax}) -- the export's value list and BitLength disagree; "
+                        "not emitted"
+                    )
+                ],
             )
+        fit = [(v, label) for v, label in enum_opts if v >= 0]
         neg = _negative_option_count(ev)
         if neg:
             notes.append(f"{neg} negative enum option value(s) from the export omitted")

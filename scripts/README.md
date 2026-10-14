@@ -104,8 +104,11 @@ Writable only where it is safe: the field must be byte 0 of a 1-byte datapoint
 - everything, with `--no-bitfield-writes`.
 
 The `ConversionFactor` / `ConversionOffset` columns on `NoConversion` bit fields
-are stale copies of the last `MultOffset` row and are ignored. Enum options that
-do not fit the field are dropped with a note.
+are stale copies of the last `MultOffset` row and are ignored. An enum whose own
+option values do not fit its field is a contradiction in the export and becomes
+a comment: `SM1_Sensor_*_Status_GWG` declares 7 bits but lists `128` ("Nicht
+verwendet", the sibling `0x80` flag), and decoding it as 7 bits showed
+"Unterbrechung" on a unit with no SM1 module installed.
 
 ### Examples
 

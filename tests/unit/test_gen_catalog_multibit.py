@@ -187,10 +187,11 @@ def test_multi_bit_enum_select_options_in_field_units():
     assert sum(1 for ln in lines if re.match(r"\s+\d+: ", ln)) == 16
 
 
-def test_enum_options_that_do_not_fit_the_field_are_dropped_with_a_note():
-    # SM1_Sensor_7_Status_GWG (VScotHO1_72): 7-bit field, export lists 128 too.
-    ev = _ev(
-        values=[(0, "Sensor ok"), (1, "Kurzschluss"), (2, "Unterbrechung"), (128, "nicht verwendet")],
+def _sm1_status(values):
+    # SM1_Sensor_7_Status_GWG (VScotHO1_72): 7-bit field (mask 0x7F) whose own
+    # value list includes 128 = "Nicht verwendet" -- the sibling 0x80 flag.
+    return _ev(
+        values=values,
         address=0xCF90,
         block_length=20,
         byte_length=20,
@@ -203,14 +204,27 @@ def test_enum_options_that_do_not_fit_the_field_are_dropped_with_a_note():
         upper="",
         stepping="",
     )
+
+
+def test_enum_whose_options_contradict_its_bit_length_is_a_comment():
+    # Hardware, 2026-10-14, no SM1 module installed: the byte reads 0x82. With
+    # 128 dropped and mask 0x7F applied, the entity published "Unterbrechung"
+    # (open circuit) for a sensor that does not exist. The 0x80 bit is
+    # SM1_Sensor_7_Status_Verwendet ("1: nicht verwendet").
+    ev = _sm1_status([(0, "Sensor ok"), (1, "Kurzschluss"), (2, "Unterbrechung"), (128, "Nicht verwendet")])
     platform, lines = gc.emit_entity(ev, "full", gc.PROTO_P300)
+    assert platform == "comment"
+    assert "128" in lines[0]
+    assert "value list and BitLength disagree" in lines[0]
+
+
+def test_enum_whose_options_fit_is_still_emitted():
+    platform, lines = gc.emit_entity(
+        _sm1_status([(0, "Sensor ok"), (1, "Kurzschluss"), (2, "Unterbrechung")]), "full", gc.PROTO_P300
+    )
     assert platform == "text_sensor"
-    assert _key(lines, "type") == "enum"
     assert _mask(lines) == 0x7F
     assert _key(lines, "byte_offset") == "4" and _key(lines, "length") == "20"
-    text = "\n".join(lines)
-    assert "128" not in text.split("options:")[1]
-    assert "do not fit the 7-bit field" in text
 
 
 # --- numeric fields -----------------------------------------------------------------
