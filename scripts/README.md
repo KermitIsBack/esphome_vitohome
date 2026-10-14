@@ -82,6 +82,15 @@ semantics are device-variant-specific** — these are a default to verify on the
 unit; openv-vs-VD200 disagreements are in `fault_codes.CONFLICTS`, and the VD300
 set carries OCR caveats (a few codes to verify against the PDF) in its header.
 
+### Signedness
+
+`div2` and `div10` decode signed in the component. Where Vitosoft declares the
+value unsigned (`Parameter` `Byte`/`Int`/`Int4`) **and** its lower border is 0 or
+above, the generator emits `signed: false` with the reason as a comment, so a
+1-byte 0..127.5 degC temperature does not turn negative above 63.5 degC. The
+declared type alone is not trusted: it contradicts the borders on 27 rows,
+including the outdoor sensor at `0x0800` (design_notes §8h).
+
 ### Bit fields
 
 A datapoint with `BitLength` 1..8 is a field of one byte that other datapoints

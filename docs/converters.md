@@ -46,7 +46,10 @@ These back the `sensor` platform, and the encodable subset backs the writable
 **Sign.** `div2` and `div10` decode the raw integer as signed (two's
 complement), so a sub-zero temperature reads correctly; every other converter
 is unsigned by default. An explicit `signed:` on the entity overrides the
-default for that datapoint.
+default for that datapoint. `scripts/gen_catalog.py` emits `signed: false` on a
+`div2`/`div10` datapoint that Vitosoft declares unsigned *and* borders at 0 or
+above -- a 1-byte boiler temperature of 0..127.5 degC would otherwise read
+-58 degC at 70 degC (design notes §8h).
 
 **Encodability.** A writable `number` accepts only converters that have a
 defined inverse; `sec2hour` is read-only and cannot back a `number`.
