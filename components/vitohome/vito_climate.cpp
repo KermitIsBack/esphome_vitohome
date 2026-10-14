@@ -60,6 +60,9 @@ void VitoClimate::setup() {
       names.push_back(this->presets_[i].name);
     this->set_supported_custom_presets(names);
   }
+  // Placeholder only: nothing is published until ready_() (both registers read
+  // once), so this value never reaches Home Assistant as a claim about the
+  // device. A setpoint-only climate has no mode register and is always HEAT.
   this->mode = this->has_mode_ ? climate::CLIMATE_MODE_OFF : climate::CLIMATE_MODE_HEAT;
 }
 
@@ -159,8 +162,10 @@ void VitoClimate::on_setpoint_read(const ResponseView &response) {
     return;
   }
   this->target_temperature = static_cast<float>(response.data[0]);
+  this->setpoint_known_ = true;
   ESP_LOGD(TAG, "%s setpoint = %u degC", this->get_name().c_str(), response.data[0]);
-  this->publish_state();
+  if (this->ready_())
+    this->publish_state();
 }
 
 void VitoClimate::on_mode_read(const ResponseView &response) {
@@ -175,8 +180,10 @@ void VitoClimate::on_mode_read(const ResponseView &response) {
       if (p.read_values[j] == byte) {
         this->set_custom_preset_(p.name);
         this->mode = p.mode;
+        this->mode_known_ = true;
         ESP_LOGD(TAG, "%s mode = '%s' (read 0x%02X)", this->get_name().c_str(), p.name, byte);
-        this->publish_state();
+        if (this->ready_())
+          this->publish_state();
         return;
       }
     }
@@ -202,12 +209,21 @@ void VitoClimate::on_mode_read(const ResponseView &response) {
   // mode doesn't get a state push -- and a wave of downstream HA/MQTT
   // traffic -- on every single poll; the UI is already correctly showing "no
   // preset" after the first one.
-  if (this->has_custom_preset()) {
+  //
+  // The FIRST mode read counts as "mode known" even when unmapped: the device
+  // answered, and withholding the whole climate (setpoint included) because
+  // its Betriebsart is outside the preset table would hide a working entity.
+  // The coarse mode then stays at its setup() placeholder, which the warning
+  // below says is unconfirmed.
+  const bool first = !this->mode_known_;
+  this->mode_known_ = true;
+  if (this->has_custom_preset() || (first && this->ready_())) {
     this->clear_custom_preset_();
-    this->publish_state();
+    if (this->ready_())
+      this->publish_state();
   }
-  ESP_LOGW(TAG, "%s: device mode 0x%02X is not in any preset's read set; cleared custom_preset",
-           this->get_name().c_str(), byte);
+  ESP_LOGW(TAG, "%s: device mode 0x%02X is not in any preset's read set; cleared custom_preset%s",
+           this->get_name().c_str(), byte, first ? " (climate mode unconfirmed)" : "");
 }
 
 void VitoClimate::dump_config() {

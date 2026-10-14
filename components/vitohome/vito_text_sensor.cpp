@@ -45,6 +45,10 @@ void VitoTextSensor::dump_config() {
   }
   ESP_LOGCONFIG(TAG, "    Type: %s  Address: 0x%04X  Length: %u", type_name(this->type_), this->datapoint_.address(),
                 this->datapoint_.length());
+  if (this->extract_byte_ >= 0) {
+    ESP_LOGCONFIG(TAG, "    Extract: %u byte(s) at offset %d of a %u-byte block read", this->extract_len_,
+                  this->extract_byte_, this->datapoint_.length());
+  }
   if (this->field_mask_ != 0) {
     ESP_LOGCONFIG(TAG, "    Bit mask: 0x%02X", this->field_mask_);
   }

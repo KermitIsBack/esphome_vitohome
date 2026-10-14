@@ -1957,6 +1957,23 @@ def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300, bitfield_wr
         note = (note + "; " if note else "") + (
             f"field at BytePosition {field_off} has no declared write address -> demoted to read-only"
         )
+    # A write NARROWER than its block corrupts the rest of the block. Hardware,
+    # VScotHO1_72 (P300), 2026-10-14: Neptun_ZP~0x7953 is a 2-byte block whose
+    # byte 1 read 00 before any write. After a 1-byte write the device held
+    # 01 D6, then 00 D5 -- byte 1 became the CHECKSUM byte of our own write
+    # telegram (`...:79:53:01:01:D6`, `...:79:53:01:00:D5`). The device writes
+    # its whole datapoint and takes whatever follows the payload on the wire.
+    # Same at 0x7951 (D3/D4). The ACK and the 1-byte read-back both looked
+    # fine, so nothing on the component side can see it; only the block length
+    # in the export can. Demote every writable field narrower than its block.
+    # (Weekday Schaltzeiten are the documented exception -- vcontrold writes
+    # 8 bytes per day into the 56-byte program -- and never reach this path.)
+    if writable and length < block_len:
+        writable = False
+        note = (note + "; " if note else "") + (
+            f"writes {length} byte(s) of a {block_len}-byte block: the device writes its whole datapoint and "
+            "fills the rest from the telegram (hardware-confirmed) -> demoted to read-only"
+        )
 
     # Byte-array-as-string (HexByte2AsciiByte): emit the ascii text_sensor type
     # (Sachnummer, Herstellnummer, ...). Read-only device identity; the field
