@@ -388,12 +388,12 @@ inline bool timebyte_to_hhmm(uint8_t b, uint8_t *h, uint8_t *m) {
   return true;
 }
 
-// Encode hour/minute to one switch-point byte, truncating the minute to the
-// next-lower 10-minute step. Returns false if the hour is not 0..23 (24+
-// collides with the disabled sentinel) or the minute is not 0..59, so a bad
-// value is rejected rather than silently disabling the slot.
+// Encode hour/minute to one switch-point byte, truncating minutes to the
+// next-lower 10-minute step. Accepts 00:00..23:59 and exactly 24:00.
+// The day-program parser permits 24:00 only as an end time.
+// Returns false for invalid arguments.
 inline bool hhmm_to_timebyte(uint8_t h, uint8_t m, uint8_t *b) {
-  if (b == nullptr || h > 23 || m > 59)
+  if (b == nullptr || h > 24 || m > 59 || (h == 24 && m != 0))
     return false;
   *b = static_cast<uint8_t>((h << 3) | (m / 10));  // m/10 in 0..5 fits 3 bits
   return true;
@@ -466,7 +466,7 @@ inline bool parse_hhmm_(const char **pp, const char *end, uint8_t *b) {
       p++;
     }
   }
-  if (field[0] > 23 || field[1] > 59)
+    if (field[0] > 24 || field[1] > 59 || (field[0] == 24 && field[1] != 0))
     return false;
   if (!hhmm_to_timebyte(static_cast<uint8_t>(field[0]), static_cast<uint8_t>(field[1]), b))
     return false;
@@ -523,8 +523,19 @@ inline bool encode_schaltzeiten_day(const char *str, uint8_t *buf8) {
           return false;
         if (cur != tok_end)
           return false;  // trailing garbage in the token
-        tmp[2 * pair] = onb;
-        tmp[2 * pair + 1] = offb;
+        // 24:00 is only valid as an end time.
+        if (onb >= 0xC0)
+          return false;
+        
+        // Clear intervals whose end precedes the start.
+        // Equal start and end times remain valid.
+        if (offb < onb) {
+          tmp[2 * pair] = 0xFF;
+          tmp[2 * pair + 1] = 0xFF;
+        } else {
+          tmp[2 * pair] = onb;
+          tmp[2 * pair + 1] = offb;
+        }
       }
       p = tok_end;
       pair++;
