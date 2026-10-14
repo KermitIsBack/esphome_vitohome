@@ -427,8 +427,16 @@ static void test_timebyte() {
   CHECK(hhmm_to_timebyte(8, 35, &b) && b == 0x43);  // 08:35 -> 08:30
   CHECK(hhmm_to_timebyte(23, 50, &b) && b == 0xBD);
   CHECK(hhmm_to_timebyte(23, 55, &b) && b == 0xBD);  // 23:55 -> 23:50, never 24:00
-  // Hour 24+ would collide with the disabled sentinel -> rejected.
-  CHECK(!hhmm_to_timebyte(24, 0, &b));
+  // Exactly 24:00 is encodable; the day parser restricts it to OFF times.
+  CHECK(hhmm_to_timebyte(24, 0, &b) && b == 0xC0);
+  // Invalid times must leave the output byte unchanged.
+  CHECK(!hhmm_to_timebyte(24, 1, &b));
+  CHECK(b == 0xC0);
+  CHECK(!hhmm_to_timebyte(24, 10, &b));
+  CHECK(b == 0xC0);
+  CHECK(!hhmm_to_timebyte(25, 0, &b));
+  CHECK(b == 0xC0);
+  CHECK(!hhmm_to_timebyte(24, 0, nullptr));
   CHECK(!hhmm_to_timebyte(6, 60, &b));  // minute out of range
 }
 
@@ -493,15 +501,70 @@ static void test_schaltzeiten_day() {
   decode_schaltzeiten_day(buf, 8, out, sizeof(out));
   CHECK(std::strcmp(out, "06:00-22:00 -- 08:30-12:00") == 0);
 
-  // Malformed input is rejected; buf is left unchanged (no torn write). Seed
-  // buf to a known value first so "unchanged" is what we actually assert.
-  CHECK(encode_schaltzeiten_day("", buf));        // buf := all 0xFF
+  // Full-day interval: 24:00 is a valid end time.
+  const uint8_t full_day[] = {
+      0x00, 0xC0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+  CHECK(encode_schaltzeiten_day("00:00-24:00", buf));
+  CHECK(std::memcmp(buf, full_day, 8) == 0);
+  decode_schaltzeiten_day(buf, 8, out, sizeof(out));
+  CHECK(std::strcmp(out, "00:00-24:00") == 0);
+
+  // Operation until the end of the day.
+  CHECK(encode_schaltzeiten_day("05:30-24:00", buf));
+  CHECK(buf[0] == 0x2B && buf[1] == 0xC0);
+  decode_schaltzeiten_day(buf, 8, out, sizeof(out));
+  CHECK(std::strcmp(out, "05:30-24:00") == 0);
+
+  // Equal times are accepted; 00:00-00:00 means always off.
+  const uint8_t equal_times[] = {
+      0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+  CHECK(encode_schaltzeiten_day("00:00-00:00", buf));
+  CHECK(std::memcmp(buf, equal_times, 8) == 0);
+
+  // An end before the start clears only the affected pair.
+  const uint8_t cleared_pair[] = {
+      0xFF, 0xFF, 0x30, 0xB0, 0xFF, 0xFF, 0xFF, 0xFF};
+  CHECK(encode_schaltzeiten_day("22:00-06:00 06:00-22:00", buf));
+  CHECK(std::memcmp(buf, cleared_pair, 8) == 0);
+
+  // A reversed single interval clears the whole day.
+  CHECK(encode_schaltzeiten_day("22:00-06:00", buf));
+  CHECK(std::memcmp(buf, none, 8) == 0);
+
+  // Equality is also accepted away from midnight.
+  CHECK(encode_schaltzeiten_day("12:00-12:00", buf));
+  CHECK(buf[0] == 0x60 && buf[1] == 0x60);
+
+  // Compare the encoded times after truncation to 10-minute steps.
+  CHECK(encode_schaltzeiten_day("06:09-06:01", buf));
+  CHECK(buf[0] == 0x30 && buf[1] == 0x30);
+
+  // Restore a nonempty program for the unchanged-on-error checks below.
+  CHECK(encode_schaltzeiten_day("22:00-06:00 06:00-22:00", buf));
+  CHECK(std::memcmp(buf, cleared_pair, 8) == 0);
+
+  // Only exactly 24:00 is valid, and only as an end time.
+  // Rejected input must leave the existing program unchanged.
+  CHECK(!encode_schaltzeiten_day("05:30-24:01", buf));
+  CHECK(std::memcmp(buf, cleared_pair, 8) == 0);
+  CHECK(!encode_schaltzeiten_day("05:30-24:10", buf));
+  CHECK(std::memcmp(buf, cleared_pair, 8) == 0);
+  CHECK(!encode_schaltzeiten_day("24:00-24:00", buf));
+  CHECK(std::memcmp(buf, cleared_pair, 8) == 0);
+
+  // Malformed input is rejected; buf is left unchanged (no torn write).
+  // Seed buf to all 0xFF before checking rejected inputs.
+  CHECK(encode_schaltzeiten_day("", buf));
   CHECK(!encode_schaltzeiten_day("06:00", buf));  // missing OFF
   CHECK(std::memcmp(buf, none, 8) == 0);
-  CHECK(!encode_schaltzeiten_day("24:00-01:00", buf));        // hour out of range
+  CHECK(!encode_schaltzeiten_day("24:00-01:00", buf));  // invalid start time
+  CHECK(std::memcmp(buf, none, 8) == 0);
   CHECK(!encode_schaltzeiten_day("06:00-22:00-23:00", buf));  // trailing garbage
-  CHECK(!encode_schaltzeiten_day("aa:bb-cc:dd", buf));        // non-numeric
-  CHECK(!encode_schaltzeiten_day("1-2-3-4-5", buf));          // five tokens
+  CHECK(std::memcmp(buf, none, 8) == 0);
+  CHECK(!encode_schaltzeiten_day("aa:bb-cc:dd", buf));  // non-numeric
+  CHECK(std::memcmp(buf, none, 8) == 0);
+  CHECK(!encode_schaltzeiten_day("1-2-3-4-5", buf));  // five tokens
+  CHECK(std::memcmp(buf, none, 8) == 0);
 }
 
 // --- clock helpers: civil_seconds / weekday / encode_datetime_bcd ----------
