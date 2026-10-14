@@ -34,6 +34,71 @@ inline bool decode_masked_bit(const uint8_t *data, std::size_t data_len, uint8_t
 }
 
 // ---------------------------------------------------------------------------
+// bit fields (`bit_mask` on sensor / number / select / switch / enum)
+// ---------------------------------------------------------------------------
+//
+// A bit field is a run of adjacent bits inside one byte, named by its MASK:
+// 0xF0 is the high nibble, 0x08 a single flag. A mask carries no bit-numbering
+// convention, which is the point -- Vitosoft numbers BitPosition MSB-first,
+// vcontrold numbers <bit> LSB-first (docs/design_notes.md SS8e), and the
+// translation happens once, in scripts/gen_catalog.py.
+//
+// The FIELD value is the masked bits shifted down: field = (byte & mask) >>
+// shift, where shift is the mask's lowest set bit. Option values, on/off
+// values and the converter scale all apply to the field, never to the byte.
+
+// True for a non-zero mask whose set bits are adjacent (0x0C, 0xF0, 0xFF; not
+// 0x0A, not 0). The Python schema rejects anything else at config time; this
+// is the runtime twin of that check.
+inline bool bit_mask_contiguous(uint8_t mask) {
+  if (mask == 0)
+    return false;
+  // Adding the lowest set bit carries through a contiguous run and clears it:
+  // 0x0C + 0x04 = 0x10, and 0x10 & 0x0C == 0. A gap leaves a set bit behind
+  // (0x0A + 0x02 = 0x0C, 0x0C & 0x0A == 0x08). Done in unsigned so 0xF0+0x10
+  // = 0x100 is not truncated before the AND.
+  const unsigned m = mask;
+  return ((m + (m & (0U - m))) & m) == 0;
+}
+
+// Index of the mask's lowest set bit: the right-shift that turns the masked
+// byte into the field value. Caller guarantees mask != 0.
+inline uint8_t bit_mask_shift(uint8_t mask) {
+  uint8_t shift = 0;
+  while (shift < 7 && ((mask >> shift) & 0x01) == 0)
+    shift++;
+  return shift;
+}
+
+// Largest field value the mask can hold (0x0F for 0xF0, 1 for 0x08).
+inline uint8_t bit_field_max(uint8_t mask) {
+  return mask == 0 ? 0 : static_cast<uint8_t>(mask >> bit_mask_shift(mask));
+}
+
+// field = (byte & mask) >> shift. Returns false (leaving *field untouched) for
+// a zero or non-contiguous mask.
+inline bool extract_bit_field(uint8_t byte, uint8_t mask, uint8_t *field) {
+  if (field == nullptr || !bit_mask_contiguous(mask))
+    return false;
+  *field = static_cast<uint8_t>((byte & mask) >> bit_mask_shift(mask));
+  return true;
+}
+
+// The read-modify-write merge: replace only the masked bits of `old` with
+// `field`, keeping every other bit exactly as read. Returns false -- and the
+// caller must NOT transmit -- for a zero or non-contiguous mask, or a field
+// value that does not fit the mask. That last check is the encode_scaled
+// contract carried over: an over-wide value is refused, never truncated into
+// the field (truncation would write a different, plausible-looking value).
+inline bool merge_bit_field(uint8_t old, uint8_t mask, uint32_t field, uint8_t *out) {
+  if (out == nullptr || !bit_mask_contiguous(mask) || field > bit_field_max(mask))
+    return false;
+  const uint8_t shifted = static_cast<uint8_t>(field << bit_mask_shift(mask));
+  *out = static_cast<uint8_t>((old & static_cast<uint8_t>(~mask)) | (shifted & mask));
+  return true;
+}
+
+// ---------------------------------------------------------------------------
 // numeric decode/encode
 // ---------------------------------------------------------------------------
 

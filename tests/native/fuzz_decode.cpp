@@ -204,6 +204,29 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *input, std::size_t size) {
     delete[] str;
   }
 
+  // --- bit fields: the read-modify-write merge -------------------------------
+  // Round-trip oracles over fuzzed (old byte, mask, field). These are the two
+  // properties the hub's read-modify-write rests on: the bits outside the mask
+  // are transmitted exactly as read, and the field reads back as written. A
+  // merge that leaked one bit (e.g. `old | shifted` instead of masking `old`
+  // first) trips the read-back oracle on the kDSeed_bitfield_* seeds.
+  {
+    const uint8_t old = data_len > 0 ? data[0] : 0;
+    const uint8_t mask = data_len > 1 ? data[1] : cap_sel;
+    const uint32_t field = data_len > 2 ? data[2] : len_sel;
+    uint8_t merged = 0;
+    if (merge_bit_field(old, mask, field, &merged)) {
+      oracle(bit_mask_contiguous(mask), "merge_bit_field accepted a gapped or zero mask");
+      oracle((merged & static_cast<uint8_t>(~mask)) == (old & static_cast<uint8_t>(~mask)),
+             "merge_bit_field changed a bit outside the mask");
+      uint8_t back = 0;
+      oracle(extract_bit_field(merged, mask, &back) && back == field, "merged field does not read back");
+    } else {
+      // Refusal must be for a reason: bad mask, or a field that does not fit.
+      oracle(!bit_mask_contiguous(mask) || field > bit_field_max(mask), "merge_bit_field refused a valid field");
+    }
+  }
+
   // --- encode_scaled / encode_raw_le: exact-size staging buffers ------------
   // Both take a width and a caller buffer, which is the shape that overflows.
   // The buffers are sized exactly so ASan frames them.

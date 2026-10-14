@@ -4,7 +4,9 @@ import esphome.config_validation as cv
 from esphome.const import CONF_ADDRESS, CONF_MAX_VALUE, CONF_MIN_VALUE, CONF_NAME, CONF_STEP, CONF_UPDATE_INTERVAL
 
 from . import (
+    BIT_MASK_SCHEMA,
     CONF_ACCESS,
+    CONF_BIT_MASK,
     CONF_BYTE_LENGTH,
     CONF_BYTE_OFFSET,
     CONF_CONVERTER,
@@ -17,8 +19,10 @@ from . import (
     GWG_ACCESS_MODES,
     MAX_P300_READ_LENGTH,
     VitoHomeComponent,
+    bit_field_max,
     converter_scale,
     datapoint_expression,
+    emit_bit_mask,
     emit_poll_interval,
     emit_write_target,
     field_width,
@@ -27,6 +31,7 @@ from . import (
     raw_fits,
     resolve_signed,
     scale_literal,
+    validate_bit_field,
     validate_block_extraction,
     vitohome_ns,
 )
@@ -76,6 +81,18 @@ def _validate_encodable_range(config):
     width = field_width(config)
     for key in (CONF_MIN_VALUE, CONF_MAX_VALUE):
         raw = llround(config[key] / scale)
+        if CONF_BIT_MASK in config:
+            # A bit field holds 0..bit_field_max(mask), unsigned -- the same
+            # range VitoNumber::control() enforces before staging the field.
+            top = bit_field_max(config[CONF_BIT_MASK])
+            if not 0 <= raw <= top:
+                raise cv.Invalid(
+                    f"{key} ({config[key]}) -> raw {raw} does not fit bit_mask "
+                    f"0x{config[CONF_BIT_MASK]:02X} (field values 0..{top}) with converter "
+                    f"'{config[CONF_CONVERTER]}' (scale {scale})",
+                    path=[key],
+                )
+            continue
         if not raw_fits(raw, width, is_signed):
             kind = "signed" if is_signed else "unsigned"
             raise cv.Invalid(
@@ -104,6 +121,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_BYTE_LENGTH): cv.int_range(min=1, max=4),
             cv.Optional(CONF_CONVERTER, default="noconv"): cv.enum(_WRITABLE_CONVERTERS, lower=True),
             cv.Optional(CONF_SIGNED): cv.boolean,
+            # Writes become a read-modify-write of the one byte (vitohome.h,
+            # rmw_pending_); see validate_bit_field for the shape rules.
+            cv.Optional(CONF_BIT_MASK): BIT_MASK_SCHEMA,
             cv.Required(CONF_MIN_VALUE): cv.float_,
             cv.Required(CONF_MAX_VALUE): cv.float_,
             cv.Required(CONF_STEP): cv.positive_float,
@@ -114,6 +134,7 @@ CONFIG_SCHEMA = cv.All(
     .extend(cv.COMPONENT_SCHEMA),
     validate_block_extraction((1, 2, 3, 4)),
     _validate_converter_field_width,
+    validate_bit_field(writable=True),
     _validate_encodable_range,
 )
 
@@ -139,6 +160,7 @@ async def to_code(config):
     cg.add(var.set_scale(scale_literal(config[CONF_CONVERTER])))
     cg.add(var.set_signed(resolve_signed(config)))
     cg.add(var.set_read_back(config[CONF_READ_BACK]))
+    emit_bit_mask(var, config)
     emit_poll_interval(var, poll_ms)
 
     if CONF_ACCESS in config:

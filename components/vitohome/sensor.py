@@ -4,7 +4,9 @@ import esphome.config_validation as cv
 from esphome.const import CONF_ADDRESS, CONF_NAME, CONF_UPDATE_INTERVAL
 
 from . import (
+    BIT_MASK_SCHEMA,
     CONF_ACCESS,
+    CONF_BIT_MASK,
     CONF_BYTE_LENGTH,
     CONF_BYTE_OFFSET,
     CONF_CONVERTER,
@@ -17,10 +19,12 @@ from . import (
     VitoHomeComponent,
     converter_big_endian,
     datapoint_expression,
+    emit_bit_mask,
     emit_poll_interval,
     pop_poll_interval,
     resolve_signed,
     scale_literal,
+    validate_bit_field,
     validate_converter_length,
     vitohome_ns,
 )
@@ -108,6 +112,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_SIGNED): cv.boolean,
             cv.Optional(CONF_BYTE_OFFSET): cv.int_range(min=0, max=MAX_P300_READ_LENGTH - 1),
             cv.Optional(CONF_BYTE_LENGTH): cv.int_range(min=1, max=4),
+            # A field of one byte (decode.h, "bit fields"): extracted, then
+            # scaled by the converter. Read-only here, so any 1-byte shape.
+            cv.Optional(CONF_BIT_MASK): BIT_MASK_SCHEMA,
             cv.Optional(CONF_UPDATE_INTERVAL): cv.update_interval,
             # GWG-only (rejected under any other protocol in _final_validate,
             # __init__.py). Selects the TYPE byte per GWGAccessMode
@@ -120,6 +127,7 @@ CONFIG_SCHEMA = cv.All(
     _validate_length,
     _validate_converter_length_effective,
     _validate_byte_offset,
+    validate_bit_field(writable=False),
 )
 
 
@@ -139,6 +147,7 @@ async def to_code(config):
         cg.add(var.set_extract_byte(config[CONF_BYTE_OFFSET]))
         if CONF_BYTE_LENGTH in config:
             cg.add(var.set_extract_len(config[CONF_BYTE_LENGTH]))
+    emit_bit_mask(var, config)
     if CONF_ACCESS in config:
         cg.add(var.set_access(config[CONF_ACCESS]))
     emit_poll_interval(var, poll_ms)

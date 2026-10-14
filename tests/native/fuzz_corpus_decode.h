@@ -29,6 +29,21 @@
 // assume away.
 
 // the 0x7360 32-byte label block exactly as hardware returned it (design_notes 8g)
+// Bit-field read-modify-write (decode.h merge_bit_field). The bit-field target
+// reads payload [0] = byte as read, [1] = bit_mask, [2] = field value. Each seed
+// CLEARS or narrows a bit that is set in the old byte -- the only case in which
+// a merge that forgets to mask `old` first is visible. Negative-controlled: with
+// `old | shifted` in place of the masked merge, both trip "merged field does not
+// read back" (the 28 seeds before these did not).
+// EEPROM 0x0005 with K13 (0x08) set; write K13 = 0 -> must give 0x62
+inline constexpr uint8_t kDSeed_bitfield_clear_flag[] = {0x10, 0x01, 0x6A, 0x08, 0x00};
+// SPR30 0x001E factory 0x87; write unten (low nibble) = 3 -> must give 0x83
+inline constexpr uint8_t kDSeed_bitfield_narrow_nibble[] = {0x10, 0x01, 0x87, 0x0F, 0x03};
+// same byte, field 16 into a nibble: must be refused, not truncated to 0
+inline constexpr uint8_t kDSeed_bitfield_over_wide[] = {0x10, 0x01, 0x87, 0x0F, 0x10};
+// gapped mask 0x0A: must be refused
+inline constexpr uint8_t kDSeed_bitfield_gapped_mask[] = {0x10, 0x01, 0x87, 0x0A, 0x01};
+
 inline constexpr uint8_t kDSeed_hw_label_block_32[] = {
     0x50, 0x20, 0x00, 0x0B, 0x48, 0x00, 0x65, 0x00, 0x69, 0x00, 0x7A, 0x00, 0x6B, 0x00, 0x72, 0x00, 0x65,
     0x00, 0x69, 0x00, 0x73, 0x00, 0x20, 0x00, 0x31, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -223,6 +238,10 @@ inline constexpr DecodeSeed kDecodeSeeds[] = {
     {"doubles_nan", kDSeed_doubles_nan, sizeof(kDSeed_doubles_nan)},
     {"doubles_ordinary", kDSeed_doubles_ordinary, sizeof(kDSeed_doubles_ordinary)},
     {"raw_dump_elided", kDSeed_raw_dump_elided, sizeof(kDSeed_raw_dump_elided)},
+    {"bitfield_clear_flag", kDSeed_bitfield_clear_flag, sizeof(kDSeed_bitfield_clear_flag)},
+    {"bitfield_narrow_nibble", kDSeed_bitfield_narrow_nibble, sizeof(kDSeed_bitfield_narrow_nibble)},
+    {"bitfield_over_wide", kDSeed_bitfield_over_wide, sizeof(kDSeed_bitfield_over_wide)},
+    {"bitfield_gapped_mask", kDSeed_bitfield_gapped_mask, sizeof(kDSeed_bitfield_gapped_mask)},
 };
 
 inline constexpr std::size_t kDecodeSeedCount = sizeof(kDecodeSeeds) / sizeof(kDecodeSeeds[0]);

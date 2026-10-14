@@ -115,6 +115,21 @@ class VitoEntityBase {
   // published state still reflects the device (the write did not take).
   virtual void handle_write_error(optolink::OptolinkResult /*error*/) {}
 
+  // --- bit field (`bit_mask`) -----------------------------------------------
+  // Non-zero: this entity's value is the masked bits of ONE byte (decode.h,
+  // "bit fields"), not the whole byte. The read side extracts the field before
+  // decoding; the write side stages the FIELD value as the first staged byte and the hub
+  // turns the write into a read-modify-write of that byte (vitohome.cpp,
+  // dispatch_next_), so the bits outside the mask -- other datapoints sharing
+  // the byte -- are written back exactly as read. 0 (default) = whole field,
+  // the pre-existing behaviour.
+  //
+  // Named field_mask, not bit_mask, because VitoBinarySensor already owns a
+  // `bit_mask_` with "any masked bit set" semantics; the YAML key is
+  // `bit_mask` on every platform.
+  void set_field_mask(uint8_t mask) { this->field_mask_ = mask; }
+  uint8_t field_mask() const { return this->field_mask_; }
+
   // --- write path -----------------------------------------------------------
   const uint8_t *write_data() const { return this->write_buf_; }
   uint8_t write_length() const { return this->write_len_; }
@@ -160,6 +175,7 @@ class VitoEntityBase {
   // bounds-checks against sizeof, so existing <= 4-byte writers are unaffected.
   uint8_t write_buf_[8]{0, 0, 0, 0, 0, 0, 0, 0};
   uint8_t write_len_{0};
+  uint8_t field_mask_{0};
   bool read_back_{true};
   uint32_t poll_interval_ms_{0};
   optolink::GWGAccessMode access_{optolink::GWGAccessMode::PHYSICAL};

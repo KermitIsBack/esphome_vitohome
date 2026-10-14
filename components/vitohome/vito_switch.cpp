@@ -19,10 +19,19 @@ void VitoSwitch::dump_config() {
     ESP_LOGCONFIG(TAG, "    Extract: %u byte(s) at offset %d of a %u-byte block read", this->extract_len_,
                   this->extract_byte_, this->datapoint_.length());
   }
+  if (this->field_mask_ != 0) {
+    ESP_LOGCONFIG(TAG, "    Bit mask: 0x%02X (writes are read-modify-write)", this->field_mask_);
+  }
 }
 
 void VitoSwitch::write_state(bool state) {
   const uint32_t raw = state ? this->on_value_ : this->off_value_;
+  // Bit field: on/off are FIELD values (see VitoSelect::control()).
+  if (this->field_mask_ != 0 && raw > bit_field_max(this->field_mask_)) {
+    ESP_LOGE(TAG, "%s: value 0x%02" PRIX32 " does not fit bit_mask 0x%02X - not written", this->datapoint_.name(), raw,
+             this->field_mask_);
+    return;
+  }
   // See VitoSelect::control(): encode_raw_le() clamps to the staging buffer and
   // returns the effective width.
   uint8_t buf[4];
@@ -69,7 +78,14 @@ void VitoSwitch::handle_response(const ResponseView &response) {
              len);
     return;
   }
-  const uint32_t raw = static_cast<uint32_t>(read_le(p, len > 4 ? 4 : len));
+  uint32_t raw = static_cast<uint32_t>(read_le(p, len > 4 ? 4 : len));
+  if (this->field_mask_ != 0) {
+    // Bit field: compare the masked bits only (see VitoSelect::handle_response).
+    uint8_t field = 0;
+    if (!extract_bit_field(p[0], this->field_mask_, &field))
+      return;
+    raw = field;
+  }
   for (uint16_t i = 0; i < this->on_state_count_; i++) {
     if (raw == this->on_state_values_[i]) {
       ESP_LOGD(TAG, "%s = ON (raw 0x%02" PRIX32 ")", this->datapoint_.name(), raw);

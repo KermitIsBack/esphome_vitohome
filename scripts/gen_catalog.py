@@ -166,6 +166,135 @@ _FACTOR_PRESETS = (
 # non-numeric rows). Treat the pair as "no factor/offset present".
 _FACTOR_PLACEHOLDERS = ("-0.1067", "6992.58")
 
+# Tolerance for "a border / stepping is a whole number of raw steps" in
+# _scale_from_bounds (the export writes steppings like 0.125 and 0.1, which are
+# not exact in binary floating point).
+_STEP_TOL = 1e-6
+
+
+@dataclass
+class BoundsScale:
+    """Raw encoding inferred from borders + fractional stepping (see
+    _scale_from_bounds). value = raw * scale + offset, raw in raw_lo..raw_hi.
+    kind: "scale" (offset 0), "affine" (offset = lower border) or "ambiguous"
+    (negative lower border outside GWG: signed raw * step and raw * step +
+    lower both fit, nothing in the export decides -> no transform emitted)."""
+
+    kind: str
+    scale: float
+    offset: float
+    raw_lo: int
+    raw_hi: int
+
+
+def _whole_steps(x: float) -> int | None:
+    n = round(x)
+    return n if abs(x - n) <= _STEP_TOL else None
+
+
+def _scale_from_bounds(ev: Event, protocol: str = "") -> BoundsScale | None:
+    """Infer the raw encoding of an identity-conversion datapoint whose
+    borders carry a FRACTIONAL stepping. A plain raw value can only move in
+    whole steps, so such a row cannot be `noconv` as declared. None when the
+    rule does not apply.
+
+    Survey (DataPointDefinitionVersion 0.0.26.4683): 4 GWG and 14 other
+    NoConversion rows carry a fractional stepping on a whole-byte field.
+
+      * lower >= 0 -> "scale": value = raw * step, raw = lower/step ..
+        upper/step (e.g. SR13_K17_KonfiKTReglerverstaerkung 0.1..9.9 / 0.1 ->
+        raw 1..99). Both borders must be whole steps.
+      * lower < 0, GWG -> "affine": value = raw * step + lower, raw 0..N with
+        N = (upper - lower) / step. GWG_BEMK55Raumkorrekturwert (EEPROM 0x0016,
+        1 byte, -5..5 / 0.125, N = 80) reads 0x28 = 40 on real hardware (issue
+        #21, 0x2053 HW 0x01 SW 0x7A) on two days: 40 * 0.125 - 5 = 0.0 K, the
+        factory default; a signed reading would be +5 K, the maximum.
+      * lower < 0 elsewhere -> "ambiguous" (e.g. K70_NRP_KonfiOffset-
+        Aussentemperatur 0x7770, -5..5 / 0.1: signed raw -50..50 or raw 0..100
+        + offset). No hardware evidence either way.
+
+    The ConversionFactor/Offset columns on these rows are NOT the encoding:
+    on NoConversion rows they repeat the last MultOffset row edited before
+    them (5/35 after K06, 2/6 after K07, 0.5/-16 after K85), so 0x0016
+    carries 5/35 while the bit field at 0x0015 carries 0.125/-5. They are
+    ignored when this rule applies.
+
+    Multi-bit fields count their raw range in BitLength bits:
+    GWG_BEMK88/89SchaltpunktSPR30L* (two 4-bit fields of 0x001E, 0..1 / 0.1)
+    -> raw 0..10 of 15 -> value = field * 0.1 (see _bit_field for the extract).
+
+    Excluded on purpose:
+      * single bits (BitLength 1): booleans, never scaled;
+      * "Rohwert" rows (GWG_TimerNachlaufRohwert, 0x003A): the RAW companion
+        of the MultOffset GWG_TimerNachlauf at the same address, whose 0..100 /
+        0.01 borders are copied from the converted sibling.
+
+    UNVERIFIED: every kind is inferred, not declared. The caller emits a
+    READ-ONLY sensor -- the component has no affine encode path, and a
+    wrong-scale writable number is worse than none. GWG write test v4.4 P4
+    (0x0016 0x28 -> 0x29 and back) confirms "affine" if the boiler's
+    room-correction display shows +0.125 K.
+    """
+    if ev.conversion not in ("", "NoConversion"):
+        return None
+    bit_len = ev.bit_length or 0
+    if bit_len == 1:
+        return None
+    if "Rohwert" in (ev.tech or "") or "Rohwert" in (ev.name or ""):
+        return None
+    width = ev.byte_length or ev.block_length or 1
+    if width not in (1, 2, 3, 4):
+        return None
+    lo = ev.lower or (ev.values[0].lower if ev.values else "")
+    hi = ev.upper or (ev.values[0].upper if ev.values else "")
+    st = ev.stepping or (ev.values[0].stepping if ev.values else "")
+    try:
+        lo_f, hi_f, st_f = float(lo), float(hi), float(st)
+    except (TypeError, ValueError):
+        return None
+    if not all(math.isfinite(x) for x in (lo_f, hi_f, st_f)):
+        return None
+    # An integral stepping is consistent with a plain raw value; only a
+    # fractional one rules raw == value out.
+    if st_f <= 0 or st_f == int(st_f) or hi_f <= lo_f:
+        return None
+    raw_max = (1 << bit_len) - 1 if bit_len > 1 else (1 << (8 * width)) - 1
+    if lo_f >= 0:
+        r_lo, r_hi = _whole_steps(lo_f / st_f), _whole_steps(hi_f / st_f)
+        if r_lo is None or r_hi is None or r_hi > raw_max:
+            return None
+        return BoundsScale("scale", st_f, 0.0, r_lo, r_hi)
+    n = _whole_steps((hi_f - lo_f) / st_f)
+    if n is None or not 1 <= n <= raw_max:
+        return None
+    kind = "affine" if protocol == PROTO_GWG else "ambiguous"
+    return BoundsScale(kind, st_f, lo_f, 0, n)
+
+
+def _bit_field(ev: Event) -> tuple[int, int, int] | None:
+    """(byte_offset, shift, mask) of a bit field (BitLength 1..8), so that
+    field = (byte >> shift) & mask; None if it does not fit in one byte. The
+    component's ``bit_mask`` is ``mask << shift``.
+
+    BitPosition is the absolute MSB-first index of the field's FIRST bit,
+    the same numbering as single bits (hardware-confirmed on 0x55DD, see the
+    binary_sensor branch of emit_entity): GWG_K06Kesselmaximaltemperatur
+    (BitPosition 0, BitLength 4) is the HIGH nibble of 0x0001, mask 0xF0.
+    Consistent with issue #21 (0x2053 HW 0x01 SW 0x7A): 0x0001 reads 0xA8,
+    which gives K06 = 10 * 5 + 35 = 85 degC and K05 Vorlauf-max HKB (low
+    nibble) = 8 * 5 + 35 = 75 degC; LSB-first would give a flow maximum above
+    the boiler maximum. Not yet confirmed by a write.
+    """
+    bit_len = ev.bit_length or 0
+    if not 1 <= bit_len <= 8:
+        return None
+    bit_pos = ev.bit_position or 0
+    shift = 8 - (bit_pos % 8) - bit_len
+    if shift < 0:
+        return None
+    return bit_pos // 8, shift, (1 << bit_len) - 1
+
+
 # Mode commands whose live state is read at a DIFFERENT address than the
 # command register (see the read/write-split analysis). Maps the writable
 # command address -> the read-only effective-state address, per heating
@@ -1349,7 +1478,248 @@ def _string_lines(name: str, kind: str, addr: int, field_len: int, field_off: in
     return lines
 
 
-def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300):
+def _emit_bit_field(ev: Event, protocol: str, bitfield_writes: bool = True):
+    """Emit a bit field (BitLength 1..8) as a native ``bit_mask`` entity.
+
+    Every bit field except a READ-ONLY single bit comes here (those stay on the
+    hardware-confirmed binary_sensor path). Before this existed, a writable bit
+    field became a whole-byte number/select/switch: choosing "1 ohne Nachlauf"
+    on GWG_K13Speichernachlauf (EEPROM 0x0005) wrote 0x01 and cleared the other
+    seven coding flags in that byte. With ``bit_mask`` the component reads the
+    byte first and writes back only the field (vitohome.h, rmw_pending_).
+
+    Writable only where the read and the write are the same one-byte register:
+    the field is in byte 0 of a 1-byte datapoint. Every GWG bit field has that
+    shape. A field in byte 0 of a wider block (P300 Neptun_* outputs, 2-byte
+    blocks) would need a 1-byte write at a block base -- a partial-block write
+    with no hardware confirmation -- and an interior field has no declared write
+    address at all (docs/design_notes.md SS8g), so both stay read-only. So do
+    fields whose scale is inferred (_scale_from_bounds) or carries an offset
+    (MultOffset with ConversionOffset != 0): there is no encode path for them.
+    """
+    name = ev.name
+    addr = ev.address
+    bit_len = ev.bit_length or 0
+    bit_pos = ev.bit_position or 0
+    bf = _bit_field(ev)
+    if bf is None:
+        return (
+            "comment",
+            [
+                f"# {name} @ 0x{addr:04X}: {bit_len}-bit field at BitPosition {bit_pos} does not fit in one byte -> custom decode"
+            ],
+        )
+    byte, shift, fmax = bf
+    mask = fmax << shift
+    block_len = ev.block_length or ev.byte_length or 1
+    if ev.byte_position and ev.byte_position != byte:
+        return (
+            "comment",
+            [
+                (
+                    f"# {name} @ 0x{addr:04X}: BitPosition {bit_pos} implies byte {byte} but the "
+                    f"export declares BytePosition {ev.byte_position} -- contradictory, needs hardware "
+                    f"confirmation before it can be emitted"
+                )
+            ],
+        )
+    if block_len > MAX_P300_READ_LENGTH or byte >= block_len:
+        return (
+            "comment",
+            [
+                (
+                    f"# {name} @ 0x{addr:04X}: {bit_len}-bit field in byte {byte} of a {block_len}-byte "
+                    f"block exceeds the single-telegram read -> custom handling"
+                )
+            ],
+        )
+    mask_line = f"  bit_mask: 0x{mask:02X}  # Vitosoft BitPosition {bit_pos}, BitLength {bit_len} (MSB-first)"
+    notes: list[str] = []
+
+    writable = _is_writable(ev, protocol)
+    if writable and not bitfield_writes:
+        writable = False
+        notes.append("bit-field writes disabled (--no-bitfield-writes) -> read-only")
+    if writable and (byte != 0 or block_len != 1):
+        writable = False
+        notes.append(
+            f"field in byte {byte} of a {block_len}-byte block: writing it would be a partial-block write "
+            "with no hardware confirmation -> read-only"
+        )
+    if writable and COMMAND_STATE_ADDR.get(addr) is not None:
+        writable = False
+        notes.append("command register with a separate state address: no read-modify-write -> read-only")
+
+    def read_lines() -> list[str]:
+        # Byte 0: a 1-byte read at the block base (aligned on P300). Deeper: the
+        # whole block at the base plus byte_offset, as everywhere else.
+        if byte == 0:
+            return [f"  address: 0x{addr:04X}", "  length: 1"]
+        return [f"  address: 0x{addr:04X}", f"  length: {block_len}", f"  byte_offset: {byte}"]
+
+    _conv0, conv_kind = CONVERSION_MAP.get(ev.conversion, (None, PLAIN))
+    poll = _poll_for(ev, conv_kind, protocol)
+
+    def head(platform_type: str | None = None) -> list[str]:
+        lines = [f"  # NOTE: {n}" for n in notes]
+        lines.append("- platform: vitohome")
+        if platform_type:
+            lines.append(f"  type: {platform_type}")
+        lines.append(f"  name: {_yaml_str(name)}")
+        return lines
+
+    # --- enum fields -----------------------------------------------------------
+    enum_opts = _dedup_option_labels(_enum_options(ev))
+    if enum_opts:
+        fit = [(v, label) for v, label in enum_opts if 0 <= v <= fmax]
+        if len(fit) < len(enum_opts):
+            notes.append(
+                f"{len(enum_opts) - len(fit)} option value(s) from the export do not fit the {bit_len}-bit "
+                f"field (0..{fmax}) and were omitted"
+            )
+        neg = _negative_option_count(ev)
+        if neg:
+            notes.append(f"{neg} negative enum option value(s) from the export omitted")
+        if not fit:
+            return ("comment", [f"# {name} @ 0x{addr:04X}: no enum option fits the {bit_len}-bit field"])
+        if writable:
+            pair = _boolean_pair(fit)
+            if pair:
+                on_v, off_v, on_l, off_l = pair
+                lines = head() + read_lines() + [mask_line]
+                if (on_v, off_v) != (1, 0):
+                    lines.append(f"  on_value: {on_v}  # {on_l}")
+                    lines.append(f"  off_value: {off_v}  # {off_l}")
+                else:
+                    lines.append(f"  # on {on_v} = {on_l}; off {off_v} = {off_l} (field values)")
+                lines += ["  disabled_by_default: true", f"  update_interval: {poll}s"]
+                return ("switch", lines)
+            lines = head() + read_lines() + [mask_line]
+            lines += ["  disabled_by_default: true", f"  update_interval: {poll}s", "  options:"]
+            lines += [f"    {v}: {_yaml_str(label)}" for v, label in fit]
+            return ("select", lines)
+        if bit_len == 1:
+            # A read-only flag keeps the binary_sensor shape every other bit uses.
+            lines = head()
+            lines += [f"  address: 0x{addr:04X}", f"  length: {block_len}"]
+            if byte:
+                lines.append(f"  byte_offset: {byte}")
+            lines += [mask_line, "  disabled_by_default: true", f"  update_interval: {poll}s"]
+            return ("binary_sensor", lines)
+        lines = head("enum") + read_lines() + [mask_line]
+        lines += ["  disabled_by_default: true", f"  update_interval: {poll}s", "  options:"]
+        lines += [f"    {v}: {_yaml_str(label)}" for v, label in fit]
+        return ("text_sensor", lines)
+
+    # --- numeric fields ---------------------------------------------------------
+    filters: list[tuple[str, float]] = []
+    eff_factor = ev.conv_factor if ev.conv_factor not in (None, 0.0) else None
+    conv = _conv0
+    if ev.conversion in ("", "NoConversion"):
+        conv = "noconv"
+        if eff_factor is not None:
+            # The factor/offset columns on NoConversion bit fields are stale
+            # copies of the last MultOffset row (5/35, 2/6, 0.125/-5, 0.5/-16 on
+            # GWG); see _scale_from_bounds.
+            notes.append(
+                f"export factor/offset ({eff_factor:g}, {ev.conv_offset or 0:g}) ignored (stale on NoConversion bit fields)"
+            )
+        bs = _scale_from_bounds(ev, protocol)
+        if bs is not None and bs.kind != "ambiguous":
+            filters.append(("multiply", bs.scale))
+            if bs.offset:
+                filters.append(("offset", bs.offset))
+            notes.append(
+                f"fractional stepping: borders imply value = field * {bs.scale:g}"
+                + (f" + {bs.offset:g}" if bs.offset else "")
+                + f" (field {bs.raw_lo}..{bs.raw_hi}). UNVERIFIED inference -- read-only until a hardware "
+                "write confirms it"
+            )
+            writable = False
+        elif bs is not None:
+            notes.append("fractional stepping with an ambiguous encoding -> raw field value, read-only")
+            writable = False
+    elif ev.conversion == "MultOffset":
+        f_val = eff_factor
+        o_val = ev.conv_offset or 0.0
+        preset = None
+        if f_val is not None and o_val == 0.0:
+            for pf, pname in _FACTOR_PRESETS:
+                if abs(f_val - pf) < 1e-12:
+                    preset = pname
+                    break
+        if preset:
+            conv = preset
+            notes.append(f"conversion 'MultOffset' (factor {f_val:g}) -> {preset}")
+        else:
+            conv = "noconv"
+            if f_val is not None and f_val != 1.0:
+                filters.append(("multiply", f_val))
+            if o_val:
+                filters.append(("offset", o_val))
+            if filters:
+                notes.append(
+                    f"conversion 'MultOffset': value = field * {f_val if f_val is not None else 1:g}"
+                    + (f" + {o_val:g}" if o_val else "")
+                    + " -> filters; no encode path for the transform -> read-only"
+                )
+                writable = False
+    if conv is None or 1 not in _CONV_LENGTHS.get(conv, (1,)):
+        scale = _CONV_SCALE.get(conv or "", 1.0)
+        if scale != 1.0:
+            filters.insert(0, ("multiply", scale))
+        notes.append(f"conversion {ev.conversion!r} has no 1-byte converter -> raw field + filter, read-only")
+        conv = "noconv"
+        writable = False
+
+    unit = _unit_for(ev)
+    dc = _device_class_for(unit)
+    if writable:
+        scale = _CONV_SCALE.get(conv, 1.0)
+        lo = ev.lower or (ev.values[0].lower if ev.values else "")
+        hi = ev.upper or (ev.values[0].upper if ev.values else "")
+        step = ev.stepping or (ev.values[0].stepping if ev.values else "")
+
+        def _fits(v: str) -> bool:
+            try:
+                raw = _llround(float(v) / scale)
+            except (TypeError, ValueError):
+                return False
+            return 0 <= raw <= fmax
+
+        if lo != "" and hi != "" and step not in ("", "0") and _fits(lo) and _fits(hi):
+            bounds = [f"  min_value: {lo}", f"  max_value: {hi}", f"  step: {step}"]
+        else:
+            # The field's own range is known exactly, which beats the 0/0/1
+            # placeholder whole-byte numbers fall back to.
+            notes.append(f"borders absent or outside the {bit_len}-bit field -> the field range 0..{fmax}")
+            bounds = ["  min_value: 0", f"  max_value: {fmax * scale:g}", f"  step: {scale:g}"]
+        lines = head() + read_lines() + [mask_line, f"  converter: {conv}"]
+        if unit:
+            lines.append(f"  unit_of_measurement: {_yaml_str(unit)}")
+        if dc:
+            lines.append(f"  device_class: {dc}")
+        lines += bounds
+        lines += ["  mode: box", "  disabled_by_default: true", f"  update_interval: {poll}s"]
+        return ("number", lines)
+
+    lines = head() + read_lines() + [mask_line, f"  converter: {conv}"]
+    if unit:
+        lines.append(f"  unit_of_measurement: {_yaml_str(unit)}")
+    if dc:
+        lines.append(f"  device_class: {dc}")
+    if filters:
+        lines.append("  filters:")
+        lines += [f"    - {f_name}: {f_arg:.12g}" for f_name, f_arg in filters]
+    if conv_kind == COUNTER:
+        lines += ["  state_class: total_increasing", "  accuracy_decimals: 1"]
+    else:
+        lines.append("  state_class: measurement")
+    lines += ["  disabled_by_default: true", f"  update_interval: {poll}s"]
+    return ("sensor", lines)
+
+
+def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300, bitfield_writes: bool = True):
     """Return (platform, yaml_lines) for one event, or None to skip it.
     ev.name is the resolved friendly name; the stable technical ``id:`` is added
     by generate() (which can de-duplicate across the whole package)."""
@@ -1381,6 +1751,10 @@ def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300):
             ],
         )
 
+    # Bit fields: everything except a read-only single bit (binary_sensor below).
+    if (ev.bit_length or 0) > 1 or ((ev.bit_length or 0) == 1 and _is_writable(ev, protocol)):
+        return _emit_bit_field(ev, protocol, bitfield_writes)
+
     conv, conv_kind = CONVERSION_MAP.get(ev.conversion, (None, PLAIN))
     note = None
     # Value-transform filters (multiply/offset) for READ-ONLY sensors whose
@@ -1401,6 +1775,40 @@ def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300):
     # -- never a literal 0x multiplier.
     eff_factor = ev.conv_factor if ev.conv_factor not in (None, 0.0) else None
     factor_driven = ev.conversion == "MultOffset" or (ev.conversion in ("", "NoConversion") and eff_factor is not None)
+    # Borders + fractional stepping that cannot be a plain raw value win over
+    # the (stale) factor/offset columns; see _scale_from_bounds. Always
+    # read-only: there is no affine encode path, and the inference is
+    # unverified on hardware.
+    bounds_scale = _scale_from_bounds(ev, protocol)
+    if bounds_scale is not None:
+        bs = bounds_scale
+        factor_driven = False
+        conv = "noconv"
+        b_lo = bs.raw_lo * bs.scale + bs.offset
+        b_hi = bs.raw_hi * bs.scale + bs.offset
+        head = (
+            f"conversion {ev.conversion or 'none'!r} with fractional stepping: borders {b_lo:g}..{b_hi:g} step {bs.scale:g}"
+        )
+        stale = f"; export factor/offset ({eff_factor:g}, {ev.conv_offset or 0:g}) ignored" if eff_factor else ""
+        if bs.kind == "ambiguous":
+            # Raw bytes only: two readings fit and nothing decides between them.
+            note = (
+                f"{head} fit both signed raw * {bs.scale:g} and raw * {bs.scale:g} + {bs.offset:g}"
+                f" (raw {bs.raw_lo}..{bs.raw_hi}){stale}. Encoding unknown -> raw value, read-only"
+            )
+        else:
+            value_filters.append(("multiply", bs.scale))
+            if bs.offset:
+                value_filters.append(("offset", bs.offset))
+            note = (
+                f"{head} imply value = raw * {bs.scale:g}"
+                + (f" + {bs.offset:g}" if bs.offset else "")
+                + f" (raw {bs.raw_lo}..{bs.raw_hi}){stale}. UNVERIFIED inference -- read-only"
+                " until a hardware write confirms it"
+            )
+        if writable:
+            writable = False
+            note += " (writable in the export; not a number until confirmed)"
     if factor_driven:
         f_val = eff_factor
         o_val = ev.conv_offset or 0.0
@@ -1874,6 +2282,10 @@ def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300):
     try:
         neg_range = lo_hint != "" and float(lo_hint) < 0
     except (TypeError, ValueError):
+        neg_range = False
+    # A bounds-inferred encoding has an unsigned raw (0..N); an affine one
+    # carries the negative part of the range in the offset filter.
+    if bounds_scale is not None:
         neg_range = False
     lines += [
         "- platform: vitohome",
@@ -2382,6 +2794,7 @@ def generate(
     order: str = "address",
     protocol: str | None = None,
     stats: dict | None = None,
+    bitfield_writes: bool = True,
 ) -> str:
     """Render the package for one device token. ``order`` is "address"
     (default; entities sorted by Optolink address, byte-identical to earlier
@@ -2561,7 +2974,7 @@ def generate(
             dropped_unreachable += 1
             continue
 
-        result = emit_entity(ev, profile, protocol)
+        result = emit_entity(ev, profile, protocol, bitfield_writes)
         if result is None:
             continue
         platform, lines = result
@@ -2931,6 +3344,7 @@ def export_all(
     reachable_only: bool,
     protocol: str | None = None,
     order: str = "address",
+    bitfield_writes: bool = True,
 ) -> int:
     """Write one catalog per device token into *out_dir* (created if needed).
 
@@ -3017,6 +3431,7 @@ def export_all(
                 error_codes=error_codes,
                 error_code_set=error_code_set,
                 reachable_only=reachable_only,
+                bitfield_writes=bitfield_writes,
                 order=order,
                 protocol=protocol,
                 stats=gen_stats,
@@ -3105,6 +3520,16 @@ def main(argv=None):
         action=argparse.BooleanOptionalAction,
         default=True,
         help="emit a device_id diagnostic text_sensor and suppress the raw 0xF8..0xFB reads (default: on)",
+    )
+    p.add_argument(
+        "--bitfield-writes",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "emit writable bit fields (number/select/switch with bit_mask; the component writes them "
+            "as a read-modify-write of their byte) where the read and the write are the same 1-byte "
+            "register. --no-bitfield-writes keeps every bit field read-only (default: on)"
+        ),
     )
     p.add_argument(
         "--error-history",
@@ -3200,6 +3625,7 @@ def main(argv=None):
             error_codes=args.error_codes,
             error_code_set=args.error_code_set,
             reachable_only=args.reachable_only,
+            bitfield_writes=args.bitfield_writes,
             protocol=args.protocol,
             order=args.order,
         )
@@ -3267,6 +3693,7 @@ def main(argv=None):
         error_codes=args.error_codes,
         error_code_set=args.error_code_set,
         reachable_only=args.reachable_only,
+        bitfield_writes=args.bitfield_writes,
         order=args.order,
         protocol=args.protocol,
     )

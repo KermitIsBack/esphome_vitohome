@@ -19,6 +19,9 @@ void VitoSelect::dump_config() {
     ESP_LOGCONFIG(TAG, "    Extract: %u byte(s) at offset %d of a %u-byte block read", this->extract_len_,
                   this->extract_byte_, this->datapoint_.length());
   }
+  if (this->field_mask_ != 0) {
+    ESP_LOGCONFIG(TAG, "    Bit mask: 0x%02X (writes are read-modify-write)", this->field_mask_);
+  }
 }
 
 void VitoSelect::control(size_t index) {
@@ -27,6 +30,14 @@ void VitoSelect::control(size_t index) {
     return;
   }
   const uint32_t raw = this->raw_values_[index];
+  // Bit field: the option value is the FIELD value, staged as one byte; the hub
+  // merges it into the byte it reads first (read-modify-write). select.py
+  // checks every option against the mask width; this is the runtime twin.
+  if (this->field_mask_ != 0 && raw > bit_field_max(this->field_mask_)) {
+    ESP_LOGE(TAG, "%s: option value 0x%02" PRIX32 " does not fit bit_mask 0x%02X - not written",
+             this->datapoint_.name(), raw, this->field_mask_);
+    return;
+  }
   // encode_raw_le() clamps the write length to the staging buffer and returns
   // the effective width, so an over-long write-datapoint length can't make
   // set_write_payload_() copy past buf. Shared with VitoSwitch::write_state().
@@ -73,7 +84,15 @@ void VitoSelect::handle_response(const ResponseView &response) {
              len);
     return;
   }
-  const uint32_t raw = static_cast<uint32_t>(read_le(p, len > 4 ? 4 : len));
+  uint32_t raw = static_cast<uint32_t>(read_le(p, len > 4 ? 4 : len));
+  if (this->field_mask_ != 0) {
+    // Bit field: options are FIELD values, so compare the masked bits only --
+    // the rest of the byte belongs to other datapoints and may hold anything.
+    uint8_t field = 0;
+    if (!extract_bit_field(p[0], this->field_mask_, &field))
+      return;
+    raw = field;
+  }
   for (uint16_t i = 0; i < this->raw_value_count_; i++) {
     if (this->raw_values_[i] == raw) {
       ESP_LOGD(TAG, "%s = option %u (raw 0x%02" PRIX32 ")", this->datapoint_.name(), i, raw);

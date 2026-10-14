@@ -195,6 +195,15 @@ number:
     read_back: false
 
 select:
+  # bit_mask select: a 2-bit field (values 0..3) of a 1-byte register
+  - platform: vitohome
+    name: "Test Bit Field Select"
+    address: 0x778C
+    bit_mask: 0x30
+    options:
+      0: "Aus"
+      1: "Stufe 1"
+      2: "Stufe 2"
   - platform: vitohome
     name: "Test Mode"
     address: 0x2301
@@ -239,6 +248,13 @@ switch:
     state_address: 0x7660
     length: 4
     byte_offset: 2
+  # bit_mask: one flag of a 1-byte register, written as a read-modify-write
+  # (the other seven bits go back exactly as read). Codegen gate for the
+  # non-GWG branch of the hub's RMW; the address is not a real flag register.
+  - platform: vitohome
+    name: "Test Bit Flag"
+    address: 0x778B
+    bit_mask: 0x08
 
 event:
   # fault-code slot FA01: fires on code change (hex type / cleared / unknown)

@@ -19,7 +19,12 @@
 //   (5) out-of-range EEPROM requests are refused up front, and an FF FF pair
 //       ("address not in use", uwen70) is delivered as 0xFF, not as an error;
 //   (6) PHYSICAL reads are untouched: LEN as requested, bytes as received;
-//   (7) the timing instrument fires once per datapoint, not per pair.
+//   (7) the timing instrument fires once per datapoint, not per pair;
+//   (8) lastReadHadUnservedEeprom() (THIRD_PARTY.md #25) is true inside the
+//       callback exactly when an FF FF pair was part of the read -- also as
+//       the SECOND pair of a 2-byte read -- and false for a good EEPROM read,
+//       after a reset by the next read, and for every PHYSICAL read. The
+//       delivered bytes are the same either way.
 #include <cstdio>
 #include <vector>
 
@@ -37,6 +42,9 @@ int g_timing_calls = 0;
 optolink::OptolinkResult g_last_error = optolink::OptolinkResult::CONTINUE;
 uint16_t g_last_addr = 0;
 std::vector<uint8_t> g_last_data;
+// (8): sampled inside the callback, which is where the hub consumes it.
+const Engine *g_engine = nullptr;
+bool g_last_unserved = false;
 }  // namespace
 
 static void pump(Engine &a, int n = 6) {
@@ -53,6 +61,7 @@ int main() {
     g_responses++;
     g_last_addr = address;
     g_last_data.assign(data, data + length);
+    g_last_unserved = g_engine != nullptr && g_engine->lastReadHadUnservedEeprom();
   });
   adapter.onError([](optolink::OptolinkResult error, uint16_t address) {
     g_errors++;
@@ -61,6 +70,7 @@ int main() {
   });
   adapter.onTiming([](uint32_t, uint32_t, uint16_t) { g_timing_calls++; });
   adapter.begin();
+  g_engine = &adapter;
 
   int failures = 0;
   auto check = [&failures](bool ok, const char *what) {
@@ -83,6 +93,7 @@ int main() {
   check(g_last_addr == 0x0016, "    reported at the requested address");
   check(g_last_data == std::vector<uint8_t>{0x28}, "    delivers the value byte (b1) only");
   check(g_timing_calls == 1, "    (7) timing fired once");
+  check(!g_last_unserved, "    (8) a good pair is not flagged unserved");
 
   // --- (2) same, bytes in separate loop() calls ------------------------------
   // 2026-10-11/13: <<< F0:0F at 0x000C (K45 max pump speed, 1..100 % -> 15).
@@ -155,6 +166,7 @@ int main() {
   pump(adapter);
   check(g_responses == 5 && g_errors == 2 && g_last_data == std::vector<uint8_t>{0xFF},
         "    FF FF pair -> 0xFF delivered, no error");
+  check(g_last_unserved, "    (8) ... and flagged unserved inside the callback");
   uart.clear_written();
 
   // --- (6) PHYSICAL is unchanged ---------------------------------------------
@@ -166,6 +178,28 @@ int main() {
   uart.feed({0x6C, 0x63});
   pump(adapter);
   check(g_responses == 6 && g_last_data == (std::vector<uint8_t>{0x6C, 0x63}), "    both bytes delivered as received");
+  check(!g_last_unserved, "    (8) a PHYSICAL read is never flagged unserved");
+  uart.clear_written();
+
+  // --- (8) the unserved flag on a multi-byte read, and its reset --------------
+  check(adapter.read(0x0017, 2, Mode::EEPROM), "(8) 2-byte EEPROM read, second address unserved");
+  pump(adapter);
+  uart.clear_written();
+  uart.feed({0xE7, 0x18});  // good pair at 0x0017
+  pump(adapter);
+  uart.clear_written();
+  uart.feed({0xFF, 0xFF});  // FF FF at 0x0018
+  pump(adapter);
+  check(g_responses == 7 && g_last_data == (std::vector<uint8_t>{0x18, 0xFF}), "    delivered as 18 FF, unchanged");
+  check(g_last_unserved, "    flagged unserved (the FF FF was the second pair)");
+  uart.clear_written();
+  check(adapter.read(0x0016, 1, Mode::EEPROM), "    next EEPROM read accepted");
+  pump(adapter);
+  uart.clear_written();
+  uart.feed({0xD7, 0x28});
+  pump(adapter);
+  check(g_responses == 8 && g_last_data == std::vector<uint8_t>{0x28}, "    delivers 0x28");
+  check(!g_last_unserved, "    and the flag was reset by the new read");
 
   std::printf("gwg eeprom pairs: %d failure(s)\n", failures);
   return failures == 0 ? 0 : 1;

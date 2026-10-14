@@ -254,6 +254,7 @@ class GWGEngine {
         _eepromPairs(false),
         _eepromLength(0),
         _eepromIndex(0),
+        _eepromUnserved(false),
         _busy(false),
         _currentRequest(),
         _responseBuffer{},
@@ -293,6 +294,16 @@ class GWGEngine {
   // (BE_READ, BE_WRITE), never across modes. Returns false for KMBUS_RAM and
   // KMBUS_EEPROM, which have no write telegram type at all.
   bool write(uint16_t address, const uint8_t *data, uint8_t length, GWGAccessMode access = GWGAccessMode::PHYSICAL);
+
+  // True when the transaction that just completed was an EEPROM read in which
+  // at least one address answered FF FF ("address not in use"). That pair is
+  // still DELIVERED as 0xFF -- ordinary reads, and the hub's all-0xFF warning,
+  // are unchanged -- but a read-modify-write must not merge into it: 0xFF is
+  // indistinguishable from a byte with every bit set, so writing the merge back
+  // would turn an unserved address into a served one (vitohome.cpp,
+  // rmw_handle_read_). Valid inside the onResponse callback; reset by the next
+  // read()/write(). THIRD_PARTY.md #25.
+  bool lastReadHadUnservedEeprom() const { return _eepromUnserved; }
 
   bool begin();
   void loop();
@@ -340,6 +351,9 @@ class GWGEngine {
   bool _eepromPairs;
   uint8_t _eepromLength;
   uint8_t _eepromIndex;
+  // Latched FF FF seen in the current EEPROM transaction (see
+  // lastReadHadUnservedEeprom()).
+  bool _eepromUnserved;
   bool _busy;
   PacketGWG _currentRequest;
   std::array<uint8_t, kResponseBufferSize> _responseBuffer;

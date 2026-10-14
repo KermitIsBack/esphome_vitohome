@@ -20,6 +20,9 @@ void VitoNumber::dump_config() {
     ESP_LOGCONFIG(TAG, "    Extract: %u byte(s) at offset %d of a %u-byte block read", this->extract_len_,
                   this->extract_byte_, this->datapoint_.length());
   }
+  if (this->field_mask_ != 0) {
+    ESP_LOGCONFIG(TAG, "    Bit mask: 0x%02X (writes are read-modify-write)", this->field_mask_);
+  }
 }
 
 void VitoNumber::control(float value) {
@@ -28,6 +31,30 @@ void VitoNumber::control(float value) {
   // width under block extraction, or with a read/write address split; falls
   // back to datapoint_ for the single-address case).
   const uint8_t len = this->get_write_datapoint().length();
+  if (this->field_mask_ != 0) {
+    // Bit field: stage the FIELD value, unsigned, in one byte. The hub merges
+    // it into the byte it reads back first (read-modify-write), so the bits
+    // outside the mask are never touched here. number.py checks min/max
+    // against the mask width; this is the runtime twin of that check.
+    if (!encode_scaled(static_cast<double>(value), this->scale_, false, 1, buf) ||
+        buf[0] > bit_field_max(this->field_mask_)) {
+      ESP_LOGE(TAG, "%s: value %.3f does not fit bit_mask 0x%02X (scale %g) - not written", this->datapoint_.name(),
+               value, this->field_mask_, this->scale_);
+      return;
+    }
+    if (!this->set_write_payload_(buf, 1)) {
+      ESP_LOGE(TAG, "%s: failed to stage write payload", this->datapoint_.name());
+      return;
+    }
+    this->pending_value_ = value;
+    if (this->vh_parent_ == nullptr || !this->vh_parent_->request_write(this)) {
+      ESP_LOGE(TAG, "%s: write could not be queued", this->datapoint_.name());
+      return;
+    }
+    ESP_LOGD(TAG, "%s: queued write %.3f (field 0x%02X, mask 0x%02X)", this->datapoint_.name(), value, buf[0],
+             this->field_mask_);
+    return;
+  }
   if (!encode_scaled(static_cast<double>(value), this->scale_, this->signed_, len, buf)) {
     // Out-of-range for the wire representation. The Python schema already
     // cross-checks min/max against the encodable range, so reaching this
@@ -60,7 +87,14 @@ void VitoNumber::handle_response(const ResponseView &response) {
   }
   double value = NAN;
   bool ok;
-  if (this->extract_byte_ >= 0) {
+  if (this->field_mask_ != 0) {
+    // Bit field: the same extraction as VitoSensor -- one byte, masked and
+    // shifted to the field, then scaled (unsigned; see control()).
+    const uint16_t off = this->extract_byte_ >= 0 ? static_cast<uint16_t>(this->extract_byte_) : 0;
+    uint8_t field = 0;
+    ok = off < response.data_length && extract_bit_field(response.data[off], this->field_mask_, &field) &&
+         decode_scaled(&field, 1, 1, false, this->scale_, &value);
+  } else if (this->extract_byte_ >= 0) {
     const uint16_t off = static_cast<uint16_t>(this->extract_byte_);
     ok =
         off + this->extract_len_ <= response.data_length &&

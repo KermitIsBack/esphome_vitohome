@@ -274,6 +274,11 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
     NONE,
     READ,
     WRITE,
+    // First half of a bit-field write: the read of the byte that the merged
+    // write will replace. It belongs to the WRITE lane (the entity has left
+    // write_queue_ and write_in_flight_ is set), so every completion path
+    // treats its failure as a failed write. See rmw_pending_.
+    RMW_READ,
   };
 
   // One-shot device identification, run immediately after protocol start-up:
@@ -310,6 +315,14 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
 
   void on_response_(const ResponseView &response, uint16_t request_address);
   void on_error_(optolink::OptolinkResult error, uint16_t request_address);
+
+  // --- bit-field read-modify-write (see rmw_pending_) ------------------------
+  void rmw_handle_read_(VitoEntityBase *entity, const ResponseView &response);
+  void rmw_dispatch_write_();
+  // Fail the bit-field write of `entity` WITHOUT transmitting anything: clears
+  // write_in_flight_ and reports the error to the entity. `why` is logged.
+  void rmw_abort_(VitoEntityBase *entity, optolink::OptolinkResult error, const char *why);
+  void rmw_verify_read_back_(VitoEntityBase *entity, const ResponseView &response);
 
   // --- identification -------------------------------------------------------
 
@@ -452,6 +465,40 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
   VitoEntityBase *in_flight_{nullptr};
   OpType in_flight_op_{OpType::NONE};
   uint32_t in_flight_started_ms_{0};
+
+  // --- bit-field read-modify-write ------------------------------------------
+  //
+  // An entity with a field_mask() writes only the masked bits of one byte. The
+  // write lane turns its write into two transactions: an RMW_READ of the byte at
+  // the write address, then a WRITE of that byte with only the masked bits
+  // replaced (decode.h::merge_bit_field). Everything else in the byte -- other
+  // datapoints sharing it, e.g. eight coding flags at GWG EEPROM 0x0005 -- goes
+  // back exactly as read.
+  //
+  // INVARIANT (host-unprovable; docs/design_notes.md SS10a, invariant 3):
+  //   between an RMW_READ response and the dispatch of its merged write,
+  //   dispatch_next_() dispatches NOTHING else -- rmw_pending_ is checked before
+  //   identification, the raw lane and both entity lanes -- and every RMW_READ
+  //   completion path (response, error, address mismatch, watchdog) either arms
+  //   rmw_pending_ or ends in rmw_abort_(). That is what makes two quick changes
+  //   to sibling fields safe: A's read and write can never straddle B's.
+  //
+  // Fail closed: if the read fails for any reason, nothing is written. A blind
+  // fallback write is exactly the corruption this exists to prevent.
+  //
+  // All state is inline and fixed-size (one byte payload; every bit field fits
+  // one byte, enforced at config time), so there is no allocation (guidelines
+  // A4).
+  VitoEntityBase *rmw_pending_{nullptr};  // armed: merged byte ready to write
+  uint8_t rmw_byte_{0};                   // the merged byte to transmit
+  uint8_t rmw_old_{0};                    // the byte as read, for the log line
+  // The bit-field write most recently transmitted, for the read-back check:
+  // after the ACK the hub reads the byte back anyway (read_back), and every bit
+  // OUTSIDE the mask must still match what was written. A difference means the
+  // device changed a sibling field inside the read/write window, or did not take
+  // the write as sent; either way it is logged, never silently accepted.
+  VitoEntityBase *rmw_verify_entity_{nullptr};
+  uint8_t rmw_verify_byte_{0};
 
   // --- identification state -------------------------------------------------
 
