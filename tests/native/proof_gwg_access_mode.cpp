@@ -110,12 +110,16 @@ int main() {
       {optolink::GWGAccessMode::KMBUS_EEPROM, 0x43, "KMBUS_EEPROM -> 0x43"},
   };
   for (const auto &c : cases) {
-    check(adapter.read(0x00F8, 2, c.mode), c.name);
+    // EEPROM is read byte-wise as complement pairs (proof_gwg_eeprom_pairs):
+    // a 2-byte datapoint is two LEN-1 telegrams, so only its TYPE byte and
+    // first telegram are pinned here.
+    const bool eeprom = c.mode == optolink::GWGAccessMode::EEPROM;
+    check(adapter.read(0x00F8, eeprom ? 1 : 2, c.mode), c.name);
     uart.feed({0x05});
     adapter.loop();
-    const std::vector<uint8_t> want = {0x01, c.expected_type, 0xF8, 0x02, 0x04};
+    const std::vector<uint8_t> want = {0x01, c.expected_type, 0xF8, static_cast<uint8_t>(eeprom ? 0x01 : 0x02), 0x04};
     check(uart.written() == want, "  frame matches table");
-    uart.feed({0x20, 0x53});  // dannerph's tested virtual-0xF8 payload bytes
+    uart.feed({0x20, eeprom ? static_cast<uint8_t>(0xDF) : static_cast<uint8_t>(0x53)});
     pump(adapter);
     uart.clear_written();
   }

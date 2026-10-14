@@ -87,6 +87,11 @@ g++ -std=c++17 -Wall -Wextra -Werror "${SAN_FLAGS[@]}" -pthread -DVITOHOME_PROTO
   proof_gwg_access_mode.cpp "${SRCS[@]}" -o gwg_access_mode
 ./gwg_access_mode
 
+echo "== GWG EEPROM complement pairs =="
+g++ -std=c++17 -Wall -Wextra -Werror "${SAN_FLAGS[@]}" -pthread -DVITOHOME_PROTOCOL_GWG -I"$ROOT" -I"$OPTO" \
+  proof_gwg_eeprom_pairs.cpp "${SRCS[@]}" -o gwg_eeprom_pairs
+./gwg_eeprom_pairs
+
 echo "== VS1/KW chaining + the two split sync windows (#22) =="
 g++ -std=c++17 -Wall -Wextra -Werror "${SAN_FLAGS[@]}" -pthread -DVITOHOME_PROTOCOL_KW -I"$ROOT" -I"$OPTO" \
   proof_vs1_chain.cpp "${SRCS[@]}" -o vs1_chain

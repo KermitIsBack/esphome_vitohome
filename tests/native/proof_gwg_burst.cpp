@@ -109,8 +109,9 @@ int main() {
   // This is the whole point: no ENQ is fed, and the frame still goes out.
   check(adapter.read(0x0070, 1), "second read accepted");
   pump(adapter);
-  const std::vector<uint8_t> want70 = {0x01, 0xCB, 0x70, 0x01, 0x04};
-  check(uart.written() == want70, "BURST: sent without waiting for an ENQ");
+  // Burst-sent, so no ENQ_ACK in front (gwgBurstOmitsEnqAck, default true).
+  const std::vector<uint8_t> want70 = {0xCB, 0x70, 0x01, 0x04};
+  check(uart.written() == want70, "BURST: sent without waiting for an ENQ, no 0x01");
   uart.feed({0x5F});
   pump(adapter);
   check(g_responses == 2, "burst-sent read completes");
@@ -192,7 +193,7 @@ int main() {
     const uint8_t payload[] = {0x2A};
     check(adapter.write(0x0076, payload, 1), "write accepted");
     pump(adapter);
-    const std::vector<uint8_t> want_write = {0x01, 0xC8, 0x76, 0x01, 0x2A, 0x04};
+    const std::vector<uint8_t> want_write = {0xC8, 0x76, 0x01, 0x2A, 0x04};
     check(uart.written() == want_write, "BURST: write sent without waiting for an ENQ");
     uart.clear_written();
     uart.feed({0x00});  // GWG answers a write with a single ack byte
@@ -202,7 +203,7 @@ int main() {
     // The read-back the hub issues from handle_write_response().
     check(adapter.read(0x0076, 1), "read-back accepted");
     pump(adapter);
-    const std::vector<uint8_t> want_readback = {0x01, 0xCB, 0x76, 0x01, 0x04};
+    const std::vector<uint8_t> want_readback = {0xCB, 0x76, 0x01, 0x04};
     check(uart.written() == want_readback, "BURST: read-back rides the write's own sync");
     uart.clear_written();
     uart.feed({0x2A});
@@ -286,9 +287,9 @@ int main() {
   // --- (8) gwgBurstOmitsEnqAck: the leading 0x01 on a burst-sent request ----
   // Frame byte 0 is ENQ_ACK. dannerph and uwen70 both treat it as the reply to
   // the device's 0x05 rather than part of the request, and both therefore omit
-  // it when sending inside an already-open window. This project has always
-  // included it unconditionally, and the 2026-10-10 capture's only two
-  // unanswered requests were exactly its two burst-sent ones.
+  // it when sending inside an already-open window. This project included it
+  // unconditionally until the 2026-10-13 hardware A/B (see constants.h), which
+  // made omit=true the default.
   //
   // Pinned here: the flag changes the burst frame and NOTHING else. An
   // ENQ-paced request keeps the 0x01 under both settings -- it is a genuine
@@ -340,7 +341,7 @@ int main() {
       pump(a3);
     }
     optolink::gwgBurstOmitsEnqAck = saved;
-    check(optolink::gwgBurstOmitsEnqAck == false, "flag restored to its default");
+    check(optolink::gwgBurstOmitsEnqAck == true, "flag restored to its default (omit)");
   }
 
   std::printf("gwg burst: %d failure(s)\n", failures);

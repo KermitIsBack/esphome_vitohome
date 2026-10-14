@@ -243,13 +243,21 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
 
   // GWG BURST frame switch, diagnostic. Selects whether a burst-sent request
   // carries the leading 0x01 -- see optolink::gwgBurstOmitsEnqAck in
-  // constants.h for the two candidate behaviours and the evidence. Same shape,
-  // same reasoning and the same not-a-YAML-key rule as the layout flag above:
-  // exactly one is correct, and a real unit is what decides.
+  // constants.h for the two behaviours and the hardware evidence that made
+  // omit=true the default. Same not-a-YAML-key rule as the layout flag above.
   //
   // Takes effect on the next burst-sent request, so one session can A/B it.
   void set_gwg_burst_omits_enq_ack(bool omit) { optolink::gwgBurstOmitsEnqAck = omit; }
   bool gwg_burst_omits_enq_ack() const { return optolink::gwgBurstOmitsEnqAck; }
+
+  // True once the GWG engine has given up on bursting for this session (see
+  // GWGEngine::BURST_FAILURES_BEFORE_FALLBACK). Latched, never cleared: the
+  // engine itself does not re-enable bursting short of a reboot. A test that
+  // compares burst framings must check this first -- a burst probe run after
+  // the fallback sends every request on a fresh ENQ and so proves nothing
+  // about the burst frame (2026-10-13 capture, boot B). Always false on
+  // non-GWG builds.
+  bool gwg_burst_disabled() const { return this->gwg_burst_disabled_; }
 
   void queue_raw_read(uint16_t address, uint8_t length,
                       optolink::GWGAccessMode access = optolink::GWGAccessMode::PHYSICAL);
@@ -456,6 +464,7 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
   int ident_controller_{-1};
   int ident_hw_{-1};
   int ident_sw_{-1};
+  bool gwg_burst_disabled_{false};  // see gwg_burst_disabled()
 
   // --- raw scan console lane -------------------------------------------------
   //

@@ -22,9 +22,20 @@ bool GWGEngine::read(uint16_t address, uint8_t length, GWGAccessMode access) {
   if (_busy) {
     return false;
   }
-  if (_currentRequest.createPacket(gwgReadTypeByte(access), address, length)) {
+  const bool eeprom = access == GWGAccessMode::EEPROM;
+  // An EEPROM datapoint is read one address at a time (see kEepromPairLength),
+  // so the whole run must stay inside GWG's 1-byte address space; that also
+  // keeps length + 1 within the response buffer.
+  if (eeprom && (length == 0 || address + length - 1 > 0xFF)) {
+    optolink_log_i("reading not possible, EEPROM length out of range");
+    return false;
+  }
+  if (_currentRequest.createPacket(gwgReadTypeByte(access), address, eeprom ? 1 : length)) {
     _currentAddress = address;
-    _currentLength = length;
+    _currentLength = eeprom ? kEepromPairLength : length;
+    _eepromPairs = eeprom;
+    _eepromLength = eeprom ? length : 0;
+    _eepromIndex = 0;
     _busy = true;
     _requestTime = _currentMillis;
     optolink_log_i("reading packet OK");
@@ -49,6 +60,7 @@ bool GWGEngine::write(uint16_t address, const uint8_t *data, uint8_t length, GWG
   if (_currentRequest.createPacket(gwgWriteTypeByte(access), address, length, data)) {
     _currentAddress = address;
     _currentLength = length;
+    _eepromPairs = false;  // EEPROM writes keep their single-frame layout
     _busy = true;
     _requestTime = _currentMillis;
     optolink_log_i("writing packet OK");
@@ -225,9 +237,17 @@ void GWGEngine::_receive() {
     _tryOnError(OptolinkResult::TIMEOUT);
     return;
   }
+  // EEPROM pairs land after the value bytes already collected (see
+  // kEepromPairLength); every other read starts at 0, as before.
+  const std::size_t base = _eepromPairs ? _eepromIndex : 0;
   while (_interface->available()) {
-    _responseBuffer[_bytesTransferred] = _interface->read();
-    ++_bytesTransferred;
+    const uint8_t byte = _interface->read();
+    // Never index past the buffer: a device that keeps talking past the
+    // expected count simply fails the length match below and times out.
+    if (base + _bytesTransferred < kResponseBufferSize)
+      _responseBuffer[base + _bytesTransferred] = byte;
+    if (_bytesTransferred < 0xFF)
+      ++_bytesTransferred;
     _lastMillis = _currentMillis;
   }
   // Response-completion fix vs. upstream (THIRD_PARTY.md #8): upstream compared
@@ -240,6 +260,9 @@ void GWGEngine::_receive() {
   // GWG setaddr entry is a stub -- but the 1-byte-ack convention is hardware-
   // confirmed on the KW sibling protocol, THIRD_PARTY.md #11; GWG remains
   // unverified on hardware).
+  // Exception, hardware-confirmed: an EEPROM read is answered with a 2-byte
+  // complement pair per address, so _currentLength is 2 there (see
+  // kEepromPairLength and THIRD_PARTY.md #24).
   const uint8_t expected = isKnownGwgWriteType(_currentRequest.packetType()) ? 1 : _currentLength;
   if (_bytesTransferred == expected) {
     _bytesTransferred = 0;  // VS1 parity; _init() also resets before SEND
@@ -252,6 +275,32 @@ void GWGEngine::_receive() {
     if (_sentInBurst)
       _burstFailures = 0;
     _setState(State::INIT);
+    if (_eepromPairs) {
+      const uint8_t complement = _responseBuffer[_eepromIndex];
+      const uint8_t value = _responseBuffer[_eepromIndex + 1];
+      // FF FF is the one non-complementary pair accepted: uwen70 reads it as
+      // "address not in use", the EEPROM form of the 0xFF every other GWG mode
+      // returns for an unserved address. Passing it on as 0xFF keeps the hub's
+      // all-0xFF warning (gwg_note_all_ff_) working for EEPROM too.
+      const bool unserved = complement == 0xFF && value == 0xFF;
+      if (!unserved && static_cast<uint8_t>(complement + value) != 0xFF) {
+        optolink_log_w("GWG EEPROM pair %02X %02X does not sum to 0xFF", complement, value);
+        _tryOnError(OptolinkResult::CRC);
+        return;
+      }
+      _responseBuffer[_eepromIndex] = value;
+      ++_eepromIndex;
+      if (_eepromIndex < _eepromLength) {
+        // Next address, same transaction. The completion just above re-opened
+        // the burst window, so this normally goes out without waiting for an
+        // ENQ; the request watchdog is re-armed per telegram, because a long
+        // EEPROM run under strict one-telegram-per-ENQ would otherwise exceed
+        // REQUEST_TIMEOUT_MS by design.
+        _currentRequest.createPacket(gwgReadTypeByte(GWGAccessMode::EEPROM), _currentAddress + _eepromIndex, 1);
+        _requestTime = _currentMillis;
+        return;
+      }
+    }
     // Timing instrument (2026-08-24, see OnTimingCallback): reads only.
     // Writes are out of scope -- GWG write framing remains model-derived
     // (THIRD_PARTY.md #8) and this instrument was motivated by, and only
@@ -259,7 +308,7 @@ void GWGEngine::_receive() {
     if (_onTimingCallback && !isKnownGwgWriteType(_currentRequest.packetType())) {
       _onTimingCallback(_enqAgeMillis, _currentMillis - _sendCompleteMillis, _currentAddress);
     }
-    _tryOnResponse(expected);
+    _tryOnResponse(_eepromPairs ? _eepromLength : expected);
   }
 }
 

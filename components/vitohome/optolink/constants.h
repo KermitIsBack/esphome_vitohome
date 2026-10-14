@@ -212,9 +212,9 @@ extern bool gwgWriteEotBeforePayload;
 // GWG BURST frame switch: is the leading 0x01 part of the request, or the
 // acknowledgement of the device's ENQ?
 //
-//   false (default, this project's pre-existing behaviour):
+//   false (this project's behaviour until 2026-10-13):
 //       every request carries 01 as its first byte, ENQ-paced or burst-sent
-//   true (dannerph / uwen70):
+//   true (default; dannerph / uwen70):
 //       01 is written in IDLE as the reply to the device's 0x05 and is NOT
 //       part of the request; a burst-sent request therefore starts at TYPE
 //
@@ -241,13 +241,23 @@ extern bool gwgWriteEotBeforePayload;
 // BURST_FAILURES_BEFORE_FALLBACK. So this project has a negative control for
 // bursting WITH the ACK on the same protocol family.
 //
-// That is suggestive, not decisive: "this unit does not burst at all" explains
-// the same two timeouts. Settling it needs both variants tried against one
-// address on one unit in one session, which is why this is runtime and not
-// constexpr -- same reasoning as gwgWriteEotBeforePayload above.
-// VitoHomeComponent::set_gwg_burst_omits_enq_ack() flips it from a lambda.
+// Settled on hardware (issue #21, GWG_VBEM 0x2053 HW=0x01 SW=0x7A, same unit
+// throughout, 6x PHYSICAL 0x006F per run):
+//   2026-10-11, omit=true:  25 of 25 burst-sent requests answered (6 x 0x006F,
+//       then EEPROM, mixed CB/AE and a 15-address 9E sweep), no fallback.
+//   2026-10-13, omit=false: both burst-sent requests unanswered, fallback after
+//       2; every ENQ-paced request around them was answered.
+// Plus the 2026-10-10 capture above (omit=false: 0 of 2). So the unit DOES
+// burst, and the leading 0x01 is what breaks a burst frame.
 //
-// Default UNCHANGED (false): no wire format moves ahead of a hardware reading.
+// The old default also cost the identification: the boot-time reads at
+// 0xF8..0xFB run before any user action, so with omit=false their burst-sent
+// sub-reads could time out, trip the fallback and leave the device id unknown
+// before the first button press (2026-10-13 boot B: "Device: unknown",
+// strict one-telegram-per-ENQ from the first request on).
+//
+// Still a runtime switch, so a unit that turns out to need the old layout can
+// be set back from a lambda: VitoHomeComponent::set_gwg_burst_omits_enq_ack().
 extern bool gwgBurstOmitsEnqAck;
 
 constexpr uint8_t gwgWriteTypeByte(GWGAccessMode mode) {

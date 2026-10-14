@@ -234,12 +234,12 @@ void VitoHomeComponent::setup() {
   // silence because the engine's own warning is compiled out of normal builds
   // (see GWGEngine::OnBurstFallbackCallback).
   this->vito_->onBurstFallback([this](uint8_t consecutive_failures) {
+    this->gwg_burst_disabled_ = true;
     ESP_LOGW(TAG,
              "GWG burst disabled after %u unanswered burst-sent request(s); polling is now one "
-             "telegram per ENQ for the rest of this session. If this unit is expected to burst, "
-             "the leading 0x01 may be the ENQ acknowledgement rather than part of the request "
-             "(see gwgBurstOmitsEnqAck).",
-             static_cast<unsigned>(consecutive_failures));
+             "telegram per ENQ for the rest of this session (burst frames %s the leading 0x01; "
+             "see gwgBurstOmitsEnqAck).",
+             static_cast<unsigned>(consecutive_failures), optolink::gwgBurstOmitsEnqAck ? "omit" : "carry");
   });
 #endif
 

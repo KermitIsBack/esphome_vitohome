@@ -252,10 +252,15 @@ rather than assumed**:
 and pass the proof suite (`tests/native/proof_gwg_burst.cpp` asserts the strict
 one-telegram-per-ENQ property instead when it is off).
 
-Still worth confirming on a GWG unit specifically: that the second telegram of a
-burst is answered there too. If `GWG burst disabled` shows up in the log, it is
-not. The KW confirmation above makes that likely but not certain — GWG is a
-different protocol on the same family.
+**GWG bursting is hardware-confirmed** (issue #21, GWG_VBEM `0x2053`
+SW `0x7A`), with one condition: a burst-sent GWG request must **not** carry the
+leading `0x01`. That byte acknowledges the device's ENQ, and a burst request
+answers none. With it left off, 25 of 25 burst-sent requests were answered;
+with it kept, 0 of 4, across two sessions. `gwgBurstOmitsEnqAck` therefore
+defaults to `true`. With the old default, the boot-time identification reads
+could already trip the fallback and lose the device id before any user
+action. If `GWG burst disabled` still shows up in a log, that unit differs —
+report it.
 
 #### The two windows, separated
 
@@ -286,6 +291,19 @@ current one. `GWGEngine::_init()`'s burst path runs on the same rule.
 Exceeding the window remains a **soft** failure — the chain ends and the next
 telegram waits for an ENQ — so the cost of being too tight is throughput, not
 correctness.
+
+### GWG EEPROM: one complement pair per address
+
+An EEPROM (`eeprom`, `0xAE`) read is not answered with LEN data bytes. Each
+address returns a **pair**: byte 0 is the one's complement of byte 1, byte 1 is
+the value, and `b0 + b1 == 0xFF`. This holds whether the telegram asks for one
+byte or two. The engine therefore reads an EEPROM datapoint byte-wise (one LEN-1
+telegram per address, chained in a burst), checks every pair, and delivers only
+the value bytes. A pair that does not check out fails the read with `CRC`; `FF FF`
+("address not in use") is delivered as `0xFF`. The evidence is in
+`GWGEngine::kEepromPairLength`. The decisive point: burner hours at `0x0017`
+stepped `E8 17` → `E7 18` between two days, so the second byte is the counter.
+EEPROM writes are unchanged; their frame is still unconfirmed.
 
 ### Identification under GWG
 

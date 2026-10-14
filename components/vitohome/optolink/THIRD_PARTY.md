@@ -583,7 +583,27 @@ These are intentional divergences from upstream `edc059a7`:
     every reading is used as a difference against an earlier one, and
     `system_clock` can be stepped backwards mid-run.
 
-Items 7-12, 18, 19, 21 and 22 are the only intentional changes to on-wire/runtime
+24. **GWG EEPROM complement pairs + burst frame default (behavioral divergence,
+    hardware-sourced, 2026-10-13).** Two changes, both from captures on one
+    GWG_VBEM (`0x2053`, SW `0x7A`, issue #21):
+    - An EEPROM (`0xAE`) read is answered with a 2-byte complement pair per
+      address (`b0 + b1 == 0xFF`, value in `b1`) whatever LEN the telegram
+      carries. Upstream expected LEN data bytes and delivered them raw, so a
+      1-byte EEPROM read completed on the complement (or timed out when both
+      bytes landed in one `loop()`). `read()` now issues one LEN-1 telegram per
+      address, verifies each pair (a mismatch fails the read with `CRC`; `FF FF`
+      is passed on as `0xFF`, "address not in use"), and delivers only the value
+      bytes. Evidence: 14 of 14 EEPROM reads summed to `0xFF`; only `b1` fell
+      inside the declared range of the bounded datapoints; and `0x0017` (burner
+      hours, units) stepped `E8 17` -> `E7 18` between two days. uwen70's eeprom
+      branch documents the same rule. EEPROM *writes* are unchanged.
+    - `gwgBurstOmitsEnqAck` now defaults to `true`: a burst-sent request omits
+      the leading `0x01`. With it, 25 of 25 burst-sent requests were answered;
+      without it, 0 of 4 across two sessions. See `constants.h`.
+    Proofs: `tests/native/proof_gwg_eeprom_pairs.cpp`, and the updated burst
+    frames in `tests/native/proof_gwg_burst.cpp`.
+
+Items 7-12, 18, 19, 21, 22 and 24 are the only intentional changes to on-wire/runtime
 protocol behavior; items 13-16 are structural (no behavior change from any call
 site that exists -- item 16 alters bytes only on a RESPONSE-construction path
 nothing exercises); item 17 changes only construction-failure handling

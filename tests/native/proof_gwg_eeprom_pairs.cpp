@@ -1,0 +1,172 @@
+// Proof: GWG EEPROM (0xAE) reads are complement-pair aware.
+//
+// See GWGEngine::kEepromPairLength. On hardware (issue #21, GWG_VBEM 0x2053
+// SW=0x7A) every EEPROM read returned two bytes, b0 + b1 == 0xFF, value in
+// b1, whatever LEN the telegram carried. The engine therefore reads EEPROM
+// byte-wise -- one LEN-1 telegram per address -- checks each pair, and
+// delivers only the value bytes. The wire bytes used below are the ones from
+// those captures.
+//
+// Pinned here:
+//   (1) a 1-byte EEPROM read sends LEN 1, accepts the pair even when both
+//       bytes arrive in one loop() (the case that used to time out), and
+//       delivers b1 only;
+//   (2) the same with the two bytes arriving in separate loop() calls;
+//   (3) a 2-byte EEPROM datapoint is two telegrams at consecutive addresses,
+//       the second burst-sent, delivered as 2 value bytes at the base address;
+//   (4) a pair that does not sum to 0xFF fails the read with CRC and delivers
+//       nothing;
+//   (5) out-of-range EEPROM requests are refused up front, and an FF FF pair
+//       ("address not in use", uwen70) is delivered as 0xFF, not as an error;
+//   (6) PHYSICAL reads are untouched: LEN as requested, bytes as received;
+//   (7) the timing instrument fires once per datapoint, not per pair.
+#include <cstdio>
+#include <vector>
+
+#include "fake_optolink.h"
+#include "protocol_select.h"
+
+using namespace esphome::vitohome;
+using Engine = optolink::OptolinkEngine<SelectedProtocol>;
+using Mode = optolink::GWGAccessMode;
+
+namespace {
+int g_responses = 0;
+int g_errors = 0;
+int g_timing_calls = 0;
+optolink::OptolinkResult g_last_error = optolink::OptolinkResult::CONTINUE;
+uint16_t g_last_addr = 0;
+std::vector<uint8_t> g_last_data;
+}  // namespace
+
+static void pump(Engine &a, int n = 6) {
+  for (int i = 0; i < n; ++i)
+    a.loop();
+}
+
+int main() {
+  optolink::optolink_test_clock_freeze();
+
+  FakeOptolink uart;
+  Engine adapter(&uart);
+  adapter.onResponse([](const uint8_t *data, uint8_t length, uint16_t address) {
+    g_responses++;
+    g_last_addr = address;
+    g_last_data.assign(data, data + length);
+  });
+  adapter.onError([](optolink::OptolinkResult error, uint16_t address) {
+    g_errors++;
+    g_last_error = error;
+    g_last_addr = address;
+  });
+  adapter.onTiming([](uint32_t, uint32_t, uint16_t) { g_timing_calls++; });
+  adapter.begin();
+
+  int failures = 0;
+  auto check = [&failures](bool ok, const char *what) {
+    std::printf("  %-64s %s\n", what, ok ? "ok" : "FAIL");
+    if (!ok)
+      failures++;
+  };
+
+  // --- (1) 1-byte EEPROM read, both pair bytes in one loop() ---------------
+  // 2026-10-11/13: >>> 01:AE:16:02:04  <<< D7:28   (0xD7 + 0x28 == 0xFF)
+  check(adapter.read(0x0016, 1, Mode::EEPROM), "(1) EEPROM read of 0x0016 accepted");
+  uart.feed({0x05});
+  adapter.loop();
+  const std::vector<uint8_t> want16 = {0x01, 0xAE, 0x16, 0x01, 0x04};
+  check(uart.written() == want16, "    telegram carries LEN 1");
+  uart.clear_written();
+  uart.feed({0xD7, 0x28});  // both bytes buffered before the next loop()
+  pump(adapter);
+  check(g_responses == 1 && g_errors == 0, "    completes on the pair, no timeout");
+  check(g_last_addr == 0x0016, "    reported at the requested address");
+  check(g_last_data == std::vector<uint8_t>{0x28}, "    delivers the value byte (b1) only");
+  check(g_timing_calls == 1, "    (7) timing fired once");
+
+  // --- (2) same, bytes in separate loop() calls ------------------------------
+  // 2026-10-11/13: <<< F0:0F at 0x000C (K45 max pump speed, 1..100 % -> 15).
+  check(adapter.read(0x000C, 1, Mode::EEPROM), "(2) EEPROM read of 0x000C accepted");
+  pump(adapter);  // rides the burst window opened by (1)
+  const std::vector<uint8_t> want0c = {0xAE, 0x0C, 0x01, 0x04};
+  check(uart.written() == want0c, "    burst-sent, LEN 1, no 0x01");
+  uart.clear_written();
+  uart.feed({0xF0});
+  adapter.loop();
+  check(g_responses == 1, "    one byte is not yet a pair");
+  uart.feed({0x0F});
+  pump(adapter);
+  check(g_responses == 2 && g_last_data == std::vector<uint8_t>{0x0F}, "    then delivers 0x0F");
+
+  // --- (3) 2-byte EEPROM datapoint = two telegrams ---------------------------
+  // Burner hours: 0x0017 units, 0x0018 hundreds. 2026-10-13: E7 18 / F4 0B.
+  const int timing_before = g_timing_calls;
+  check(adapter.read(0x0017, 2, Mode::EEPROM), "(3) 2-byte EEPROM read of 0x0017 accepted");
+  pump(adapter);
+  const std::vector<uint8_t> want17 = {0xAE, 0x17, 0x01, 0x04};
+  check(uart.written() == want17, "    first telegram: 0x0017, LEN 1");
+  uart.clear_written();
+  uart.feed({0xE7, 0x18});
+  pump(adapter);
+  check(g_responses == 2, "    not delivered after the first pair");
+  const std::vector<uint8_t> want18 = {0xAE, 0x18, 0x01, 0x04};
+  check(uart.written() == want18, "    second telegram: 0x0018, burst-sent, LEN 1");
+  uart.clear_written();
+  uart.feed({0xF4, 0x0B});
+  pump(adapter);
+  check(g_responses == 3 && g_errors == 0, "    delivered once both pairs are in");
+  check(g_last_addr == 0x0017, "    at the base address");
+  check(g_last_data == (std::vector<uint8_t>{0x18, 0x0B}), "    as the two value bytes (24 h, 11 x 100 h)");
+  check(g_timing_calls == timing_before + 1, "    (7) timing fired once for the datapoint");
+
+  // --- (4) a broken pair fails the read --------------------------------------
+  check(adapter.read(0x0001, 1, Mode::EEPROM), "(4) EEPROM read accepted");
+  pump(adapter);
+  uart.clear_written();
+  uart.feed({0x57, 0xA9});  // 0x57 + 0xA9 == 0x100, not 0xFF
+  pump(adapter);
+  check(g_responses == 3, "    nothing delivered");
+  check(g_errors == 1 && g_last_error == optolink::OptolinkResult::CRC, "    CRC error raised");
+  check(g_last_addr == 0x0001, "    for the requested address");
+  check(adapter.read(0x0001, 1, Mode::EEPROM), "    engine accepts the next read");
+  pump(adapter);
+  uart.clear_written();
+  uart.feed({0x57, 0xA8});
+  pump(adapter);
+  check(g_responses == 4 && g_last_data == std::vector<uint8_t>{0xA8}, "    and a good pair after it reads 0xA8");
+
+  // A broken SECOND pair fails the whole 2-byte read.
+  check(adapter.read(0x0017, 2, Mode::EEPROM), "    2-byte read accepted");
+  pump(adapter);
+  uart.feed({0xE7, 0x18});
+  pump(adapter);
+  uart.feed({0xF4, 0x0C});
+  pump(adapter);
+  check(g_responses == 4 && g_errors == 2 && g_last_error == optolink::OptolinkResult::CRC,
+        "    a bad second pair fails the whole datapoint");
+  uart.clear_written();
+
+  // --- (5) out-of-range requests --------------------------------------------
+  check(!adapter.read(0x0010, 0, Mode::EEPROM), "(5) EEPROM length 0 refused");
+  check(!adapter.read(0x00FF, 2, Mode::EEPROM), "    EEPROM run past 0xFF (1-byte GWG address) refused");
+  check(adapter.read(0x00FF, 1, Mode::EEPROM), "    EEPROM read of the last address accepted");
+  pump(adapter);
+  uart.feed({0xFF, 0xFF});  // unserved address
+  pump(adapter);
+  check(g_responses == 5 && g_errors == 2 && g_last_data == std::vector<uint8_t>{0xFF},
+        "    FF FF pair -> 0xFF delivered, no error");
+  uart.clear_written();
+
+  // --- (6) PHYSICAL is unchanged ---------------------------------------------
+  check(adapter.read(0x0017, 2, Mode::PHYSICAL), "(6) PHYSICAL 2-byte read accepted");
+  pump(adapter);
+  const std::vector<uint8_t> want_phys = {0xCB, 0x17, 0x02, 0x04};
+  check(uart.written() == want_phys, "    LEN 2 on the wire, as requested");
+  uart.clear_written();
+  uart.feed({0x6C, 0x63});
+  pump(adapter);
+  check(g_responses == 6 && g_last_data == (std::vector<uint8_t>{0x6C, 0x63}), "    both bytes delivered as received");
+
+  std::printf("gwg eeprom pairs: %d failure(s)\n", failures);
+  return failures == 0 ? 0 : 1;
+}

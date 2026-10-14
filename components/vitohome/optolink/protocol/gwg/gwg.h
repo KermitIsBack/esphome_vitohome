@@ -38,6 +38,10 @@ back to strict one-telegram-per-ENQ. See ENQ_VALIDITY_MS.
 Sync poke: optional EOT (0x04) nudge while waiting for the device ENQ, gated by
 GWGEngine::SEND_ENQ_POKE (default off, so the default build is unchanged); see
 that flag for the vcontrold/VS1 rationale.
+EEPROM pairs (2026-10-13): an EEPROM (0xAE) read is answered with a 2-byte
+complement pair per address, not with the requested byte count -- see
+kEepromPairLength. read() splits an EEPROM read into one single-byte telegram
+per address, checks each pair and delivers only the value bytes.
 Fail-soft: the constructor no longer abort()s on serial-interface allocation
 failure; it leaves the engine in a failed state and begin() returns false (see
 THIRD_PARTY.md), so the wrapper mark_failed()s instead of the firmware aborting.
@@ -199,6 +203,27 @@ class GWGEngine {
   // safe upper bound (datapoint length is a uint8_t).
   static constexpr std::size_t kResponseBufferSize = 256;
 
+  // EEPROM (0xAE) reads answer with a complement PAIR per address: byte 0 is
+  // the one's complement of byte 1, byte 1 is the value, b0 + b1 == 0xFF.
+  // The pair comes back whatever LEN the telegram carries (LEN 1 and LEN 2
+  // both returned exactly 2 bytes), so a multi-byte EEPROM datapoint is read
+  // byte-wise: one LEN-1 telegram per address, sent back-to-back.
+  //
+  // Hardware evidence, issue #21 (GWG_VBEM 0x2053 SW=0x7A), 2026-10-11 and
+  // 2026-10-13: every one of 14 EEPROM reads returned a pair summing to 0xFF;
+  // only byte 1 fell inside the declared range of the bounded datapoints
+  // (0x000C 1..100 %, 0x0017/0x0018 0..99); and between the two days 0x0017
+  // (burner hours, units) stepped E8 17 -> E7 18, i.e. byte 1 counted 23 -> 24.
+  // uwen70/esphome_vitoconnect's eeprom branch documents the same rule and
+  // also reads byte-wise.
+  //
+  // A pair that does not sum to 0xFF fails the whole read with
+  // OptolinkResult::CRC rather than delivering a guess -- except FF FF, which
+  // uwen70 documents as "address not in use" and is delivered as 0xFF, the
+  // same answer every other GWG mode gives for an unserved address. EEPROM WRITES are not
+  // affected: their frame is still unconfirmed (see gwgWriteEotBeforePayload).
+  static constexpr uint8_t kEepromPairLength = 2;
+
   // Active sync poke. OFF by default: INIT waits passively for the device's ENQ
   // (0x05), byte-identical to the original behaviour. Set to true only if a GWG
   // device never establishes -- then INIT also sends an EOT (0x04) every
@@ -226,6 +251,9 @@ class GWGEngine {
         _interface(nullptr),
         _currentAddress(0),
         _currentLength(0),
+        _eepromPairs(false),
+        _eepromLength(0),
+        _eepromIndex(0),
         _busy(false),
         _currentRequest(),
         _responseBuffer{},
@@ -302,6 +330,16 @@ class GWGEngine {
   internals::SerialInterface *_interface;
   uint16_t _currentAddress;
   uint8_t _currentLength;
+  // EEPROM pair state (see kEepromPairLength). _currentLength is the number
+  // of bytes expected on the wire for the telegram in flight (2 per pair);
+  // _eepromLength is the caller's datapoint length and _eepromIndex the
+  // address offset of the pair in flight. The verified value bytes are packed
+  // into _responseBuffer[0.._eepromIndex-1] as they arrive; the pair in flight
+  // is received at _responseBuffer[_eepromIndex], so the buffer never needs
+  // more than _eepromLength + 1 bytes.
+  bool _eepromPairs;
+  uint8_t _eepromLength;
+  uint8_t _eepromIndex;
   bool _busy;
   PacketGWG _currentRequest;
   std::array<uint8_t, kResponseBufferSize> _responseBuffer;

@@ -17,9 +17,9 @@ namespace esphome::vitohome::optolink {
 bool gwgWriteEotBeforePayload = false;
 
 // GWG BURST frame switch -- see the long comment on the declaration in
-// constants.h. Default false keeps the leading 0x01 on every request,
-// including burst-sent ones, exactly as before.
-bool gwgBurstOmitsEnqAck = false;
+// constants.h. Default true (since 2026-10-13, hardware A/B): a burst-sent
+// request omits the leading 0x01, which acknowledges an ENQ it does not answer.
+bool gwgBurstOmitsEnqAck = true;
 
 const char *errorToString(OptolinkResult error) {
   if (error == OptolinkResult::TIMEOUT) {
