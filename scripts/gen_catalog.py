@@ -447,6 +447,11 @@ class Event:
     # conversions with a real factor; never stacked on Div*/Mult* presets.
     conv_factor: float | None = None
     conv_offset: float | None = None
+    # Vitosoft's declared value type (`Parameter`: Byte, SByte, Int, SInt, Int4,
+    # SInt4, *HighByteFirst, Array, String...). Used only as a second signal for
+    # signedness -- see _declared_unsigned(); it contradicts the borders on 27
+    # rows, so it never decides on its own.
+    parameter_type: str = ""
     # Access-layer array structure: BlockLength bytes = block_factor records
     # (e.g. ecnsysEventType~Error: BlockLength 90, BlockFactor 10 -> ten 9-byte
     # fault slots; MappingType 3). 0/None when the datapoint is not an array.
@@ -663,6 +668,7 @@ def _load_access(path):
                 "unit": _child(e, "Unit"),
                 "fc_read": _child(e, "FCRead"),
                 "fc_write": _child(e, "FCWrite"),
+                "parameter_type": _child(e, "Parameter"),
             }
     return acc
 
@@ -864,6 +870,7 @@ class Catalog:
             token=token,
             fc_read=(acc.get("fc_read") or f.get("FCRead") or ""),
             fc_write=(acc.get("fc_write") or f.get("FCWrite") or ""),
+            parameter_type=(acc.get("parameter_type") or f.get("Parameter") or "").strip(),
             conv_factor=_fval("conversion_factor", "ConversionFactor", is_factor=True),
             conv_offset=_fval("conversion_offset", "ConversionOffset", is_factor=False),
             block_factor=pick("block_factor", "BlockFactor"),
@@ -1405,6 +1412,38 @@ _CONV_LENGTHS = {
     "mult100": (1, 2, 4),
     "rotatebytes": (2,),
 }
+
+
+# Vitosoft's unsigned integer ParameterTypes. The *HighByteFirst variants are
+# deliberately absent: they also change the byte order, which this generator does
+# not model for div2/div10 (no reachable div2/div10 datapoint carries one).
+_UNSIGNED_PARAMETER_TYPES = ("byte", "int", "int4")
+
+
+def _declared_unsigned(ev: Event) -> bool:
+    """Both signals say the raw value is unsigned: the declared ParameterType
+    is Byte/Int/Int4 AND the lower border is present and >= 0.
+
+    Why it matters: the component decodes div2/div10 as SIGNED by default (a
+    sub-zero temperature must read correctly). For a datapoint Vitosoft declares
+    unsigned, that is wrong above half the range: GWG_Kesseltemperatur (0x0070,
+    1 byte, Div2, Int, 0..127.5 degC) at 70 degC is raw 0x8C, which a signed
+    decode publishes as -58 degC. 400 reachable entities across 162 catalogs
+    had that shape.
+
+    Why both signals: ParameterType alone is not trustworthy. It contradicts the
+    borders on 27 rows, among them the outdoor sensor ADC_IstTemperaturwert
+    ~0x0800 (declared Int, bordered -60..60) -- decoding that one unsigned would
+    publish 6553.5 degC at -0.1 degC. Where the lower border is negative, absent
+    or unparsable, the existing rule (converter default / negative border) stands.
+    """
+    if (ev.parameter_type or "").strip().lower() not in _UNSIGNED_PARAMETER_TYPES:
+        return False
+    lo = ev.lower or (ev.values[0].lower if ev.values else "")
+    try:
+        return float(lo) >= 0
+    except (TypeError, ValueError):
+        return False
 
 
 def _llround(x: float) -> int:
@@ -2063,7 +2102,7 @@ def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300, bitfield_wr
         scale = _CONV_SCALE.get(conv, 1.0)
         if scale != 1.0:
             value_filters.append(("multiply", scale))
-        force_signed = force_signed or conv in ("div2", "div10")
+        force_signed = force_signed or (conv in ("div2", "div10") and not _declared_unsigned(ev))
         note = (note + "; " if note else "") + (
             f"converter {conv!r} unsupported at {length} bytes -> noconv"
             + (f" + multiply filter ({scale:g})" if scale != 1.0 else "")
@@ -2174,6 +2213,14 @@ def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300, bitfield_wr
         is_signed = _default_signed or _lo_neg
         if _lo_neg and not _default_signed:
             lines.append("  signed: true")
+        elif _default_signed and _declared_unsigned(ev):
+            # Declared unsigned with a non-negative border: override the
+            # converter's signed default (see _declared_unsigned). This also
+            # lets an upper border above the signed range fit -- 127.5 on a
+            # 1-byte div2 is raw 255, unsigned -- instead of falling back to
+            # the 0/0/1 placeholders.
+            is_signed = False
+            lines.append(f"  signed: false  # Vitosoft ParameterType {ev.parameter_type}, borders {lo}..{hi}")
         unit = _unit_for(ev)
         if unit:
             lines.append(f"  unit_of_measurement: {_yaml_str(unit)}")
@@ -2336,6 +2383,9 @@ def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300, bitfield_wr
     lines.append(f"  converter: {conv}")
     if (force_signed or neg_range) and not default_signed:
         lines.append("  signed: true")
+    elif default_signed and _declared_unsigned(ev):
+        # See _declared_unsigned: unsigned type and a non-negative border.
+        lines.append(f"  signed: false  # Vitosoft ParameterType {ev.parameter_type}, lower border {lo_hint}")
     unit = _unit_for(ev)
     if unit:
         lines.append(f"  unit_of_measurement: {_yaml_str(unit)}")

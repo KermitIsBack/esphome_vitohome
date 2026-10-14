@@ -1386,6 +1386,37 @@ disagree. The generator trusts `Address`, and that datapoint (1 byte,
 
 ---
 
+### 8h. ParameterType is a second signal for signedness, never the only one
+
+Every row of the export declares a value type in `Parameter`: `Byte`, `SByte`,
+`Int`, `SInt`, `Int4`, `SInt4`, the `*HighByteFirst` variants, `Array`,
+`String`... The generator ignored it, and decided signedness from the converter's
+default (`div2`/`div10` signed) and a negative lower border.
+
+That is wrong for **400 reachable entities across 162 catalogs**: declared
+unsigned, decoded signed. It bites above half the range, which for a 1-byte
+`Div2` temperature is 63.5 degC -- `GWG_Kesseltemperatur` (0x0070, `Int`,
+0..127.5) at 70 degC is raw `0x8C`, published as -58 degC. A writable sibling
+fared worse: `GWG_Trinkwasser_SolltemperaturBEM` (`Byte`, `Div2`, 10..90) has an
+upper border of raw 180, which does not fit a SIGNED byte, so the number fell
+back to the 0/0/1 placeholders.
+
+`ParameterType` alone is not the answer either. It contradicts the borders on 27
+rows, among them the classic outdoor sensor `ADC_IstTemperaturwert_ATSV333MW1
+~0x0800` -- declared `Int`, bordered -60..60. A type-only rule (which is what
+gismo2004/optov does) publishes 6553.5 degC there at -0.1 degC.
+
+So the rule needs both signals to agree: `signed: false` is emitted on a
+`div2`/`div10` datapoint only when the type is `Byte`/`Int`/`Int4` **and** the
+lower border is present and >= 0 (`_declared_unsigned()`). That fixes 188
+distinct datapoints. The remaining 212 keep the signed default deliberately:
+210 have no borders at all (mostly raw ADC temperature channels, which can go
+negative) and 2 have a negative border. The `*HighByteFirst` types are left
+alone: they also reverse the byte order, which no reachable `div2`/`div10`
+datapoint needs.
+
+---
+
 ### 9a. Frame logging belongs in the component, not in `uart: debug:`
 
 ESPHome's UART debugger has no notion of an Optolink telegram, so it has to be
