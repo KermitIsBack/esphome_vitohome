@@ -437,7 +437,7 @@ switch:
     name: "RMW Neptun ZP test"
     address: 0x7953
     bit_mask: 0x01
-    
+
 climate:
   # Room climate for heating circuit 1: the slider edits the room setpoint
   # (0x2306, applied through the heat curve); Betriebsart rides along as
