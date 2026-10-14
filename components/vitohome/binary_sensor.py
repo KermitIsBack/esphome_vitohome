@@ -5,6 +5,7 @@ from esphome.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE, CONF_UPDATE_INTERV
 
 from . import (
     CONF_ACCESS,
+    CONF_BIT_MASK,
     CONF_BYTE_OFFSET,
     CONF_LENGTH,
     CONF_VITOHOME_ID,
@@ -20,8 +21,6 @@ from . import (
 )
 
 DEPENDENCIES = ["vitohome"]
-
-CONF_BIT_MASK = "bit_mask"
 
 VitoBinarySensor = vitohome_ns.class_("VitoBinarySensor", binary_sensor.BinarySensor, cg.Component)
 

@@ -603,12 +603,27 @@ These are intentional divergences from upstream `edc059a7`:
     Proofs: `tests/native/proof_gwg_eeprom_pairs.cpp`, and the updated burst
     frames in `tests/native/proof_gwg_burst.cpp`.
 
+25. **GWG EEPROM "address not in use" made observable (additive accessor, no
+    on-wire change).** Item 24 delivers an `FF FF` pair as the value `0xFF`.
+    That stays exactly as it is -- every read, and the hub's all-`0xFF`
+    warning, sees the same bytes as before. What is new is that the engine
+    also *latches* the fact: `GWGEngine::lastReadHadUnservedEeprom()` is true
+    inside the `onResponse` callback of an EEPROM read in which at least one
+    address answered `FF FF`, and is reset by the next `read()` / `write()`.
+    The consumer is the hub's bit-field read-modify-write, which must not merge
+    into such a byte: `0xFF` is indistinguishable from a byte with every flag
+    set, so writing the merge back would turn an unserved address into a
+    served one. No callback signature changed and the other two engines are
+    untouched (the hub queries the accessor only under `VITOHOME_PROTOCOL_GWG`).
+    Proof: case (8) in `tests/native/proof_gwg_eeprom_pairs.cpp`.
+
 Items 7-12, 18, 19, 21, 22 and 24 are the only intentional changes to on-wire/runtime
 protocol behavior; items 13-16 are structural (no behavior change from any call
 site that exists -- item 16 alters bytes only on a RESPONSE-construction path
 nothing exercises); item 17 changes only construction-failure handling
 (abort -> fail-soft), not protocol or normal-path behavior; item 20 is a
-read-only diagnostic that emits nothing; item 23 is confined to the host test
+read-only diagnostic that emits nothing, and item 25 an additive accessor that
+changes no delivered byte; item 23 is confined to the host test
 branch of `optolink_millis()` and cannot reach a device build. Everything else
 preserves upstream protocol behavior. Each of items 7-12, 18 and 19 is covered by a host proof
 that fails against the upstream code (item 18:

@@ -45,6 +45,13 @@ void VitoTextSensor::dump_config() {
   }
   ESP_LOGCONFIG(TAG, "    Type: %s  Address: 0x%04X  Length: %u", type_name(this->type_), this->datapoint_.address(),
                 this->datapoint_.length());
+  if (this->extract_byte_ >= 0) {
+    ESP_LOGCONFIG(TAG, "    Extract: %u byte(s) at offset %d of a %u-byte block read", this->extract_len_,
+                  this->extract_byte_, this->datapoint_.length());
+  }
+  if (this->field_mask_ != 0) {
+    ESP_LOGCONFIG(TAG, "    Bit mask: 0x%02X", this->field_mask_);
+  }
 }
 
 const char *VitoTextSensor::lookup_(uint32_t value) const {
@@ -85,7 +92,14 @@ void VitoTextSensor::publish_enum_(const uint8_t *data, uint8_t len) {
     len = this->extract_len_;
   }
   const uint8_t use = len > 4 ? 4 : len;
-  const uint32_t raw = static_cast<uint32_t>(read_le(data, use));
+  uint32_t raw = static_cast<uint32_t>(read_le(data, use));
+  if (this->field_mask_ != 0) {
+    // Bit field: the options are FIELD values (decode.h, "bit fields").
+    uint8_t field = 0;
+    if (!extract_bit_field(data[0], this->field_mask_, &field))
+      return;
+    raw = field;
+  }
   const char *label = this->lookup_(raw);
   if (label != nullptr) {
     this->publish_state(label);

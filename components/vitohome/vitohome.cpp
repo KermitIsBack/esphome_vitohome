@@ -358,8 +358,10 @@ void VitoHomeComponent::loop() {
         // in_flight_ is known non-null here because the identification and raw
         // branches were excluded.
         ESP_LOGW(TAG, "In-flight %s to %s exceeded watchdog (%" PRIu32 " ms). Clearing.",
-                 this->in_flight_op_ == OpType::WRITE ? "write" : "read", this->in_flight_->get_datapoint().name(),
-                 IN_FLIGHT_WATCHDOG_MS);
+                 this->in_flight_op_ == OpType::WRITE      ? "write"
+                 : this->in_flight_op_ == OpType::RMW_READ ? "read-before-write"
+                                                           : "read",
+                 this->in_flight_->get_datapoint().name(), IN_FLIGHT_WATCHDOG_MS);
 
         VitoEntityBase *entity = this->in_flight_;
         const OpType operation = this->in_flight_op_;
@@ -368,11 +370,17 @@ void VitoHomeComponent::loop() {
         this->in_flight_op_ = OpType::NONE;
 
         if (operation == OpType::READ) {
+          if (this->rmw_verify_entity_ == entity)
+            this->rmw_verify_entity_ = nullptr;  // the read-back is lost; never verify a later poll
           entity->read_queued_ = false;
           entity->handle_error(optolink::OptolinkResult::TIMEOUT);
         } else if (operation == OpType::WRITE) {
+          if (this->rmw_verify_entity_ == entity)
+            this->rmw_verify_entity_ = nullptr;
           entity->write_in_flight_ = false;
           entity->handle_write_error(optolink::OptolinkResult::TIMEOUT);
+        } else if (operation == OpType::RMW_READ) {
+          this->rmw_abort_(entity, optolink::OptolinkResult::TIMEOUT, "read-before-write lost (watchdog)");
         } else {
           // Unreachable against this file as written: in_flight_ and
           // in_flight_op_ are set together (dispatch_write_/dispatch_read_) and
@@ -473,6 +481,15 @@ void VitoHomeComponent::dispatch_next_() {
   if (this->in_flight_ != nullptr || this->ident_in_flight_ || this->raw_in_flight_)
     return;
 
+  // A bit-field write whose byte has just been read goes out before anything
+  // else -- identification, the raw console, other writes, polls. That is the
+  // whole atomicity argument (see rmw_pending_ in vitohome.h): nothing may
+  // touch the bus between the read and the merged write.
+  if (this->rmw_pending_ != nullptr) {
+    this->rmw_dispatch_write_();
+    return;
+  }
+
   // Identification runs before regular traffic so the user sees the device
   // tuple in the first seconds of the log.
   if (this->ident_state_ != IdentState::IDLE && this->ident_state_ != IdentState::DONE) {
@@ -530,6 +547,36 @@ void VitoHomeComponent::dispatch_next_() {
       // A null entry violates registration/enqueue invariants. Remove it so it
       // cannot block all later writes.
       ESP_LOGE(TAG, "null entity in write queue; dropping item");
+      return true;
+    }
+
+    if (entity->field_mask() != 0) {
+      // Bit field: read the byte first (RMW_READ), at the WRITE address and in
+      // the entity's own access mode -- the byte that the merged write will
+      // replace. Config validation pins such an entity to one byte with no
+      // state_address/byte_offset, so the read and the write are the same
+      // register.
+      const optolink::Datapoint &wdp = entity->get_write_datapoint();
+#ifdef VITOHOME_PROTOCOL_GWG
+      const bool read_ok = this->vito_->read(wdp.address(), 1, entity->access());
+#else
+      const bool read_ok = this->vito_->read(wdp.address(), 1);
+#endif
+      if (!read_ok) {
+        // Same transient/permanent split as the plain write below.
+        if (this->vito_->isBusy())
+          return false;
+        ESP_LOGE(TAG, "Engine refused read-before-write for %s (permanent); dropping", entity->get_datapoint().name());
+        entity->write_queued_ = false;
+        return true;
+      }
+      this->in_flight_ = entity;
+      this->in_flight_op_ = OpType::RMW_READ;
+      this->in_flight_started_ms_ = App.get_loop_component_start_time();
+      entity->write_queued_ = false;
+      entity->write_in_flight_ = true;
+      ESP_LOGV(TAG, "Dispatched read-before-write for %s (bit_mask 0x%02X)", entity->get_datapoint().name(),
+               entity->field_mask());
       return true;
     }
 
@@ -1002,8 +1049,10 @@ void VitoHomeComponent::on_response_(const ResponseView &response, uint16_t requ
   // On P300 response.address is the address echoed in the device's own frame,
   // so this is a live wire-level check. KW/GWG carry no response address and
   // echo the retained request address, making the check tautological there.
-  const uint16_t expected_address =
-      operation == OpType::WRITE ? entity->get_write_datapoint().address() : entity->get_datapoint().address();
+  // An RMW_READ is a read of the WRITE register (see the write lane).
+  const uint16_t expected_address = (operation == OpType::WRITE || operation == OpType::RMW_READ)
+                                        ? entity->get_write_datapoint().address()
+                                        : entity->get_datapoint().address();
 
   if (expected_address != response.address) {
     ESP_LOGW(TAG, "Response address 0x%04X does not match in-flight 0x%04X; dropping", response.address,
@@ -1024,13 +1073,26 @@ void VitoHomeComponent::on_response_(const ResponseView &response, uint16_t requ
     // ran for this frame in the onResponse callback, which is correct -- a
     // checksum-valid, mis-addressed frame still proves the peer answers.
     if (operation == OpType::READ) {
+      if (this->rmw_verify_entity_ == entity)
+        this->rmw_verify_entity_ = nullptr;
       entity->read_queued_ = false;
       entity->handle_error(optolink::OptolinkResult::ERROR);
     } else if (operation == OpType::WRITE) {
+      if (this->rmw_verify_entity_ == entity)
+        this->rmw_verify_entity_ = nullptr;
       entity->write_in_flight_ = false;
       entity->handle_write_error(optolink::OptolinkResult::ERROR);
+    } else if (operation == OpType::RMW_READ) {
+      // Fail closed: a byte read from the wrong address must never be merged
+      // and written back.
+      this->rmw_abort_(entity, optolink::OptolinkResult::ERROR, "read-before-write answered for another address");
     }
 
+    return;
+  }
+
+  if (operation == OpType::RMW_READ) {
+    this->rmw_handle_read_(entity, response);
     return;
   }
 
@@ -1050,10 +1112,14 @@ void VitoHomeComponent::on_response_(const ResponseView &response, uint16_t requ
     // will perform publication or read-back.
     if (entity->write_queued_) {
       ESP_LOGV(TAG, "Write ACK for %s superseded by a newer queued value", entity->get_datapoint().name());
+      if (this->rmw_verify_entity_ == entity)
+        this->rmw_verify_entity_ = nullptr;  // the newer write re-reads first
       return;
     }
 
     entity->handle_write_response(response);
+    if (this->rmw_verify_entity_ == entity && !entity->wants_read_back())
+      this->rmw_verify_entity_ = nullptr;  // no read-back is coming
 
     if (entity->wants_read_back()) {
       // Confirm by reading the device's view of the value, ahead of the regular
@@ -1069,11 +1135,106 @@ void VitoHomeComponent::on_response_(const ResponseView &response, uint16_t requ
 
   if (operation == OpType::READ) {
     entity->read_queued_ = false;
+    if (this->rmw_verify_entity_ == entity)
+      this->rmw_verify_read_back_(entity, response);
     entity->handle_response(response);
     return;
   }
 
   ESP_LOGW(TAG, "Response received for %s with no valid operation type", entity->get_datapoint().name());
+}
+
+// ---------------------------------------------------------------------------
+// Bit-field read-modify-write (see rmw_pending_ in vitohome.h)
+// ---------------------------------------------------------------------------
+
+void VitoHomeComponent::rmw_abort_(VitoEntityBase *entity, optolink::OptolinkResult error, const char *why) {
+  ESP_LOGW(TAG, "%s: bit-field write NOT sent: %s", entity->get_datapoint().name(), why);
+  entity->write_in_flight_ = false;
+  entity->handle_write_error(error);
+}
+
+void VitoHomeComponent::rmw_handle_read_(VitoEntityBase *entity, const ResponseView &response) {
+  // Guard on data() before reading the payload (docs/design_notes.md SS10a,
+  // finding 3: a null data() can carry a non-zero length).
+  if (response.data == nullptr || response.data_length < 1 || entity->write_length() < 1) {
+    this->rmw_abort_(entity, optolink::OptolinkResult::LENGTH, "empty read-before-write response");
+    return;
+  }
+#ifdef VITOHOME_PROTOCOL_GWG
+  // An EEPROM FF FF pair means "address not in use" and is delivered as 0xFF,
+  // which is indistinguishable from a byte with every flag set. Merging into it
+  // and writing it back would turn an unserved address into a served one, so
+  // the engine flags the pair (GWGEngine::lastReadHadUnservedEeprom) and the
+  // write stops here. Ordinary reads are unaffected.
+  if (this->vito_->lastReadHadUnservedEeprom()) {
+    this->rmw_abort_(entity, optolink::OptolinkResult::ERROR,
+                     "GWG EEPROM answered FF FF (address not in use) - refusing to merge into it");
+    return;
+  }
+#endif
+  const uint8_t old = response.data[0];
+  uint8_t merged = 0;
+  if (!merge_bit_field(old, entity->field_mask(), entity->write_data()[0], &merged)) {
+    // Unreachable through validated config (the field value is range-checked
+    // against the mask in Python and again by the entity); kept fail-closed.
+    this->rmw_abort_(entity, optolink::OptolinkResult::ERROR, "field value does not fit bit_mask");
+    return;
+  }
+  this->rmw_old_ = old;
+  this->rmw_byte_ = merged;
+  this->rmw_pending_ = entity;  // dispatch_next_() sends it before anything else
+  ESP_LOGD(TAG, "%s: read-modify-write 0x%02X -> 0x%02X (bit_mask 0x%02X)", entity->get_datapoint().name(), old, merged,
+           entity->field_mask());
+}
+
+void VitoHomeComponent::rmw_dispatch_write_() {
+  VitoEntityBase *entity = this->rmw_pending_;
+  const optolink::Datapoint &wdp = entity->get_write_datapoint();
+#ifdef VITOHOME_PROTOCOL_GWG
+  const bool write_ok = this->vito_->write(wdp.address(), &this->rmw_byte_, 1, entity->access());
+#else
+  const bool write_ok = this->vito_->write(wdp.address(), &this->rmw_byte_, 1);
+#endif
+  if (!write_ok) {
+    // Transient: stay armed. dispatch_next_() keeps returning here, so nothing
+    // else reaches the bus until the merged write is out.
+    if (this->vito_->isBusy())
+      return;
+    this->rmw_pending_ = nullptr;
+    this->rmw_abort_(entity, optolink::OptolinkResult::ERROR, "engine refused the merged write (permanent)");
+    return;
+  }
+  this->rmw_pending_ = nullptr;
+  this->in_flight_ = entity;
+  this->in_flight_op_ = OpType::WRITE;
+  this->in_flight_started_ms_ = App.get_loop_component_start_time();
+  // From here the ordinary WRITE completion paths apply (ACK, read-back,
+  // supersede, error, watchdog). Arm the read-back check.
+  this->rmw_verify_entity_ = entity;
+  this->rmw_verify_byte_ = this->rmw_byte_;
+  ESP_LOGV(TAG, "Dispatched merged write for %s (0x%02X -> 0x%02X)", entity->get_datapoint().name(), this->rmw_old_,
+           this->rmw_byte_);
+}
+
+void VitoHomeComponent::rmw_verify_read_back_(VitoEntityBase *entity, const ResponseView &response) {
+  this->rmw_verify_entity_ = nullptr;
+  if (response.data == nullptr || response.data_length < 1)
+    return;  // the entity's own decode path reports a short read
+  const uint8_t mask = entity->field_mask();
+  const uint8_t got = response.data[0];
+  const uint8_t keep = static_cast<uint8_t>(~mask);
+  if ((got & keep) != (this->rmw_verify_byte_ & keep)) {
+    ESP_LOGW(TAG,
+             "%s: read-back 0x%02X differs from the written 0x%02X OUTSIDE bit_mask 0x%02X -- another datapoint in "
+             "this byte changed between the read and the write, or the device did not take the write as sent",
+             entity->get_datapoint().name(), got, this->rmw_verify_byte_, mask);
+  } else if ((got & mask) != (this->rmw_verify_byte_ & mask)) {
+    ESP_LOGW(TAG, "%s: device reports 0x%02X after writing 0x%02X (bit_mask 0x%02X) -- the field did not take",
+             entity->get_datapoint().name(), got, this->rmw_verify_byte_, mask);
+  } else {
+    ESP_LOGD(TAG, "%s: read-back 0x%02X confirms the merged write", entity->get_datapoint().name(), got);
+  }
 }
 
 bool VitoHomeComponent::refresh_all() {
@@ -1263,15 +1424,23 @@ void VitoHomeComponent::on_error_(optolink::OptolinkResult error, uint16_t reque
     return;
 
   if (operation == OpType::READ) {
+    if (this->rmw_verify_entity_ == entity)
+      this->rmw_verify_entity_ = nullptr;  // the read-back failed; never verify a later poll against it
     entity->read_queued_ = false;
     entity->handle_error(error);
   } else if (operation == OpType::WRITE) {
+    if (this->rmw_verify_entity_ == entity)
+      this->rmw_verify_entity_ = nullptr;
     entity->write_in_flight_ = false;
 
     // The device value did not change on a failed write. The entity keeps its
     // published state by default rather than going unavailable. A newer write
     // that was queued during this transaction remains queued.
     entity->handle_write_error(error);
+  } else if (operation == OpType::RMW_READ) {
+    // Fail closed: without the current byte there is nothing safe to merge
+    // into, so the write is abandoned rather than sent blind.
+    this->rmw_abort_(entity, error, "read-before-write failed");
   } else {
     ESP_LOGW(TAG, "Error callback for %s had no valid operation type", name);
   }

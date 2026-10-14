@@ -18,6 +18,9 @@ void VitoSensor::dump_config() {
     ESP_LOGCONFIG(TAG, "    Extract: %u byte(s) at offset %d of a %u-byte block read", this->extract_len_,
                   this->extract_byte_, this->datapoint_.length());
   }
+  if (this->field_mask_ != 0) {
+    ESP_LOGCONFIG(TAG, "    Bit mask: 0x%02X", this->field_mask_);
+  }
 }
 
 void VitoSensor::handle_response(const ResponseView &response) {
@@ -40,7 +43,16 @@ void VitoSensor::handle_response(const ResponseView &response) {
   const uint8_t have = response.data_length;
   double value = NAN;
   bool ok;
-  if (this->extract_byte_ >= 0) {
+  if (this->field_mask_ != 0) {
+    // Bit field: one byte -- at byte_offset inside the block read, or the whole
+    // 1-byte read -- masked and shifted down to the field, THEN scaled.
+    // Unsigned: sensor.py rejects `signed` with bit_mask (no signed bit field
+    // exists in the Vitosoft export to test one against).
+    const uint16_t off = this->extract_byte_ >= 0 ? static_cast<uint16_t>(this->extract_byte_) : 0;
+    uint8_t field = 0;
+    ok = off < have && extract_bit_field(data[off], this->field_mask_, &field) &&
+         decode_scaled(&field, 1, 1, false, this->scale_, &value);
+  } else if (this->extract_byte_ >= 0) {
     // Fetch the whole block (datapoint length), then scale/sign the field of
     // extract_len_ bytes at the offset. The bound check is against the bytes
     // actually received, so a short response fail-softs instead of reading

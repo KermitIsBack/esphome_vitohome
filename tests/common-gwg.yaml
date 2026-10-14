@@ -82,6 +82,17 @@ sensor:
     device_class: temperature
     state_class: measurement
     update_interval: 120s
+  # bit_mask: a FIELD of one byte (decode.h, "bit fields"). SPR30 oben is the
+  # high nibble of EEPROM 0x1E (Vitosoft BitPosition 0, BitLength 4, MSB-first).
+  # Read-only: its 0.1 scale is inferred from the borders (gen_catalog).
+  - platform: vitohome
+    name: "GWG SPR30 Schaltpunkt oben"
+    address: 0x1E
+    access: eeprom
+    length: 1
+    bit_mask: 0xF0
+    converter: div10
+    state_class: measurement
 
 binary_sensor:
   - platform: vitohome
@@ -119,6 +130,17 @@ text_sensor:
       0x00: "Abschaltbetrieb"
       0x01: "Nur Warmwasser"
       0x02: "Heizen und Warmwasser"
+  # bit_mask on a read-only enum: K04 Anlagenschema, high nibble of EEPROM 0x04.
+  - platform: vitohome
+    type: enum
+    name: "GWG K04 Anlagenschema"
+    access: eeprom
+    address: 0x04
+    length: 1
+    bit_mask: 0xF0
+    options:
+      0: "direkter Heizkreis HK A"
+      2: "Mischerkreis HK B"
 
 number:
   # A WRITABLE entity carrying access: -- one mode drives both directions, so
@@ -153,4 +175,43 @@ number:
     min_value: 10
     max_value: 60
     step: 1
+    update_interval: 3600s
+
+  # Bit-field WRITE (read-modify-write): the hub reads EEPROM 0x22, replaces
+  # only the high nibble, writes the byte back. BEMKB6 D-Anteil, 0..15.
+  - platform: vitohome
+    name: "GWG BEMKB6 D-Anteil Regelung"
+    address: 0x22
+    access: eeprom
+    length: 1
+    bit_mask: 0xF0
+    converter: noconv
+    min_value: 0
+    max_value: 15
+    step: 1
+    update_interval: 3600s
+
+# Two flags of the SAME byte (EEPROM 0x05 holds eight coding flags). The
+# read-modify-write keeps each write from clearing the other seven; the hub
+# serialises the two so neither can undo the other. Codegen gate only: GWG
+# writes are unverified on hardware.
+select:
+  - platform: vitohome
+    name: "GWG K13 Speichernachlauf"
+    address: 0x05
+    access: eeprom
+    length: 1
+    bit_mask: 0x08
+    options:
+      0: "mit Nachlauf bis 10 Min."
+      1: "ohne Nachlauf"
+    update_interval: 3600s
+
+switch:
+  - platform: vitohome
+    name: "GWG K16 Heizkreispumpenlogik"
+    address: 0x05
+    access: eeprom
+    length: 1
+    bit_mask: 0x40
     update_interval: 3600s

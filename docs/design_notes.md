@@ -698,6 +698,149 @@ Semantics are pinned in `tests/native/proof_ring_buffer.cpp` under ASan/UBSan
 
 ---
 
+### 5b. Bit fields: read-modify-write
+
+A bit field is a run of bits inside one byte that other datapoints share. GWG
+EEPROM `0x0005` is eight independent coding flags (K10..K17); `0x001E` is two
+4-bit switching points. Across the 2026 export there are 238 such fields, none
+spanning two bytes. Before `bit_mask`, every *writable* one was emitted as a
+whole-byte `number` / `select` / `switch`: choosing "1 ohne Nachlauf" on
+`GWG_K13Speichernachlauf` wrote `0x01` and cleared the other seven flags. On the
+read side, as soon as any sibling flag was set, the byte matched no option.
+
+`bit_mask` (converters.md, *Bit fields*) fixes both sides.
+
+**Read.** The entity extracts `field = (byte & mask) >> shift` before any other
+decoding (`decode.h::extract_bit_field`).
+
+**Write.** The entity stages the *field* value. The hub turns the write into two
+transactions: an `RMW_READ` of the byte at the write address, then a `WRITE` of
+that byte with only the masked bits replaced (`decode.h::merge_bit_field`).
+
+**Why in the hub, not the entity.** Atomicity across *sibling* entities is the
+point. The eight flags of `0x0005` are eight entities; if each did its own read
+then write (the `VitoClock` pattern), two quick changes could interleave as
+A-read, B-read, A-write, B-write, and B's write would restore A's old bit. The
+hub owns the single in-flight slot, so it is the one place that can guarantee
+nothing touches the bus between a read and its merged write: an armed
+`rmw_pending_` is dispatched before identification, the raw lane and both
+entity lanes. That is the one exception to "the raw lane is uniformly
+higher-priority than `write_queue_`" (§5): a scan-console write landing between
+the read and the merged write would be lost.
+
+**Fail closed.** Every `RMW_READ` completion path -- error, address mismatch,
+watchdog, an empty payload -- ends in `rmw_abort_()`: `write_in_flight_` is
+cleared, the entity gets `handle_write_error()`, and *nothing is written*. A
+blind fallback write is exactly the corruption this exists to prevent.
+
+**GWG "not in use".** An EEPROM `FF FF` pair is delivered as `0xFF`
+(THIRD_PARTY.md #24), indistinguishable from "all eight flags set". Merging into
+it and writing it back would turn an unserved address into a served one, so the
+engine latches the fact (`GWGEngine::lastReadHadUnservedEeprom()`,
+THIRD_PARTY.md #25) and the hub refuses. Ordinary reads are unchanged.
+
+**Read-back check.** After the ACK the hub reads the byte back anyway
+(`read_back`). The bits outside the mask must equal what was written; a
+difference is logged as a warning, never silently accepted. It means either the
+device changed a sibling field inside the read/write window (the panel, another
+master), or it did not take the write as sent.
+
+**Coalescing** needs nothing new. A value changed while an RMW is in flight sets
+`write_queued_` as before. The merge reads the entity's staging buffer at merge
+time, so the newest value goes out; the queued item then runs one redundant
+RMW. The `write_queued_` / `write_in_flight_` split (§5) is untouched.
+
+**Which shapes may be written.** The read and the write must be the same
+one-byte register: no `state_address`, no `byte_offset` (validated). The
+generator emits a writable bit field only when the field is byte 0 of a 1-byte
+datapoint -- every GWG bit field. A field in byte 0 of a wider block (the seven
+`Neptun_*` outputs on VScotHO1_72, 2-byte blocks) would need a 1-byte write at
+a block base, a partial-block write with no hardware evidence, so it stays
+read-only; interior fields have no declared write address at all (§8g).
+
+**Evidence for the bit order on multi-bit fields.** §8 proved MSB-first on
+single bits. For 4-bit fields the export's factory defaults (`ALZ`) give an
+independent check: issue #21's unit read `0x0001 = 0xA8` and `0x0002 = 0x91`,
+and under the MSB-first masks all four nibbles decode to their `ALZ` (K06 = 85,
+K05 = 75, K08 = 9, K07 = 8); LSB-first swaps every pair and matches none.
+`0x0016 = 0x28` decodes to its `ALZ` 0 K under patch 0001's inferred encoding.
+This assumes the unit is at factory settings -- five matching fields make
+coincidence unlikely, but it is a cross-check, not a write test.
+
+**Status: hardware-confirmed on P300, single-bit masks, idle bus.** The merge is
+exhaustively host-tested (`test_decode.cpp`: all 36 contiguous masks × 256
+bytes × every field value) and fuzz-oracled with a negative control. On
+VScotHO1_72, 2026-10-14, with the frame log on:
+
+| test | wire | result |
+|---|---|---|
+| fail-closed, `0x7362` | read → error frame (`…:03:01:73:62:01:01:E1`) | no write telegram sent |
+| sequence, `0x2330`, mask `0x01` | read `00` → write `01` → ACK → read-back `01` | read and write adjacent, nothing between |
+| preservation, `0x2306` (room setpoint), mask `0x01` | read `14` → write `15` → read-back `15`; then `15` → `14` | bits `0x14` kept, twice each way |
+| write during a poll burst, `0x7951` | toggled mid-cycle: read → write → ACK, then the queued polls resume | read and write adjacent, ahead of the polls |
+| 1-byte write at a 2-byte block base, `0x7951` / `0x7953` | see below | **destructive** -- byte 1 overwritten |
+
+Still open: multi-bit masks, the read-back warning path, and all of GWG. Note
+that the `refresh_all()` button only marks entities due: they are queued on the
+next hub tick, so pressing it does not by itself produce a busy bus.
+
+**A write narrower than its block corrupts the rest of the block.** The
+`Neptun_*` outputs are bit `0x01` of byte 0 of 2-byte blocks (byte 1 is the
+matching `*_Drehzahl`). On `0x7953` byte 1 read `00` twice before any write
+(scan console and poll). Then:
+
+| our 1-byte write | its checksum byte | block afterwards |
+|---|---|---|
+| `>>> 06:41:06:00:02:79:53:01:01:D6` | `D6` | `01 D6` |
+| `>>> 06:41:06:00:02:79:53:01:00:D5` | `D5` | `00 D5` |
+
+Byte 1 became the checksum byte of our own write telegram, every time; `0x7951`
+showed the same with `D3` / `D4`. The device writes its whole datapoint and
+takes whatever follows the payload on the wire. The ACK was normal and the
+1-byte read-back confirmed byte 0, so the read-back check (which only reads the
+field's own byte) could not see it -- the block length lives only in the export.
+A full 2-byte write (`>>> 41:07:00:02:79:53:02:00:00:D7`) restored `00 00`, and
+the byte then stayed `00`, which also rules out the device deriving byte 1 from
+byte 0. Consequence: the generator writes only datapoints that are their whole
+block (§8g, *narrow writes*). The bit-field rule that already kept `Neptun_*`
+read-only was right for this reason.
+
+**A side effect seen on the same run.** Writing `Sparbetrieb` (`0x2331`) ON
+while party mode was on cleared `0x2330`: the next read-modify-write on it read
+`0x00`, not the `0x01` written 5 s earlier. That is device logic (party and
+economy are mutually exclusive), not a merge problem -- the read-modify-write
+read the device's real state, which is exactly its job -- but HA showed the
+party switch ON for those seconds, because nothing re-reads an entity whose
+register another entity's write changed.
+
+### 5c. No state before the device has answered
+
+Every entity publishes only from a device response -- a read, or the write ACK
+with `read_back: false` -- so Home Assistant shows "unknown" until then, never a
+default. Audited 2026-10-14 across all platforms: sensor, number, binary_sensor,
+select, switch, text and text_sensor publish only from a response; sensor and
+number go to NaN only after three consecutive read errors; the fault `event`
+records a silent baseline on its first read; the connectivity sensor is
+edge-published once the link is up; `device_id` publishes after identification.
+
+The one exception was `climate`, whose state is a PAIR read from two registers.
+It published after the setpoint read with the `setup()` placeholder mode
+(`OFF`), and again with the real mode 120 ms later -- a "Mode: OFF" blip in HA
+history on every reboot, which an automation on "climate turned off" sees
+(hardware logs 2026-10-14). It now publishes nothing until both channels have
+been read once (`VitoClimate::ready_()`). A first mode read that matches no
+preset still counts as read, so a device in an unmapped Betriebsart does not
+hide the whole climate; the log says the coarse mode is unconfirmed.
+
+Not a component issue, recorded because it looked like one: `esphome logs`
+prints `Current Temperature: 0.00°C` and `Fan Mode: ON` for this climate. The
+device sends neither -- it advertises no current temperature and no fan modes,
+so the API leaves those protobuf fields at their defaults (0, the first enum
+value) -- and aioesphomeapi's state formatter prints them anyway. Home Assistant
+reads the traits and ignores both.
+
+---
+
 ## 6. Device identification — `0x20CB` is only the *family*
 
 With `identify_device: true` the hub runs a small **fail-soft** state machine
@@ -1197,6 +1340,18 @@ address -> demoted to read-only`. `COMMAND_STATE_ADDR`, which supplies real
 declared state addresses, is unaffected — and no datapoint in the export combines
 it with a non-zero `BytePosition`.
 
+#### Narrow writes at the block base
+
+The same principle has a third case, found on hardware 2026-10-14 (§5b): a
+write at the block base that is NARROWER than the block. The device writes its
+whole datapoint and fills the bytes after our payload from the telegram -- the
+checksum, at least. 60 writable entities across P300 catalogs had that shape
+(Vitotwin setpoints, 2 bytes of a 3-byte block; `UhrzeitJH`, 1 byte of the
+8-byte clock block; selects on byte 0 of 2-byte blocks). Every writable field
+with `ByteLength < BlockLength` is now demoted to read-only with a `NOTE`. The
+weekday Schaltzeiten are the documented exception: vcontrold writes 8 bytes per
+day into the 56-byte program, and that path never reaches this rule.
+
 #### The padding is byte-oriented
 
 The full 42-byte read also settled the block layout, and exposed a decode bug:
@@ -1357,7 +1512,14 @@ elsewhere in this file as obligations rather than as tested facts:
    the invariant holding: it clears both lane flags, so a violation costs one
    skipped poll instead of stranding the entity until reboot.
 
-If hub-level host testing is ever taken on, these two are the first things to
+3. **Bit-field read-modify-write atomicity** (§5b) -- between an `RMW_READ`
+   response and the dispatch of its merged write, `dispatch_next_()` dispatches
+   nothing else (`rmw_pending_` is checked first), and every `RMW_READ`
+   completion path either arms `rmw_pending_` or ends in `rmw_abort_()`.
+   Guaranteed by the structure of `dispatch_next_()` and stated as an editing
+   contract next to `rmw_pending_` in `vitohome.h`.
+
+If hub-level host testing is ever taken on, these three are the first things to
 point it at.
 
 Three findings the transaction build surfaced, each now a permanent lesson:
@@ -1507,6 +1669,13 @@ happen in production.
 
 ## 11. Open items / forward work
 
+- **Bit-field writes on hardware (§5b).** Confirmed on VScotHO1_72 (P300) on
+  2026-10-14: fail-closed, the read / merge / write / read-back sequence,
+  preservation of non-zero neighbouring bits, and adjacency during a poll burst.
+  Still to do: a multi-bit mask, and on a GWG unit -- after its plain EEPROM
+  write is confirmed -- two flags of `0x0005` toggled back-to-back, and an
+  `FF FF` address being refused. A 1-byte write into a 2-byte block was shown to
+  overwrite byte 1 (§5b, §8g); such fields stay read-only.
 - **GWG hardware verification.** GWG is implemented and host-proven, and as of
   2026-08-23 has one capture from a live GWG unit. That capture confirmed the
   request framing (`01 CB <addr> <len> 04`) and the `RECV $len` completion rule

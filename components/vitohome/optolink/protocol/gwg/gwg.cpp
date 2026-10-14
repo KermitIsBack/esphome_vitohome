@@ -36,6 +36,7 @@ bool GWGEngine::read(uint16_t address, uint8_t length, GWGAccessMode access) {
     _eepromPairs = eeprom;
     _eepromLength = eeprom ? length : 0;
     _eepromIndex = 0;
+    _eepromUnserved = false;
     _busy = true;
     _requestTime = _currentMillis;
     optolink_log_i("reading packet OK");
@@ -61,6 +62,7 @@ bool GWGEngine::write(uint16_t address, const uint8_t *data, uint8_t length, GWG
     _currentAddress = address;
     _currentLength = length;
     _eepromPairs = false;  // EEPROM writes keep their single-frame layout
+    _eepromUnserved = false;
     _busy = true;
     _requestTime = _currentMillis;
     optolink_log_i("writing packet OK");
@@ -288,6 +290,8 @@ void GWGEngine::_receive() {
         _tryOnError(OptolinkResult::CRC);
         return;
       }
+      if (unserved)
+        _eepromUnserved = true;  // still delivered as 0xFF; see lastReadHadUnservedEeprom()
       _responseBuffer[_eepromIndex] = value;
       ++_eepromIndex;
       if (_eepromIndex < _eepromLength) {

@@ -4,7 +4,9 @@ import esphome.config_validation as cv
 from esphome.const import CONF_ADDRESS, CONF_NAME, CONF_OPTIONS, CONF_TYPE, CONF_UPDATE_INTERVAL
 
 from . import (
+    BIT_MASK_SCHEMA,
     CONF_ACCESS,
+    CONF_BIT_MASK,
     CONF_BYTE_LENGTH,
     CONF_BYTE_OFFSET,
     CONF_LENGTH,
@@ -15,10 +17,13 @@ from . import (
     MAX_P300_READ_LENGTH,
     VitoHomeComponent,
     datapoint_expression,
+    emit_bit_mask,
     emit_option_table,
     emit_poll_interval,
     pop_poll_interval,
     register_hub_sensor,
+    validate_bit_field,
+    validate_bit_field_values,
     validate_fault_codes,
     validate_length_in,
     vitohome_ns,
@@ -126,6 +131,11 @@ def _validate_enum_extraction(config):
     return config
 
 
+def _validate_enum_bit_field(config):
+    """With bit_mask the enum options are FIELD values (0..bit_field_max(mask))."""
+    return validate_bit_field_values(config, config[CONF_OPTIONS], CONF_OPTIONS)
+
+
 def _validate_code_bytes(config):
     """The error_history codes map is keyed by the decoded wire code BYTE, so
     every key must fit 0..0xFF -- a wider key is a dead entry that can never
@@ -179,9 +189,14 @@ CONFIG_SCHEMA = cv.typed_schema(
                     cv.Optional(CONF_BYTE_OFFSET): cv.int_range(min=0, max=MAX_P300_READ_LENGTH - 1),
                     cv.Optional(CONF_BYTE_LENGTH): cv.int_range(min=1, max=4),
                     cv.Required(CONF_OPTIONS): _VALUE_MAP,
+                    # A field of one byte (decode.h, "bit fields"); the options
+                    # are field values. Read-only, so any 1-byte shape.
+                    cv.Optional(CONF_BIT_MASK): BIT_MASK_SCHEMA,
                 }
             ),
             _validate_enum_extraction,
+            validate_bit_field(writable=False),
+            _validate_enum_bit_field,
         ),
         "error_history": cv.All(
             _addressed(
@@ -272,6 +287,7 @@ async def to_code(config):
     if count:
         cg.add(var.set_options(table, count))
 
+    emit_bit_mask(var, config)
     if CONF_ACCESS in config:
         cg.add(var.set_access(config[CONF_ACCESS]))
 

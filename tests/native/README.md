@@ -70,7 +70,19 @@ parser is exercised across the boundary it crosses on every poll. Both pass.
 - `fuzz_decode.cpp` — the same two builds over the buffer-writing helpers in
   `decode.h`: `decode_schaltzeiten_day`, `decode_ascii`, `decode_utf16`,
   `format_raw_dump`, `decode_datetime_bcd`, `encode_scaled`, `encode_raw_le`
-  and `encode_schaltzeiten_day`.
+  and `encode_schaltzeiten_day`, plus round-trip oracles on the bit-field
+  read-modify-write merge (`merge_bit_field` / `extract_bit_field`: the bits
+  outside the mask are unchanged, the field reads back as written). The
+  `kDSeed_bitfield_*` seeds are what make those oracles fire on a leaky merge;
+  negative-controlled with `old | shifted` in place of the masked merge.
+- `test_decode.cpp` also covers the bit-field helpers **exhaustively**: all 256
+  masks against a brute-force contiguity reference, and for each of the 36
+  contiguous masks every old byte and every field value up to one past the
+  mask's capacity. Pinned with the issue #21 bytes (`0xA8`, `0x91`) decoding to
+  the export's factory defaults.
+- `proof_gwg_eeprom_pairs.cpp` case (8) pins `GWGEngine::lastReadHadUnservedEeprom()`
+  (THIRD_PARTY.md #25): set inside the callback exactly when an `FF FF` pair was
+  part of the read, reset by the next read, never set for PHYSICAL.
 - `fuzz_corpus_decode.h` — its seed corpus. The first two bytes of every seed
   steer the output-buffer capacity and the declared field width; the rest is
   the payload.

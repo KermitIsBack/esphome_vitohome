@@ -4,7 +4,9 @@ import esphome.config_validation as cv
 from esphome.const import CONF_ADDRESS, CONF_NAME, CONF_OPTIONS, CONF_UPDATE_INTERVAL
 
 from . import (
+    BIT_MASK_SCHEMA,
     CONF_ACCESS,
+    CONF_BIT_MASK,
     CONF_BYTE_LENGTH,
     CONF_BYTE_OFFSET,
     CONF_LENGTH,
@@ -15,12 +17,15 @@ from . import (
     MAX_P300_READ_LENGTH,
     VitoHomeComponent,
     datapoint_expression,
+    emit_bit_mask,
     emit_poll_interval,
     emit_uint32_table,
     emit_write_target,
     field_width,
     pop_poll_interval,
     raw_fits,
+    validate_bit_field,
+    validate_bit_field_values,
     validate_block_extraction,
     vitohome_ns,
 )
@@ -55,7 +60,8 @@ def _validate_options(config):
     labels = list(options.values())
     if len(set(labels)) != len(labels):
         raise cv.Invalid("option labels must be unique", path=[CONF_OPTIONS])
-    return config
+    # With bit_mask the options are FIELD values (0..bit_field_max(mask)).
+    return validate_bit_field_values(config, options, CONF_OPTIONS)
 
 
 CONFIG_SCHEMA = cv.All(
@@ -72,12 +78,16 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_BYTE_OFFSET): cv.int_range(min=0, max=MAX_P300_READ_LENGTH - 1),
             cv.Optional(CONF_BYTE_LENGTH): cv.int_range(min=1, max=2),
             cv.Required(CONF_OPTIONS): _OPTIONS_MAP,
+            # Writes become a read-modify-write of the one byte (vitohome.h,
+            # rmw_pending_); see validate_bit_field for the shape rules.
+            cv.Optional(CONF_BIT_MASK): BIT_MASK_SCHEMA,
             cv.Optional(CONF_READ_BACK, default=True): cv.boolean,
             cv.Optional(CONF_UPDATE_INTERVAL): cv.update_interval,
         }
     )
     .extend(cv.COMPONENT_SCHEMA),
     validate_block_extraction((1, 2)),
+    validate_bit_field(writable=True),
     _validate_options,
 )
 
@@ -106,6 +116,7 @@ async def to_code(config):
     cg.add(var.set_datapoint(datapoint_expression(config[CONF_NAME], read_addr, config[CONF_LENGTH])))
     emit_write_target(var, config, read_addr, write_addr)
     cg.add(var.set_read_back(config[CONF_READ_BACK]))
+    emit_bit_mask(var, config)
     emit_poll_interval(var, poll_ms)
 
     if CONF_ACCESS in config:

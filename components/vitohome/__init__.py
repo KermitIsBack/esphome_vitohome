@@ -138,6 +138,14 @@ CONF_READ_BACK = "read_back"
 CONF_STATE_ADDRESS = "state_address"
 CONF_BYTE_OFFSET = "byte_offset"
 CONF_BYTE_LENGTH = "byte_length"
+# A run of adjacent bits inside one byte, named by its mask (0xF0 = high
+# nibble, 0x08 = one flag). Shared by every platform: binary_sensor has always
+# taken it ("any masked bit set"); sensor, text_sensor enum, number, select and
+# switch take it as a FIELD (decode.h, "bit fields"), and on the three writable
+# platforms a write becomes a read-modify-write of that byte (vitohome.h,
+# rmw_pending_). A mask rather than a bit position because a mask has no
+# numbering convention -- see docs/design_notes.md SS8e.
+CONF_BIT_MASK = "bit_mask"
 # GWG access mode (2026-08-24). Only meaningful under `protocol: GWG` --
 # enforced in _final_validate below, the same place the single-byte GWG
 # address constraint already lives, since both need the full config visible
@@ -406,6 +414,114 @@ def validate_block_extraction(plain_lengths: tuple):
         return config
 
     return validate
+
+
+def _contiguous_bit_mask(value):
+    """A field mask must be one run of adjacent set bits (0x0C, 0xF0; not 0x0A).
+
+    Mirrors ``decode.h::bit_mask_contiguous``. A gapped mask has no single
+    field value -- there is no shift that turns it into a number -- so it is
+    rejected here rather than decoded into something plausible.
+    """
+    if value == 0:
+        raise cv.Invalid("bit_mask must select at least one bit")
+    low = value & -value
+    if (value + low) & value:
+        raise cv.Invalid(
+            f"bit_mask 0x{value:02X} is not contiguous: a field is one run of adjacent bits "
+            "(e.g. 0x0C or 0xF0); a gapped mask has no single field value"
+        )
+    return value
+
+
+# The FIELD-mask spelling (sensor / text_sensor enum / number / select / switch).
+# binary_sensor keeps plain hex_uint8_t: its "any masked bit set" semantics are
+# well defined for any mask.
+BIT_MASK_SCHEMA = cv.All(cv.hex_uint8_t, _contiguous_bit_mask)
+
+
+def bit_field_max(mask: int) -> int:
+    """Largest value a field under ``mask`` can hold (0x0F for 0xF0, 1 for 0x08).
+
+    Mirrors ``decode.h::bit_field_max``; every config-time value check against a
+    bit field goes through this.
+    """
+    return mask >> ((mask & -mask).bit_length() - 1)
+
+
+def validate_bit_field(*, writable: bool):
+    """Return the shared ``bit_mask`` shape validator.
+
+    Every bit field lives in ONE byte (none of the 238 in the Vitosoft export
+    spans two), so the field width must be 1: ``length: 1``, or ``byte_length: 1``
+    with ``byte_offset``. A ``signed`` field is rejected: the export has no
+    signed bit field to test one against, and the runtime decodes fields
+    unsigned.
+
+    On a writable platform the write is a read-modify-write of one register --
+    the byte is read at ``address`` and written back there -- so the read and
+    the write must be the same register: no ``state_address`` and no
+    ``byte_offset`` (whose write target would be an interior address that no
+    datapoint declares; docs/design_notes.md SS8g).
+    """
+
+    def validate(config):
+        if CONF_BIT_MASK not in config:
+            return config
+        width = config.get(CONF_BYTE_LENGTH, 1) if CONF_BYTE_OFFSET in config else config[CONF_LENGTH]
+        if width != 1:
+            raise cv.Invalid(
+                f"bit_mask selects bits of ONE byte, so the field must be 1 byte wide "
+                f"(length: 1, or byte_length: 1 with byte_offset; got {width})",
+                path=[CONF_BIT_MASK],
+            )
+        if config.get(CONF_SIGNED):
+            raise cv.Invalid(
+                "signed cannot be combined with bit_mask: bit fields are decoded unsigned",
+                path=[CONF_SIGNED],
+            )
+        if writable:
+            if CONF_STATE_ADDRESS in config:
+                raise cv.Invalid(
+                    "a bit_mask write is a read-modify-write of one register (the byte is read at "
+                    "address and written back there), so state_address cannot be used with bit_mask",
+                    path=[CONF_STATE_ADDRESS],
+                )
+            if CONF_BYTE_OFFSET in config:
+                raise cv.Invalid(
+                    "a writable bit_mask field must be the whole datapoint (length: 1, no byte_offset): "
+                    "a field inside a block has no declared write address",
+                    path=[CONF_BYTE_OFFSET],
+                )
+        return config
+
+    return validate
+
+
+def validate_bit_field_values(config, values, key):
+    """Reject a raw value that cannot fit the ``bit_mask`` field.
+
+    Shared by select (options), switch (on/off values) and text_sensor enum
+    (options). Mirrors the runtime refusal in decode.h::merge_bit_field: an
+    over-wide value is never truncated into the field.
+    """
+    if CONF_BIT_MASK not in config:
+        return config
+    mask = config[CONF_BIT_MASK]
+    top = bit_field_max(mask)
+    for value in values:
+        if not 0 <= value <= top:
+            raise cv.Invalid(
+                f"value {value} does not fit bit_mask 0x{mask:02X} (field values 0..{top})",
+                path=[key],
+            )
+    return config
+
+
+def emit_bit_mask(var, config):
+    """Emit ``set_field_mask()`` when ``bit_mask`` is configured."""
+    if CONF_BIT_MASK in config:
+        cg.add(var.set_field_mask(config[CONF_BIT_MASK]))
 
 
 def validate_fault_codes(config, key):

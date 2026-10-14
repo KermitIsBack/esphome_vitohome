@@ -59,17 +59,17 @@ A `converter:` is one of several ways a value is read. The full set:
 
 | platform | how the value is read | key options |
 |---|---|---|
-| `sensor` | scaled integer | `converter`, `length`, `signed`, `byte_offset`, `byte_length` |
-| `number` (write) | scaled integer, encodable converters only | `converter`, `length`, `min_value` / `max_value` / `step`, `state_address`, `byte_offset`, `byte_length` |
-| `binary_sensor` | one bit of a byte | `bit_mask`, `length` |
+| `sensor` | scaled integer | `converter`, `length`, `signed`, `byte_offset`, `byte_length`, `bit_mask` |
+| `number` (write) | scaled integer, encodable converters only | `converter`, `length`, `min_value` / `max_value` / `step`, `state_address`, `byte_offset`, `byte_length`, `bit_mask` |
+| `binary_sensor` | any bit of `bit_mask` set | `bit_mask`, `length`, `byte_offset` |
 | `text_sensor` `type: ascii` | raw bytes as an ASCII string | `length` |
 | `text_sensor` `type: utf16` | raw bytes as a UTF-16LE string | `length` (even) |
 | `text_sensor` `type: error_history` | 9-byte slot: code byte + 8-byte BCD timestamp, mapped via `codes:` | `length`, `codes` |
-| `text_sensor` `type: enum` | raw value mapped to a label | `options`, `byte_offset`, `byte_length` |
+| `text_sensor` `type: enum` | raw value mapped to a label | `options`, `byte_offset`, `byte_length`, `bit_mask` |
 | `text_sensor` `type: device_id` | the device identification string | (none) |
 | `text` | 8-byte-per-day switching-time program, read/write as a canonical `"HH:MM-HH:MM ..."` string | `address`, `read_back` |
-| `select` | raw value mapped to a label, writable | `options`, `address`, `state_address`, `byte_offset`, `byte_length` |
-| `switch` | boolean register, writable | `on_value` / `off_value`, `on_values`, `address`, `state_address`, `byte_offset`, `byte_length` |
+| `select` | raw value mapped to a label, writable | `options`, `address`, `state_address`, `byte_offset`, `byte_length`, `bit_mask` |
+| `switch` | boolean register, writable | `on_value` / `off_value`, `on_values`, `address`, `state_address`, `byte_offset`, `byte_length`, `bit_mask` |
 | `binary_sensor` `type: connectivity` | hub-fed Optolink link state, no address | (none) |
 | `event` | fault-code slot; fires an HA event on code change | `address`, `length`, `codes` |
 | `button` | force-refresh: marks all datapoints due | (none) |
@@ -123,6 +123,81 @@ The read-only `text_sensor` `type: enum` supports the same extraction with no
 write side at all: `address` is simply the block base, `length` the block
 read, and the enum field the `byte_length` bytes at `byte_offset` matched
 against `options`.
+
+### Bit fields (`bit_mask`)
+
+Many Viessmann coding values are not whole bytes but a few bits of one: GWG
+EEPROM `0x0005` holds eight independent coding flags, `0x001E` holds two 4-bit
+switching points. `bit_mask` names such a field by its **mask** -- `0xF0` is the
+high nibble, `0x08` one flag -- on `sensor`, `text_sensor` `type: enum`,
+`number`, `select` and `switch`.
+
+```yaml
+select:
+  - platform: vitohome
+    name: "K13 Speichernachlauf"
+    address: 0x0005
+    access: eeprom
+    length: 1
+    bit_mask: 0x08          # one flag of the eight in this byte
+    options:
+      0: "mit Nachlauf bis 10 Min."   # FIELD values, not byte values
+      1: "ohne Nachlauf"
+
+number:
+  - platform: vitohome
+    name: "D-Anteil Regelung"
+    address: 0x0022
+    access: eeprom
+    length: 1
+    bit_mask: 0xF0          # high nibble
+    min_value: 0
+    max_value: 15
+    step: 1
+```
+
+**The field value.** The entity reads its byte as usual (with `byte_offset`
+inside a block read, if given), then works on
+`field = (byte & bit_mask) >> shift`, where `shift` is the mask's lowest set
+bit. Everything downstream uses the field: option values, `on_value` /
+`off_value` / `on_values`, the converter scale, `min_value` / `max_value`.
+
+**Writes are read-modify-write.** A plain write replaces the whole byte, which
+for a bit field would overwrite every other datapoint sharing it. With
+`bit_mask`, the hub instead reads the byte, replaces only the masked bits, and
+writes it back, so the other bits go back exactly as they were read. Nothing
+else is sent between the read and the write, so two quick changes to fields of
+the same byte cannot undo each other. If the read fails, **nothing is written**.
+After the write, the usual read-back also checks that the bits outside the mask
+did not change, and logs a warning if they did (a device-side change inside the
+window, or a write the device did not take as sent). Under GWG, an EEPROM
+address that answers `FF FF` ("not in use") is refused rather than merged into.
+Details: `docs/design_notes.md` §5b.
+
+**Why a mask.** A mask has no bit-numbering convention. Vitosoft numbers
+`BitPosition` from the most significant bit, vcontrold numbers `<bit>` from the
+least significant one (design notes §8e); a value copied from the wrong source
+would silently select the neighbouring field. `0xF0` means the high nibble
+whoever wrote it. `scripts/gen_catalog.py` converts Vitosoft's numbering once and
+prints the original next to the mask:
+
+```yaml
+    bit_mask: 0xF0  # Vitosoft BitPosition 0, BitLength 4 (MSB-first)
+```
+
+**Rules** (all checked at `esphome config` time):
+
+- the mask is one run of adjacent bits (`0x0C`, `0xF0`; not `0x0A`, not `0`);
+- the field is one byte: `length: 1`, or `byte_length: 1` with `byte_offset`;
+- every value fits the field (`0..15` for `0xF0`, `0..1` for `0x08`); a `number`'s
+  `min_value` / `max_value` are checked after the converter scale;
+- `signed` cannot be combined with `bit_mask` (fields are decoded unsigned);
+- on `number`, `select` and `switch` the read and the write must be the same
+  register: no `state_address`, no `byte_offset`.
+
+`binary_sensor` keeps its own meaning of `bit_mask`: ON when **any** masked bit is
+set. That is well defined for any mask, so it is not restricted to contiguous
+ones.
 
 **ASCII** (`type: ascii`): each raw byte is one character. A NUL byte
 terminates the string, trailing spaces are trimmed, and any non-printable byte
@@ -245,6 +320,9 @@ reach the device:
 
 - The configured `length` must be one of the converter's valid lengths
   (the table above); a mismatch is rejected during validation.
+- With `bit_mask`, the mask must be contiguous, the field one byte, every value
+  within the field, and on writable platforms the read and write register the
+  same (see *Bit fields* above).
 - For a writable `number`, the encodable range derived from the converter and
   `length` is checked against `min_value` / `max_value`, using the same range
   check the C++ encode path applies at runtime — so the config-time check and

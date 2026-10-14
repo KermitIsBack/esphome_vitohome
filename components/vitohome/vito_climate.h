@@ -105,6 +105,13 @@ class VitoClimate final : public climate::Climate, public Component {
   void on_mode_read(const ResponseView &response);
 
  protected:
+  // True once every configured channel has been read at least once. Until then
+  // nothing is published: the climate's state is the PAIR (setpoint, mode),
+  // and publishing after only the first read hands Home Assistant the boot
+  // default for the other -- hardware-observed as a "Mode: OFF" blip on every
+  // reboot (setpoint read, publish with the default mode, mode read 120 ms
+  // later, publish HEAT), which an automation on "climate turned off" sees.
+  bool ready_() const { return this->setpoint_known_ && (!this->has_mode_ || this->mode_known_); }
   const VitoClimatePreset *find_preset_by_name_(const char *name) const;
   const VitoClimatePreset *first_preset_with_mode_(climate::ClimateMode mode) const;
 
@@ -113,6 +120,8 @@ class VitoClimate final : public climate::Climate, public Component {
   const VitoClimatePreset *presets_{nullptr};
   uint16_t preset_count_{0};
   bool has_mode_{false};
+  bool setpoint_known_{false};
+  bool mode_known_{false};
   int setpoint_min_{3};
   int setpoint_max_{37};
 };

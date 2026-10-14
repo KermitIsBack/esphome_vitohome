@@ -250,6 +250,86 @@ static void test_masked_bit() {
 }
 
 // --- decode_ascii (HexByte2AsciiByte) --------------------------------------
+// --- bit fields (bit_mask) ---------------------------------------------------
+// Exhaustive: every one of the 256 masks, every old byte, every field value up
+// to one past the mask's capacity. Small enough to enumerate (36 contiguous
+// masks x 256 x <= 257), so nothing is sampled.
+static void test_bit_field() {
+  // Contiguity against a brute-force reference: walk the bits, count runs.
+  int contiguous = 0;
+  for (unsigned m = 0; m < 256; ++m) {
+    int runs = 0;
+    bool in_run = false;
+    for (int b = 0; b < 8; ++b) {
+      const bool set = ((m >> b) & 1U) != 0;
+      if (set && !in_run)
+        ++runs;
+      in_run = set;
+    }
+    const bool ref = runs == 1;
+    CHECK(bit_mask_contiguous(static_cast<uint8_t>(m)) == ref);
+    if (ref)
+      ++contiguous;
+  }
+  CHECK(contiguous == 36);  // 8 + 7 + ... + 1 runs of length 1..8
+
+  for (unsigned m = 1; m < 256; ++m) {
+    const uint8_t mask = static_cast<uint8_t>(m);
+    uint8_t probe = 0xEE;
+    if (!bit_mask_contiguous(mask)) {
+      // A gapped mask is refused by both helpers and writes nothing.
+      CHECK(!extract_bit_field(0x5A, mask, &probe) && probe == 0xEE);
+      CHECK(!merge_bit_field(0x5A, mask, 0, &probe) && probe == 0xEE);
+      continue;
+    }
+    const uint8_t shift = bit_mask_shift(mask);
+    const uint8_t max = bit_field_max(mask);
+    CHECK(static_cast<uint8_t>(max << shift) == mask);  // shift/max describe the mask exactly
+    for (unsigned old = 0; old < 256; ++old) {
+      for (unsigned field = 0; field <= static_cast<unsigned>(max) + 1U; ++field) {
+        uint8_t out = 0xEE;
+        const bool ok = merge_bit_field(static_cast<uint8_t>(old), mask, field, &out);
+        if (field > max) {
+          // Over-wide: refused, never truncated into the field.
+          CHECK(!ok && out == 0xEE);
+          continue;
+        }
+        CHECK(ok);
+        // Bits outside the mask come back exactly as read ...
+        CHECK((out & static_cast<uint8_t>(~mask)) == (old & static_cast<uint8_t>(~mask)));
+        // ... and the field reads back as written.
+        uint8_t back = 0xEE;
+        CHECK(extract_bit_field(out, mask, &back) && back == field);
+      }
+    }
+  }
+  CHECK(!bit_mask_contiguous(0));
+  uint8_t probe = 0xEE;
+  CHECK(!extract_bit_field(0xFF, 0, &probe) && probe == 0xEE);
+  CHECK(!merge_bit_field(0xFF, 0, 0, &probe) && probe == 0xEE);
+  CHECK(!extract_bit_field(0xFF, 0x0F, nullptr));
+  CHECK(!merge_bit_field(0xFF, 0x0F, 0, nullptr));
+
+  // Real bytes. Issue #21 (GWG_VBEM 0x2053 HW 0x01 SW 0x7A): EEPROM 0x0001 read
+  // 0xA8 and 0x0002 read 0x91. Under the MSB-first masks the generator derives
+  // from Vitosoft's BitPosition, both decode to the export's factory defaults
+  // (ALZ): K06 = 10 -> 85 degC, K05 = 8 -> 75 degC, K08 = 9, K07 = 1 -> 8 K.
+  uint8_t f = 0;
+  CHECK(extract_bit_field(0xA8, 0xF0, &f) && f == 10);  // K06 Kesselmaximaltemperatur
+  CHECK(extract_bit_field(0xA8, 0x0F, &f) && f == 8);   // K05 Vorlaufmaximaltemperatur HKB
+  CHECK(extract_bit_field(0x91, 0xF0, &f) && f == 9);   // K08 NeigungKessel
+  CHECK(extract_bit_field(0x91, 0x0F, &f) && f == 1);   // K07 Differenztemperatur
+  // EEPROM 0x0005, eight coding flags; factory byte 0x62 (K16, K15, K11 set).
+  // Setting K13 (0x08) must leave the other seven exactly as they were.
+  uint8_t out = 0;
+  CHECK(merge_bit_field(0x62, 0x08, 1, &out) && out == 0x6A);
+  CHECK(merge_bit_field(0x6A, 0x08, 0, &out) && out == 0x62);
+  // SPR30 (0x001E): factory 0x87, oben = high nibble 8, unten = low nibble 7.
+  CHECK(merge_bit_field(0x87, 0xF0, 9, &out) && out == 0x97);
+  CHECK(merge_bit_field(0x87, 0x0F, 3, &out) && out == 0x83);
+  CHECK(!merge_bit_field(0x87, 0x0F, 16, &out));  // 16 does not fit a nibble
+}
+
 static void test_ascii() {
   char buf[24];
   // "7426" as ASCII codes 0x37 0x34 0x32 0x36.
@@ -567,6 +647,7 @@ int main() {
   test_clock_helpers();
   test_datetime();
   test_masked_bit();
+  test_bit_field();
   test_ascii();
   test_rotate_bytes();
   test_utf16();
