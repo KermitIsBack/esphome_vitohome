@@ -466,8 +466,6 @@ inline bool parse_hhmm_(const char **pp, const char *end, uint8_t *b) {
       p++;
     }
   }
-    if (field[0] > 24 || field[1] > 59 || (field[0] == 24 && field[1] != 0))
-    return false;
   if (!hhmm_to_timebyte(static_cast<uint8_t>(field[0]), static_cast<uint8_t>(field[1]), b))
     return false;
   *pp = p;
@@ -524,18 +522,16 @@ inline bool encode_schaltzeiten_day(const char *str, uint8_t *buf8) {
         if (cur != tok_end)
           return false;  // trailing garbage in the token
         // 24:00 is only valid as an end time.
-        if (onb >= 0xC0)
+        if (onb == 0xC0)
           return false;
-        
-        // Clear intervals whose end precedes the start.
+
+        // Reject reversed intervals without changing the existing program.
         // Equal start and end times remain valid.
-        if (offb < onb) {
-          tmp[2 * pair] = 0xFF;
-          tmp[2 * pair + 1] = 0xFF;
-        } else {
-          tmp[2 * pair] = onb;
-          tmp[2 * pair + 1] = offb;
-        }
+        if (offb < onb)
+          return false;
+
+        tmp[2 * pair] = onb;
+        tmp[2 * pair + 1] = offb;
       }
       p = tok_end;
       pair++;
