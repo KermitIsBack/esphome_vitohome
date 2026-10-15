@@ -201,6 +201,8 @@ _LOG_LINES = [
     "nothing here",
     # A pasted log without a Device line: an address in it is not a device id.
     "read 0x5525 ok\nRaw: 0x00F8: 20",
+    # The burner-control chip, which selects the GFA companion.
+    "Device: 0x20CB (VScotHO1) HW=0x03 SW=0x51 GFA=0x24",
 ]
 
 
@@ -226,12 +228,13 @@ def test_javascript_lookup_matches_resolve(catalog):
     expected = [catalog.resolve(*case)[0] for case in cases]
     assert out["answers"] == expected
     assert out["parsed"] == [
-        {"id": 0x2053, "hw": 0x01, "sw": 0x7A, "f0": None},
-        {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": None},
-        {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": 0x10},
-        {"id": 0x20A3, "hw": None, "sw": None, "f0": None},
-        {"id": None, "hw": None, "sw": None, "f0": None},
-        {"id": None, "hw": None, "sw": None, "f0": None},
+        {"id": 0x2053, "hw": 0x01, "sw": 0x7A, "f0": None, "gfa": None},
+        {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": None, "gfa": None},
+        {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": 0x10, "gfa": None},
+        {"id": 0x20A3, "hw": None, "sw": None, "f0": None, "gfa": None},
+        {"id": None, "hw": None, "sw": None, "f0": None, "gfa": None},
+        {"id": None, "hw": None, "sw": None, "f0": None, "gfa": None},
+        {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": None, "gfa": 0x24},
     ]
     assert out["unknown_without_id"] == {"kind": "unknown", "ident": None}
 
@@ -297,11 +300,15 @@ def test_committed_catalogs_agree_with_manifest_and_lookup(lang):
 
     assert set(lookup["tokens"]) == set(rows)
     for token, row in rows.items():
-        assert lookup["tokens"][token] == {
-            "file": row["file"],
-            "status": row["status"].split(":", 1)[0],
-            "detail": row["status"],
-        }
+        expected = {"file": row["file"], "status": row["status"].split(":", 1)[0], "detail": row["status"]}
+        if row.get("gfa_slots"):
+            expected["gfa"] = True
+        assert lookup["tokens"][token] == expected
+
+    # Every chip the finder offers has its companion in this language.
+    gfa_dir = os.path.join(lang_dir, gc.GFA_DIRNAME)
+    on_disk_gfa = set(os.listdir(gfa_dir)) if os.path.isdir(gfa_dir) else set()
+    assert on_disk_gfa == {gc.gfa_companion_name(chip) for chip in lookup.get("gfa_chips", {})}
 
     referenced = set()
     for entry in lookup["idents"].values():

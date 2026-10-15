@@ -40,7 +40,7 @@
   }
   textarea { min-height: 3.4rem; resize: vertical; }
   input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.7rem; margin-top: 0.9rem; }
+  .fields { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.7rem; margin-top: 0.9rem; }
   fieldset.lang { border: 0; padding: 0; margin: 0.9rem 0 0; display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; align-items: center; }
   fieldset.lang legend { float: left; font-size: 0.85rem; color: var(--muted); margin-right: 0.4rem; padding: 0; }
   fieldset.lang label { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0; font-size: 0.95rem; color: var(--ink); cursor: pointer; }
@@ -82,8 +82,9 @@
       <div><label for="hw">HW index</label><input id="hw" autocomplete="off" placeholder="03"></div>
       <div><label for="sw">SW index</label><input id="sw" autocomplete="off" placeholder="51"></div>
       <div><label for="f0">F0 (optional)</label><input id="f0" autocomplete="off" placeholder=""></div>
+      <div><label for="gfa">GFA chip (optional)</label><input id="gfa" autocomplete="off" placeholder="24"></div>
     </div>
-    <p class="hint">All values are hexadecimal, exactly as logged. The line appears as <code>Device identification: …</code> at start-up and as <code>Device: …</code> in the configuration dump.</p>
+    <p class="hint">All values are hexadecimal, exactly as logged. The line appears as <code>Device identification: …</code> at start-up and as <code>Device: …</code> in the configuration dump. The GFA chip is the byte your unit reports at <code>0x7650</code> (scan console, raw read, 1 byte); it selects the burner-control fault texts.</p>
     <fieldset class="lang">
       <legend>Catalog language</legend>
       <label><input type="radio" name="lang" value="de"> Deutsch</label>
@@ -120,9 +121,9 @@ function pickLanguage() {
   return (navigator.language || "").toLowerCase().startsWith("de") ? "de" : "en";
 }
 const $ = (id) => document.getElementById(id);
-const fields = { id: $("id"), hw: $("hw"), sw: $("sw"), f0: $("f0") };
-const limits = { id: 0xffff, hw: 0xff, sw: 0xff, f0: 0xffff };
-const widths = { id: 4, hw: 2, sw: 2, f0: 2 };
+const fields = { id: $("id"), hw: $("hw"), sw: $("sw"), f0: $("f0"), gfa: $("gfa") };
+const limits = { id: 0xffff, hw: 0xff, sw: 0xff, f0: 0xffff, gfa: 0xff };
+const widths = { id: 4, hw: 2, sw: 2, f0: 2, gfa: 2 };
 let data = null;
 
 function el(tag, attrs, ...children) {
@@ -164,11 +165,42 @@ function tokenTable(entries, picked, withF0) {
   return table;
 }
 
+// The GFA companion for a catalog with a burner-control fault history:
+// { chip, name, file } when the entered chip has texts, { chip: null } when no
+// chip is entered, { chip, unknown: true } when the chip has none.
+function gfaChoice(c, gfa) {
+  if (!c.gfa) return null;
+  if (gfa === null || gfa === undefined) return { chip: null };
+  const chip = gfa.toString(16).toUpperCase().padStart(2, "0");
+  const chips = (data && data.gfa_chips) || {};
+  if (!Object.prototype.hasOwnProperty.call(chips, chip)) return { chip, unknown: true };
+  return { chip, name: chips[chip], file: "gfa/chip_" + chip + ".yaml" };
+}
+
+function gfaNote(choice) {
+  const chips = (data && data.gfa_chips) || {};
+  const known = Object.keys(chips).sort().map((k) => k + (chips[k] ? " " + chips[k] : "")).join(", ");
+  if (choice.chip === null) {
+    return note("", el("p", {},
+      "This unit has a burner-control (GFA) fault history. Its texts depend on the burner-control chip, not on the device type: read ",
+      el("code", {}, "0x7650"), " (1 byte) with the scan console and enter it as GFA chip to add the matching companion. Known chips: ", known, "."));
+  }
+  if (choice.unknown) {
+    return note("warn-note", el("p", {}, "Vitosoft has no fault texts for GFA chip ", el("code", {}, choice.chip),
+      "; the GFA history shows raw codes. Known chips: ", known, "."));
+  }
+  return note("", el("p", {}, "GFA chip ", el("code", {}, choice.chip), choice.name ? " (" + choice.name + ")" : "",
+    ": the companion ", el("a", { href: REPO + "/blob/main/" + catalogPath(choice.file) }, el("code", {}, catalogPath(choice.file))),
+    " adds its fault texts to the catalog's GFA history. Save it in ", el("code", {}, "catalogs/gfa/"), "."));
+}
+
 function catalogBlock(entry) {
   const c = entry.catalog;
   const out = document.createDocumentFragment();
   if (c.status === "ok") {
-    const snippet = "packages:\n  heater: !include catalogs/" + c.file + "\n";
+    const gfa = gfaChoice(c, parseHex(fields.gfa.value, limits.gfa));
+    let snippet = "packages:\n  heater: !include catalogs/" + c.file + "\n";
+    if (gfa && gfa.file) snippet += "  gfa: !include catalogs/" + gfa.file + "\n";
     const copy = el("button", { type: "button" }, "Copy");
     copy.addEventListener("click", () => {
       navigator.clipboard.writeText(snippet).then(() => { copy.textContent = "Copied"; }, () => { copy.textContent = "Copy failed"; });
@@ -178,6 +210,7 @@ function catalogBlock(entry) {
         " (", el("a", { href: RAW + lang + "/" + c.file, download: c.file }, "raw"), ")"),
       el("p", {}, "Save it next to your device YAML in a ", el("code", {}, "catalogs/"), " folder and include it as a package:"),
       el("pre", {}, snippet), copy,
+      ...(gfa ? [gfaNote(gfa)] : []),
       note("warn-note", el("p", {}, "A full catalog registers every datapoint, including the ones left disabled in Home Assistant. On a small ESP, copy only the entities you need into your own file. Not every address answers on every firmware: verify values on your unit.")),
     );
   } else if (c.status === "missing") {

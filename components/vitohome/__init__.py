@@ -666,6 +666,10 @@ async def _emit_hub_sensor_tables():
     )
 
 
+# CORE.data["vitohome"] key: rows -> the emitted VitoOption array (emit_option_table).
+_OPTION_TABLES = "option_tables"
+
+
 def emit_option_table(config, mapping, suffix):
     """Emit ``static const VitoOption <id>_<suffix>[] = {...}`` and return (array, count).
 
@@ -681,14 +685,25 @@ def emit_option_table(config, mapping, suffix):
     so the runtime cost is zero heap. Labels are escaped with
     :func:`cpp_string_literal` exactly as ``datapoint_expression`` does.
 
+    Identical tables are emitted ONCE and shared. A catalog repeats one map on
+    many entities -- the ten system fault-history slots carry the same codes,
+    and a GFA companion (example/catalogs/<lang>/gfa/) gives the same chip map to
+    all twenty burner-control slots -- and each copy cost 8 bytes per row of
+    .rodata (the label strings were already merged by the compiler). The cache
+    is keyed by the rows themselves and lives in CORE.data (guideline D1).
+
     Returns ``(None, 0)`` for an empty mapping: a zero-length array is not valid
     C++, and the entity's null/0 defaults already mean "no table".
     """
     if not mapping:
         return None, 0
-    rows = [cg.RawExpression(f"{{{int(value)}, {cpp_string_literal(label)}}}") for value, label in mapping.items()]
-    table_id = ID(f"{config[CONF_ID]}_{suffix}", is_declaration=True, type=VitoOption)
-    return cg.static_const_array(table_id, cg.ArrayInitializer(*rows, multiline=True)), len(rows)
+    rows = tuple(f"{{{int(value)}, {cpp_string_literal(label)}}}" for value, label in mapping.items())
+    cache = CORE.data.setdefault("vitohome", {}).setdefault(_OPTION_TABLES, {})
+    if rows not in cache:
+        table_id = ID(f"{config[CONF_ID]}_{suffix}", is_declaration=True, type=VitoOption)
+        initializer = cg.ArrayInitializer(*[cg.RawExpression(r) for r in rows], multiline=True)
+        cache[rows] = cg.static_const_array(table_id, initializer)
+    return cache[rows], len(rows)
 
 
 def emit_uint32_table(config, values, suffix):
@@ -780,8 +795,13 @@ def cpp_string_literal(value: str) -> str:
     Entity names are interpolated verbatim into generated C++ (the
     ``optolink::Datapoint`` name argument). A backslash or double-quote in the
     name would otherwise break the literal, so escape those characters.
+
+    Every ``?`` is emitted as backslash-question-mark (a standard C++ escape for
+    the same character): Vitosoft texts contain "??" -- the GFA code 0xFF reads
+    "Fehlermeldung vorhanden (unbekannt/neu??)" -- and ``??)`` is a trigraph,
+    which GCC warns about and a trigraph-enabled build would turn into ``]``.
     """
-    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"').replace("?", "\\?")
     return f'"{escaped}"'
 
 

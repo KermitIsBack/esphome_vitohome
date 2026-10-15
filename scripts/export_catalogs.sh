@@ -2,7 +2,8 @@
 # Regenerate the committed catalog set from a Vitosoft export:
 #
 #   example/catalogs/de/*.yaml + index.csv    German catalogs
-#   example/catalogs/en/*.yaml + index.csv    English catalogs
+#   example/catalogs/de/gfa/chip_<XX>.yaml    German GFA companions, one per chip
+#   example/catalogs/en/...                   the same in English
 #   example/catalogs/resolve.json             the catalog finder's lookup table
 #
 # Both languages carry the same files under the same names; only the entity
@@ -37,12 +38,14 @@ done
 rm -f "$OUT"/*.yaml "$OUT"/index.csv
 for lang in de en; do
   mkdir -p "$OUT/$lang"
-  rm -f "$OUT/$lang"/*.yaml "$OUT/$lang"/index.csv "$OUT/$lang"/resolve.json
+  rm -f "$OUT/$lang"/*.yaml "$OUT/$lang"/index.csv "$OUT/$lang"/resolve.json "$OUT/$lang"/gfa/*.yaml
   "$PY" scripts/gen_catalog.py --data "$DATA" --export-all --culture "$lang" --out "$OUT/$lang"
 done
 
 # One lookup table for both languages; refuse to pick one if they disagree.
-if ! cmp -s "$OUT/de/resolve.json" "$OUT/en/resolve.json"; then
+# Compared in Python (already required) rather than with cmp, which not every
+# Windows shell has.
+if ! "$PY" -c 'import sys; a, b = (open(f, "rb").read() for f in sys.argv[1:]); sys.exit(a != b)' "$OUT/de/resolve.json" "$OUT/en/resolve.json"; then
   echo "error: resolve.json differs between de and en -- the catalog sets do not match" >&2
   exit 1
 fi

@@ -1604,12 +1604,47 @@ burner-control-side `VSKO_Scot_CES_P80~0x4050` (`GFA_READ`). The sets overlap
 heavily -- 60 of the 72 codes they share read the same everywhere -- but 7
 codes genuinely contradict between chips (`0x09` LAS vs low water pressure,
 `0x12` dLP sensor vs water-pressure sensor, `0x05`, `0x10`/`0x11`, `0x1D`), so
-no merged set is safe. The chip is a property of the installed unit, so
-`--gfa-chip` takes it for one catalog; selecting the set at runtime from the
-boot-time read is component work (§11). The GFA texts keep Vitosoft's decimal
+no merged set is safe. The chip is a property of the installed unit, so the
+texts cannot live in a catalog. They come as **companion packages**: one small
+file per chip and language, `example/catalogs/<lang>/gfa/chip_<XX>.yaml`, which
+extends the catalog's twenty GFA slots by id:
+
+```yaml
+text_sensor:
+  - id: !extend gfa_fehler_01
+    codes: &fault_codes
+      0x00: "0: Kein Fehler"
+      ...
+  - id: !extend gfa_fehler_02
+    codes: *fault_codes
+```
+
+All 63 GFA catalogs of the 2026 export carry exactly `gfa_fehler_01..20`, so
+one companion per chip fits every one of them (9 files, 45 KB per language; a
+whole per-chip copy of each catalog would have been ~500 files and ~110 MB per
+language). `esphome config` resolves every companion against VScotHO1_72 in
+both languages and against five catalogs of other families (Vitoplus,
+Vitovalor, VSorp, Vitodens, and a `V300…` unit that has the GFA slots but no
+`GFA_Kennung`): twenty entities, codes merged, no warning. The finder offers
+the companion when a GFA chip is entered or arrives as `&gfa=` in the link;
+`--gfa-chip` still bakes one chip into a single generated catalog. The YAML
+anchor keeps the file small, but after the merge each entity holds its own
+copy of the map -- see *Shared option tables* below. The GFA texts keep Vitosoft's decimal
 prefix ("10: Flammenausfall ..."); three of them carry a wrong one in the
 source (`20.8C` "8c: ...", `24.8A` and `26.8A` "139: Fehler 8Ah"), passed
 through unchanged.
+
+**Shared option tables.** `emit_option_table` writes each `codes:`/`options:`
+map as a `static const VitoOption[]` (guideline A1). A catalog repeats one map
+on many entities -- the ten system fault-history slots, and with a companion
+the twenty GFA slots -- and every copy cost 8 bytes per row of `.rodata` (the
+label strings themselves were already merged by the compiler). Identical
+tables are now emitted once and shared, keyed by their rows in `CORE.data`
+(guideline D1). VScotHO1_72 + the chip-24 companion, ESP-IDF build: flash
+400,303 -> 379,087 bytes (-21.2 KB), 28 distinct tables left. The same build
+surfaced a C++ trap in the texts: GFA code `0xFF` reads "Fehlermeldung
+vorhanden (unbekannt/neu??)", and `??)` is a trigraph -- GCC warned once per
+table. `cpp_string_literal` now escapes every `?`.
 
 ---
 
@@ -1906,12 +1941,12 @@ happen in production.
   write is confirmed -- two flags of `0x0005` toggled back-to-back, and an
   `FF FF` address being refused. A 1-byte write into a 2-byte block was shown to
   overwrite byte 1 (§5b, §8g).
-- **GFA fault texts selected at runtime (§8i).** `--gfa-chip` bakes one chip's
-  texts into one catalog. The component could read `GFA_Kennung` (`0x7650`) in
-  the identify block -- only when GFA history entities are configured, so
-  devices without a burner control never see the read -- and pick from all 8
-  distinct sets carried as shared tables, with the chip in the identification
-  log line and the finder link. Planned as 0009.
+- **The GFA chip in the identification line (§8i).** The companions and the
+  finder are in place; today the user reads `0x7650` with the scan console and
+  enters it. The hub could read `GFA_Kennung` in the identify block -- only
+  when GFA history entities are configured, so devices without a burner
+  control never see the read -- and log it as `GFA=0x24` in the identification
+  line and the finder link (`&gfa=24`); `web/lookup.js` already parses both.
 - **RF level sign (§8i).** `ecnUnit.dBm` values are emitted negated, on the
   strength of the German "-dBm" label and the unsigned `Byte` type. Unverified:
   the reference unit has no RF participant.

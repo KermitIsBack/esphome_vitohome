@@ -108,10 +108,26 @@ back to the hand-curated `vd300` map, as before. `--error-code-set vitosoft` is
 The burner-control (GFA) history is a different code space, keyed by the GFA
 chip, which is a property of the installed unit, not of the device type. Read
 it once (raw read of `0x7650`, one byte; VScotHO1_72 reads `0x24`, "NEC" in
-Vitosoft's chip table) and pass it as `--gfa-chip 24`. The sets differ by chip,
-not by device type, and 7 codes mean different things on different chips, so
-there is no safe default. Without it the GFA slots show raw hex and say how to get the
-texts. The texts keep Vitosoft's own decimal prefix ("10: Flammenausfall in der
+Vitosoft's chip table). The sets differ by chip, not by device type, and 7
+codes mean different things on different chips, so there is no safe default.
+Two ways to attach them:
+
+- **Companion package** (bulk export): `--export-all` writes
+  `gfa/chip_<XX>.yaml` next to the catalogs, one per chip that has texts. It
+  extends the catalog's GFA slots by id (`id: !extend gfa_fehler_01`, the map
+  written once as a YAML anchor), so it is included next to the catalog:
+
+  ```yaml
+  packages:
+    heater: !include catalogs/vscotho1_72.yaml
+    gfa: !include catalogs/gfa/chip_24.yaml
+  ```
+
+  The catalog finder offers the right one when the chip is entered.
+- **`--gfa-chip 24`** (single device): the texts are written into the catalog
+  itself.
+
+Without either, the GFA slots show raw hex and say how to get the texts. The texts keep Vitosoft's own decimal prefix ("10: Flammenausfall in der
 Sicherheitszeit"), the number the boiler display and the manuals use.
 
 The hand-curated maps stay in [`fault_codes.py`](fault_codes.py) for explicit
@@ -274,7 +290,8 @@ bash scripts/export_catalogs.sh <export-dir>
 ```
 
 which writes `example/catalogs/de/` and `example/catalogs/en/` (same files,
-each with its `index.csv`) and the shared `example/catalogs/resolve.json`, and
+each with its `index.csv` and `gfa/` companions) and the shared
+`example/catalogs/resolve.json` (which also lists the GFA chips), and
 refuses to run without the full `Textresource_de.xml` / `Textresource_en.xml`.
 
 ### Using the output

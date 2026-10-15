@@ -11,6 +11,7 @@ for a complete wiring example.
 |---|---|
 | [`de/`](de/) | German entity names, option labels and fault texts |
 | [`en/`](en/) | English (German where Vitosoft has no translation) |
+| `<lang>/gfa/` | Burner-control (GFA) fault texts, one companion per chip |
 
 Both folders hold the same files under the same names; units and entity types
 are identical. Home Assistant derives entity IDs from the names, so switching
@@ -30,8 +31,9 @@ that unit needs a non-Optolink access method.
 
 > **Fault texts.** Every catalog carries Vitosoft's fault texts for its own
 > device. The burner-control (GFA) history slots need the chip your unit reports
-> at `0x7650`; regenerate your catalog with `--gfa-chip` for those (see
-> [`../../scripts/README.md`](../../scripts/README.md)).
+> at `0x7650`: include `gfa/chip_<XX>.yaml` next to the catalog (the finder
+> shows the line), see [`../../scripts/README.md`](../../scripts/README.md).
 
 This stub is hand-written and survives regeneration: `export_catalogs.sh`
-clears only the generated `*.yaml`, `index.csv` and `resolve.json` files.
+clears only the generated `*.yaml` (including `gfa/`), `index.csv` and
+`resolve.json` files.

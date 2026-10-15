@@ -79,6 +79,29 @@ def test_uint32_table_count_matches_values():
     assert count == 4
 
 
+# --- sharing ----------------------------------------------------------------
+# Ten system fault-history slots carry one map, and a GFA companion gives one
+# chip map to twenty slots: identical tables must be emitted once. Measured on
+# VScotHO1_72 + the chip-24 companion: 400,303 -> 379,087 bytes of flash.
+
+
+def test_identical_option_tables_are_shared():
+    codes = {0x00: "0: Kein Fehler", 0x0A: "10: Flammenausfall"}
+    first, n1 = emit_option_table(_CONFIG, codes, "options")
+    second, n2 = emit_option_table({"id": _FakeID("vitohome_ts_2")}, dict(codes), "options")
+    assert first is second and n1 == n2 == 2
+    other, _ = emit_option_table({"id": _FakeID("vitohome_ts_3")}, {0x00: "0: anders"}, "options")
+    assert other is not first
+
+
+def test_shared_tables_do_not_survive_core_reset():
+    codes = {0x01: "x"}
+    before, _ = emit_option_table(_CONFIG, codes, "options")
+    CORE.reset()
+    after, _ = emit_option_table(_CONFIG, codes, "options")
+    assert after is not before
+
+
 # --- label escaping ---------------------------------------------------------
 #
 # Labels are interpolated into the generated C++ table, so a quote or backslash

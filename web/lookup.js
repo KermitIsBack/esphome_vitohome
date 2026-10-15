@@ -19,7 +19,8 @@ function parseHex(text, max) {
 
 // Reads the identification out of anything the hub prints, e.g.
 //   "Device: 0x2053 (GWG_VBEM) HW=0x01 SW=0x7A"
-// Missing fields come back as null.
+// plus an optional "GFA=0x24": the burner-control chip, which selects the GFA
+// fault-text companion. Missing fields come back as null.
 function parseIdentification(text) {
   // Prefer the hub's own "Device:" / "Device identification:" line when a whole
   // log was pasted, so an unrelated 0xNNNN address earlier in it is not taken.
@@ -29,7 +30,7 @@ function parseIdentification(text) {
   const pasted = String(text || "");
   const line = /^.*\bDevice(?: identification)?:.*\b0x[0-9a-f]{4}\b.*$/im.exec(pasted);
   const trimmed = pasted.trim();
-  if (!line && /[\r\n]/.test(trimmed)) return { id: null, hw: null, sw: null, f0: null };
+  if (!line && /[\r\n]/.test(trimmed)) return { id: null, hw: null, sw: null, f0: null, gfa: null };
   const source = line ? line[0].slice(line[0].search(/\bDevice(?: identification)?:/i)) : trimmed;
   const pick = (pattern, max) => {
     const match = pattern.exec(source);
@@ -40,6 +41,7 @@ function parseIdentification(text) {
     hw: pick(/\bHW\s*[=:]\s*(?:0x)?([0-9a-f]{1,2})\b/i, 0xff),
     sw: pick(/\bSW\s*[=:]\s*(?:0x)?([0-9a-f]{1,2})\b/i, 0xff),
     f0: pick(/\bF0\s*[=:]\s*(?:0x)?([0-9a-f]{1,4})\b/i, 0xffff),
+    gfa: pick(/\bGFA\s*[=:]\s*(?:0x)?([0-9a-f]{1,2})\b/i, 0xff),
   };
 }
 

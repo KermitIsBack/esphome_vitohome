@@ -96,6 +96,7 @@ the other language creates new entities. Other languages are one
   | `bytes` | File size |
   | `status` | `ok`, `skipped: …`, or `error: …` |
   | `ext_raw` | Raw identification-extension field |
+  | `gfa_slots` | Burner-control (GFA) history slots in the catalog; such a catalog takes a `gfa/` companion |
 
   Reading it by hand takes three steps, and the device id alone is not enough
   (most ids have several rows):
@@ -116,12 +117,16 @@ the other language creates new entities. Other languages are one
 
 - **`catalogs/README.md`** — a short pointer stub for the directory.
 
+- **`catalogs/<lang>/gfa/chip_<XX>.yaml`** — burner-control (GFA) fault texts,
+  one small companion per chip. Its texts depend on the chip the unit reports at
+  `0x7650`, not on the device type, so they cannot be part of a catalog.
+
 > **Fault texts.** Every catalog carries Vitosoft's own fault texts for its
 > device (or the generic Vitotronic set where the device has none and is a
-> Vitotronic); units without either show the raw code. The burner-control (GFA)
-> history needs the chip your unit reports at `0x7650`: regenerate your catalog
-> with `--gfa-chip` to get those texts — see
-> [`scripts/README.md`](../scripts/README.md).
+> Vitotronic); units without either show the raw code. For the burner-control
+> (GFA) history, read `0x7650` once with the scan console and include the
+> matching companion next to the catalog; the catalog finder shows the line
+> when you enter the chip. See [`scripts/README.md`](../scripts/README.md).
 
 ## Using a catalog
 
@@ -131,6 +136,7 @@ from `vscotho1_72.vitohome.yaml`, which already does):
 ```yaml
 packages:
   heater: !include vscotho1_72.dp.curated.yaml   # or catalogs/de/<your-unit>.yaml
+  # gfa: !include catalogs/de/gfa/chip_24.yaml   # GFA texts for chip 0x24 (a generated catalog only)
 ```
 
 Every generated entity is `disabled_by_default: true`, so you opt in to each one
