@@ -8,10 +8,11 @@ a read-only single bit goes through _emit_bit_field(), which emits a native
 `bit_mask` entity; the component reads the byte first and writes back only the
 field (read-modify-write, vitohome.h rmw_pending_).
 
-Pinned here: the MSB-first mask derivation, the writable-shape gate (byte 0 of a
-1-byte datapoint), the read-only fallbacks (inferred scale, MultOffset with an
-offset, partial-block fields, --no-bitfield-writes), enum handling in field
-units, and the issue #21 bytes decoding to the export's factory defaults.
+Pinned here: the MSB-first mask derivation, the writable-shape gate (a 1-byte
+datapoint, or block mode for a field in a wider block), the read-only fallbacks
+(inferred scale, MultOffset with an offset, a block with a read-only sibling,
+--no-partial-writes), enum handling in field units, and the issue #21 bytes
+decoding to the export's factory defaults.
 
     python -m pytest tests/unit/test_gen_catalog_multibit.py -q
 """
@@ -294,7 +295,7 @@ def test_multoffset_preset_factor_is_writable_with_the_converter():
 # --- the writable-shape gate -----------------------------------------------------------
 
 
-def test_partial_block_field_stays_read_only():
+def _neptun():
     # Neptun_Interne_Pumpe (VScotHO1_72): bit 0x01 of byte 0 of a 2-byte block.
     ev = _flag(
         name="Neptun Interne Pumpe",
@@ -310,10 +311,24 @@ def test_partial_block_field_stays_read_only():
         gc.EventValue(enum_address_value=0, description="Aus"),
         gc.EventValue(enum_address_value=1, description="Ein"),
     ]
-    platform, lines = gc.emit_entity(ev, "full", gc.PROTO_P300)
+    return ev
+
+
+def test_bit_field_in_a_wider_block_is_a_block_write():
+    # Block mode: the whole 2-byte block at the base, byte_offset 0 (which is
+    # what selects block mode), the bit. Byte 1 (Drehzahl) is written back as read.
+    platform, lines = gc.emit_entity(_neptun(), "full", gc.PROTO_P300)
+    assert platform == "switch"
+    assert (_key(lines, "address"), _key(lines, "length"), _key(lines, "byte_offset")) == ("0x7951", "2", "0")
+    assert _mask(lines) == 0x01
+    assert "read-modify-write of the whole 2-byte block" in "\n".join(lines)
+
+
+def test_bit_field_in_a_block_with_a_read_only_sibling_stays_read_only():
+    platform, lines = gc.emit_entity(_neptun(), "full", gc.PROTO_P300, ro_blocks=frozenset({(0x7951, "")}))
     assert platform == "binary_sensor"
     assert _mask(lines) == 0x01
-    assert "partial-block write" in "\n".join(lines)
+    assert "read-only (live) data" in "\n".join(lines)
 
 
 def test_interior_field_reads_the_block_base():
@@ -337,12 +352,12 @@ def test_interior_field_reads_the_block_base():
     assert _mask(lines) == 0x0F
 
 
-def test_no_bitfield_writes_keeps_everything_read_only():
-    platform, lines = gc.emit_entity(_flag(), "full", gc.PROTO_GWG, bitfield_writes=False)
+def test_no_partial_writes_keeps_everything_read_only():
+    platform, lines = gc.emit_entity(_flag(), "full", gc.PROTO_GWG, partial_writes=False)
     assert platform == "binary_sensor"
-    assert "--no-bitfield-writes" in "\n".join(lines)
+    assert "--no-partial-writes" in "\n".join(lines)
     ev = _ev(address=0x0022, lower="0", upper="15", stepping="1")
-    platform, _ = gc.emit_entity(ev, "full", gc.PROTO_GWG, bitfield_writes=False)
+    platform, _ = gc.emit_entity(ev, "full", gc.PROTO_GWG, partial_writes=False)
     assert platform == "sensor"
 
 

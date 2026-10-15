@@ -23,14 +23,19 @@ void VitoNumber::dump_config() {
   if (this->field_mask_ != 0) {
     ESP_LOGCONFIG(TAG, "    Bit mask: 0x%02X (writes are read-modify-write)", this->field_mask_);
   }
+  if (this->block_field_width_ != 0) {
+    ESP_LOGCONFIG(TAG, "    Write: whole %u-byte block, read-modify-write of %u byte(s) at offset %u",
+                  this->get_write_datapoint().length(), this->block_field_width_, this->block_field_offset_);
+  }
 }
 
 void VitoNumber::control(float value) {
   uint8_t buf[4];
-  // The wire width of the WRITE: the write datapoint's length (the field
-  // width under block extraction, or with a read/write address split; falls
-  // back to datapoint_ for the single-address case).
-  const uint8_t len = this->get_write_datapoint().length();
+  // The width staged for the WRITE: the field in block mode (the hub merges it
+  // into the block it reads first), else the write datapoint's length (the
+  // field width under the interior shape, or with a read/write address split;
+  // falls back to datapoint_ for the single-address case).
+  const uint8_t len = this->staged_width();
   if (this->field_mask_ != 0) {
     // Bit field: stage the FIELD value, unsigned, in one byte. The hub merges
     // it into the byte it reads back first (read-modify-write), so the bits

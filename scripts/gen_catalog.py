@@ -1485,6 +1485,36 @@ def _bound_fits(value_str: str, length: int, conv: str, is_signed: bool) -> bool
 MAX_P300_READ_LENGTH = 48
 MAX_TEXT_BLOCK_LENGTH = MAX_P300_READ_LENGTH
 
+# Mirror of components/vitohome/__init__.py::MAX_RMW_BLOCK: the largest block a
+# whole-block read-modify-write sends.
+MAX_RMW_BLOCK = 16
+
+
+def _block_write_blocker(ev, protocol, block_len, field_width, ro_blocks, partial_writes):
+    """Why a writable field smaller than its block can NOT be written as a
+    whole-block read-modify-write, or None if it can.
+
+    The device writes its whole datapoint (hardware, VScotHO1_72, 2026-10-14: a
+    1-byte write into the 2-byte Neptun_ZP~0x7953 block stored our telegram's
+    checksum in byte 1), so such a field is written by reading the block,
+    replacing the field and writing all of it back (component block mode,
+    docs/design_notes.md SS5b). That is safe only for a block that holds
+    settings: a block that also carries a READ-ONLY datapoint holds live data,
+    and writing it back would restore a value the device may have changed since
+    the read.
+    """
+    if not partial_writes:
+        return "partial writes disabled (--no-partial-writes)"
+    if not 1 <= field_width <= 4:
+        return f"a {field_width}-byte field is not a scalar"
+    if block_len > MAX_RMW_BLOCK:
+        return f"the {block_len}-byte block exceeds the {MAX_RMW_BLOCK}-byte read-modify-write"
+    if (ev.address, _access_for(ev, protocol)) in ro_blocks:
+        return "the block also holds read-only (live) data, which a block write would restore from a stale read"
+    if COMMAND_STATE_ADDR.get(ev.address) is not None:
+        return "command register with a separate state address"
+    return None
+
 
 def _string_lines(name: str, kind: str, addr: int, field_len: int, field_off: int, block_len: int) -> list[str] | None:
     """Emit an ascii/utf16 text_sensor.
@@ -1517,7 +1547,7 @@ def _string_lines(name: str, kind: str, addr: int, field_len: int, field_off: in
     return lines
 
 
-def _emit_bit_field(ev: Event, protocol: str, bitfield_writes: bool = True):
+def _emit_bit_field(ev: Event, protocol: str, partial_writes: bool = True, ro_blocks: frozenset = frozenset()):
     """Emit a bit field (BitLength 1..8) as a native ``bit_mask`` entity.
 
     Every bit field except a READ-ONLY single bit comes here (those stay on the
@@ -1527,14 +1557,13 @@ def _emit_bit_field(ev: Event, protocol: str, bitfield_writes: bool = True):
     seven coding flags in that byte. With ``bit_mask`` the component reads the
     byte first and writes back only the field (vitohome.h, rmw_pending_).
 
-    Writable only where the read and the write are the same one-byte register:
-    the field is in byte 0 of a 1-byte datapoint. Every GWG bit field has that
-    shape. A field in byte 0 of a wider block (P300 Neptun_* outputs, 2-byte
-    blocks) would need a 1-byte write at a block base -- a partial-block write
-    with no hardware confirmation -- and an interior field has no declared write
-    address at all (docs/design_notes.md SS8g), so both stay read-only. So do
-    fields whose scale is inferred (_scale_from_bounds) or carries an offset
-    (MultOffset with ConversionOffset != 0): there is no encode path for them.
+    In a 1-byte datapoint (every GWG bit field) the write is a read-modify-write
+    of that byte. In a wider block (the P300 Neptun_* outputs, bit 0x01 of
+    2-byte blocks) it is a read-modify-write of the WHOLE block -- the device
+    writes its whole datapoint -- when _block_write_blocker() allows it; else
+    read-only with the reason. Fields whose scale is inferred
+    (_scale_from_bounds) or carries an offset (MultOffset with ConversionOffset
+    != 0) stay read-only: there is no encode path for them.
     """
     name = ev.name
     addr = ev.address
@@ -1576,20 +1605,27 @@ def _emit_bit_field(ev: Event, protocol: str, bitfield_writes: bool = True):
     notes: list[str] = []
 
     writable = _is_writable(ev, protocol)
-    if writable and not bitfield_writes:
+    block_mode = False
+    if writable and not partial_writes:
         writable = False
-        notes.append("bit-field writes disabled (--no-bitfield-writes) -> read-only")
-    if writable and (byte != 0 or block_len != 1):
-        writable = False
-        notes.append(
-            f"field in byte {byte} of a {block_len}-byte block: writing it would be a partial-block write "
-            "with no hardware confirmation -> read-only"
-        )
+        notes.append("partial writes disabled (--no-partial-writes) -> read-only")
+    if writable and block_len > 1:
+        why = _block_write_blocker(ev, protocol, block_len, 1, ro_blocks, partial_writes)
+        if why:
+            writable = False
+            notes.append(f"field in byte {byte} of a {block_len}-byte block: {why} -> read-only")
+        else:
+            block_mode = True
+            notes.append(f"writes are a read-modify-write of the whole {block_len}-byte block")
     if writable and COMMAND_STATE_ADDR.get(addr) is not None:
         writable = False
         notes.append("command register with a separate state address: no read-modify-write -> read-only")
 
     def read_lines() -> list[str]:
+        # Block mode: the whole block at the base, read AND written there, with
+        # the field's byte_offset -- even 0, which is what selects block mode.
+        if block_mode:
+            return [f"  address: 0x{addr:04X}", f"  length: {block_len}", f"  byte_offset: {byte}"]
         # Byte 0: a 1-byte read at the block base (aligned on P300). Deeper: the
         # whole block at the base plus byte_offset, as everywhere else.
         if byte == 0:
@@ -1774,7 +1810,13 @@ def _emit_bit_field(ev: Event, protocol: str, bitfield_writes: bool = True):
     return ("sensor", lines)
 
 
-def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300, bitfield_writes: bool = True):
+def emit_entity(
+    ev: Event,
+    profile: str,
+    protocol: str = PROTO_P300,
+    partial_writes: bool = True,
+    ro_blocks: frozenset = frozenset(),
+):
     """Return (platform, yaml_lines) for one event, or None to skip it.
     ev.name is the resolved friendly name; the stable technical ``id:`` is added
     by generate() (which can de-duplicate across the whole package)."""
@@ -1808,7 +1850,7 @@ def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300, bitfield_wr
 
     # Bit fields: everything except a read-only single bit (binary_sensor below).
     if (ev.bit_length or 0) > 1 or ((ev.bit_length or 0) == 1 and _is_writable(ev, protocol)):
-        return _emit_bit_field(ev, protocol, bitfield_writes)
+        return _emit_bit_field(ev, protocol, partial_writes, ro_blocks)
 
     conv, conv_kind = CONVERSION_MAP.get(ev.conversion, (None, PLAIN))
     note = None
@@ -1982,37 +2024,42 @@ def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300, bitfield_wr
     if writable and value_filters:
         writable = False
         note = (note + "; " if note else "") + "value transform has no encode path -> demoted to sensor"
-    # A writable field at BytePosition > 0 has NO KNOWN WRITE ADDRESS. Reading it
-    # is fine (aligned block read at the base + byte_offset), but the write target
-    # used to be emitted as `addr + BytePosition`. The export declares that
-    # address for only 144 of the 360 such fields, and where it IS declared it
-    # generally belongs to an unrelated datapoint of another device family.
-    # 0x7362 proves such an address need not exist at all.
-    #
-    # A read of a non-existent address is a NAK. A WRITE to a wrong-but-existing
-    # address changes something. Demote rather than invent a write target.
-    if writable and field_off > 0:
-        writable = False
-        note = (note + "; " if note else "") + (
-            f"field at BytePosition {field_off} has no declared write address -> demoted to read-only"
-        )
-    # A write NARROWER than its block corrupts the rest of the block. Hardware,
-    # VScotHO1_72 (P300), 2026-10-14: Neptun_ZP~0x7953 is a 2-byte block whose
-    # byte 1 read 00 before any write. After a 1-byte write the device held
-    # 01 D6, then 00 D5 -- byte 1 became the CHECKSUM byte of our own write
-    # telegram (`...:79:53:01:01:D6`, `...:79:53:01:00:D5`). The device writes
-    # its whole datapoint and takes whatever follows the payload on the wire.
-    # Same at 0x7951 (D3/D4). The ACK and the 1-byte read-back both looked
-    # fine, so nothing on the component side can see it; only the block length
-    # in the export can. Demote every writable field narrower than its block.
-    # (Weekday Schaltzeiten are the documented exception -- vcontrold writes
-    # 8 bytes per day into the 56-byte program -- and never reach this path.)
-    if writable and length < block_len:
-        writable = False
-        note = (note + "; " if note else "") + (
-            f"writes {length} byte(s) of a {block_len}-byte block: the device writes its whole datapoint and "
-            "fills the rest from the telegram (hardware-confirmed) -> demoted to read-only"
-        )
+    # A writable field smaller than its block -- at BytePosition > 0, or narrower
+    # than the block at its base -- cannot be written on its own:
+    #   * `addr + BytePosition` is no declared write address (the export declares
+    #     it for only 144 of 360 such fields, and then for an unrelated datapoint;
+    #     0x7362 does not exist at all), and
+    #   * the device writes its WHOLE datapoint, so a narrower write fills the rest
+    #     of the block from the telegram. Hardware, VScotHO1_72, 2026-10-14:
+    #     Neptun_ZP~0x7953 read 00 00 before any write; after a 1-byte write it
+    #     held 01 D6, then 00 D5 -- byte 1 became the checksum byte of our own
+    #     telegram (`...:79:53:01:01:D6`). Same at 0x7951 (D3/D4).
+    # Such a field is written as a whole-block read-modify-write (block mode:
+    # read the block at the base, replace the field, write the block back), when
+    # _block_write_blocker() allows it; else it is demoted with the reason.
+    # (Weekday Schaltzeiten write 8 bytes per day into the 56-byte program, as
+    # vcontrold does; they have their own path and never reach this.)
+    block_mode = False
+    if writable and (field_off > 0 or length < block_len):
+        why = _block_write_blocker(ev, protocol, block_len, length, ro_blocks, partial_writes)
+        if why:
+            writable = False
+            note = (note + "; " if note else "") + (
+                f"{length}-byte field at BytePosition {field_off} of a {block_len}-byte block: {why} -> demoted to read-only"
+            )
+        else:
+            block_mode = True
+            note = (note + "; " if note else "") + (f"writes are a read-modify-write of the whole {block_len}-byte block")
+
+    def write_target_lines() -> list[str]:
+        # Block mode: the block base, the whole block, the field -- byte_offset
+        # (even 0) without state_address is what selects block mode.
+        if block_mode:
+            out = [f"  address: 0x{addr:04X}", f"  length: {block_len}", f"  byte_offset: {field_off}"]
+            if length != 1:
+                out.append(f"  byte_length: {length}")
+            return out
+        return [interior_addr_line, f"  length: {length}"]
 
     # Byte-array-as-string (HexByte2AsciiByte): emit the ascii text_sensor type
     # (Sachnummer, Herstellnummer, ...). Read-only device identity; the field
@@ -2139,13 +2186,8 @@ def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300, bitfield_wr
             "- platform: vitohome",
             f"  name: {_yaml_str(name)}",
         ]
-        # field_off is always 0 here: a writable field at BytePosition > 0 was
-        # demoted to read-only above, because base + BytePosition is not a
-        # declared write address for it.
-        lines += [
-            interior_addr_line,
-            f"  length: {length}",
-        ]
+        # Either the field is the whole datapoint, or block mode (see above).
+        lines += write_target_lines()
         if state_addr is not None:
             lines.append(
                 f"  state_address: 0x{state_addr:04X}  # live state read here; address above is the write/command target"
@@ -2167,11 +2209,8 @@ def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300, bitfield_wr
             "- platform: vitohome",
             f"  name: {_yaml_str(name)}",
         ]
-        # field_off is always 0 here (see the switch branch).
-        lines += [
-            interior_addr_line,
-            f"  length: {length}",
-        ]
+        # Either the field is the whole datapoint, or block mode (see the switch branch).
+        lines += write_target_lines()
         if state_addr is not None:
             lines.append(
                 f"  state_address: 0x{state_addr:04X}  # live state read here; address above is the write/command target"
@@ -2193,11 +2232,8 @@ def emit_entity(ev: Event, profile: str, protocol: str = PROTO_P300, bitfield_wr
             "- platform: vitohome",
             f"  name: {_yaml_str(name)}",
         ]
-        # field_off is always 0 here (see the switch branch).
-        lines += [
-            interior_addr_line,
-            f"  length: {length}",
-        ]
+        # Either the field is the whole datapoint, or block mode (see the switch branch).
+        lines += write_target_lines()
         lines.append(f"  converter: {conv}")
         # A negative lower border means the raw byte(s) are two's-complement.
         # div2/div10 are already signed in the component; every other
@@ -2863,6 +2899,21 @@ def _is_writable(ev: Event, protocol: str = PROTO_P300) -> bool:
     return (ev.fc_write or "").strip().lower() in ("", "virtual_write")
 
 
+def _read_only_blocks(events, protocol: str) -> frozenset:
+    """(block base, access) of every block that holds a READ-ONLY datapoint.
+
+    Such a block carries live data: a whole-block write would restore it from a
+    stale read, so its writable fields stay read-only (_block_write_blocker).
+    Computed over ALL of the device's datapoints, before any profile or name
+    filter, and conservatively: a datapoint demoted for an unusable write
+    function code counts as read-only too. Keyed like the GWG field identity: an
+    address is per access mode there.
+    """
+    return frozenset(
+        (e.address, _access_for(e, protocol)) for e in events if e.address is not None and not _is_writable(e, protocol)
+    )
+
+
 def generate(
     catalog: Catalog,
     device: str,
@@ -2877,7 +2928,7 @@ def generate(
     order: str = "address",
     protocol: str | None = None,
     stats: dict | None = None,
-    bitfield_writes: bool = True,
+    partial_writes: bool = True,
 ) -> str:
     """Render the package for one device token. ``order`` is "address"
     (default; entities sorted by Optolink address, byte-identical to earlier
@@ -2976,6 +3027,8 @@ def generate(
         _add_chunk("text_sensor", None, _device_id_lines(oid))
         kept += 1
 
+    ro_blocks = _read_only_blocks(events, protocol)
+
     for ev in sorted(events, key=lambda e: e.address or 0):
         # Special datapoints are handled independently of profile/name filters.
         if emit_device_id and _is_identification(ev):
@@ -3057,7 +3110,7 @@ def generate(
             dropped_unreachable += 1
             continue
 
-        result = emit_entity(ev, profile, protocol, bitfield_writes)
+        result = emit_entity(ev, profile, protocol, partial_writes, ro_blocks)
         if result is None:
             continue
         platform, lines = result
@@ -3427,7 +3480,7 @@ def export_all(
     reachable_only: bool,
     protocol: str | None = None,
     order: str = "address",
-    bitfield_writes: bool = True,
+    partial_writes: bool = True,
 ) -> int:
     """Write one catalog per device token into *out_dir* (created if needed).
 
@@ -3514,7 +3567,7 @@ def export_all(
                 error_codes=error_codes,
                 error_code_set=error_code_set,
                 reachable_only=reachable_only,
-                bitfield_writes=bitfield_writes,
+                partial_writes=partial_writes,
                 order=order,
                 protocol=protocol,
                 stats=gen_stats,
@@ -3605,13 +3658,16 @@ def main(argv=None):
         help="emit a device_id diagnostic text_sensor and suppress the raw 0xF8..0xFB reads (default: on)",
     )
     p.add_argument(
+        "--partial-writes",
         "--bitfield-writes",
+        dest="partial_writes",
         action=argparse.BooleanOptionalAction,
         default=True,
         help=(
-            "emit writable bit fields (number/select/switch with bit_mask; the component writes them "
-            "as a read-modify-write of their byte) where the read and the write are the same 1-byte "
-            "register. --no-bitfield-writes keeps every bit field read-only (default: on)"
+            "emit writable fields that are smaller than their datapoint -- bit fields (bit_mask) and "
+            "fields inside a block (byte_offset) -- which the component writes as a read-modify-write "
+            "of the whole byte or block. --no-partial-writes keeps them read-only. "
+            "--[no-]bitfield-writes is the older spelling (default: on)"
         ),
     )
     p.add_argument(
@@ -3708,7 +3764,7 @@ def main(argv=None):
             error_codes=args.error_codes,
             error_code_set=args.error_code_set,
             reachable_only=args.reachable_only,
-            bitfield_writes=args.bitfield_writes,
+            partial_writes=args.partial_writes,
             protocol=args.protocol,
             order=args.order,
         )
@@ -3776,7 +3832,7 @@ def main(argv=None):
         error_codes=args.error_codes,
         error_code_set=args.error_code_set,
         reachable_only=args.reachable_only,
-        bitfield_writes=args.bitfield_writes,
+        partial_writes=args.partial_writes,
         order=args.order,
         protocol=args.protocol,
     )

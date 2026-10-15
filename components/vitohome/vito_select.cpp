@@ -22,6 +22,10 @@ void VitoSelect::dump_config() {
   if (this->field_mask_ != 0) {
     ESP_LOGCONFIG(TAG, "    Bit mask: 0x%02X (writes are read-modify-write)", this->field_mask_);
   }
+  if (this->block_field_width_ != 0) {
+    ESP_LOGCONFIG(TAG, "    Write: whole %u-byte block, read-modify-write of %u byte(s) at offset %u",
+                  this->get_write_datapoint().length(), this->block_field_width_, this->block_field_offset_);
+  }
 }
 
 void VitoSelect::control(size_t index) {
@@ -42,7 +46,7 @@ void VitoSelect::control(size_t index) {
   // the effective width, so an over-long write-datapoint length can't make
   // set_write_payload_() copy past buf. Shared with VitoSwitch::write_state().
   uint8_t buf[4];
-  const uint8_t len = encode_raw_le(raw, this->get_write_datapoint().length(), buf, sizeof(buf));
+  const uint8_t len = encode_raw_le(raw, this->staged_width(), buf, sizeof(buf));
   if (len == 0) {
     ESP_LOGE(TAG, "%s: zero-length write datapoint", this->datapoint_.name());
     return;

@@ -203,9 +203,25 @@ def test_select_accepts_block_extraction_with_state_address():
     assert cfg["byte_offset"] == 1
 
 
-def test_select_byte_offset_requires_state_address():
-    with pytest.raises(cv.Invalid, match="requires state_address"):
-        SELECT_SCHEMA(_select(length=2, byte_offset=1))
+def test_select_byte_offset_without_state_address_is_block_mode():
+    # Block mode: read AND write the whole block at `address`; the hub merges the
+    # field into it (whole-block read-modify-write).
+    cfg = SELECT_SCHEMA(_select(length=2, byte_offset=1))
+    assert cfg["byte_offset"] == 1 and "state_address" not in cfg
+
+
+def test_block_mode_length_is_capped():
+    from components.vitohome import MAX_RMW_BLOCK
+
+    with pytest.raises(cv.Invalid, match="block mode"):
+        SELECT_SCHEMA(_select(length=MAX_RMW_BLOCK + 1, byte_offset=1))
+    SELECT_SCHEMA(_select(length=MAX_RMW_BLOCK, byte_offset=1))
+
+
+def test_interior_shape_still_validates_but_warns(caplog):
+    with caplog.at_level("WARNING"):
+        SELECT_SCHEMA(_select(state_address=0x7660, length=2, byte_offset=1))
+    assert "interior address" in caplog.text and "block mode" in caplog.text
 
 
 def test_select_byte_length_requires_byte_offset():
@@ -258,9 +274,9 @@ def test_switch_accepts_block_extraction_with_state_address():
     assert cfg["byte_offset"] == 2
 
 
-def test_switch_byte_offset_requires_state_address():
-    with pytest.raises(cv.Invalid, match="requires state_address"):
-        SWITCH_SCHEMA(_switch(length=4, byte_offset=2))
+def test_switch_byte_offset_without_state_address_is_block_mode():
+    cfg = SWITCH_SCHEMA(_switch(length=4, byte_offset=2))
+    assert cfg["byte_offset"] == 2 and "state_address" not in cfg
 
 
 def test_switch_values_checked_against_field_width_not_block():
@@ -294,9 +310,9 @@ def test_number_accepts_block_extraction_with_state_address():
     assert cfg["byte_offset"] == 1
 
 
-def test_number_byte_offset_requires_state_address():
-    with pytest.raises(cv.Invalid, match="requires state_address"):
-        NUMBER_SCHEMA(_number(length=2, byte_offset=1))
+def test_number_byte_offset_without_state_address_is_block_mode():
+    cfg = NUMBER_SCHEMA(_number(length=2, byte_offset=1))
+    assert cfg["byte_offset"] == 1 and "state_address" not in cfg
 
 
 def test_number_byte_length_requires_byte_offset():

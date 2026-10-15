@@ -92,6 +92,11 @@ namespace esphome::vitohome {
 // try_front() returns a synchronized copy. try_pop_front() atomically copies
 // and removes the front item.
 //
+// move_to_front() moves an element that is already queued to the head, keeping
+// the relative order of everything else. The hub uses it when a read-back must
+// jump the queue for an entity whose ordinary poll is already waiting in it
+// (request_priority_read(); the read_queued_ flag forbids a second copy).
+//
 // consume_front_if() supports the hub's dispatch pattern. It holds the queue
 // lock while the caller attempts to hand the front item to the protocol engine
 // and removes the item only when that hand-off succeeds. This avoids the race
@@ -210,6 +215,27 @@ template<typename T> class RingBuffer {
     this->slots_[this->head_] = value;
     ++this->count_;
     return true;
+  }
+
+  // Move the first element equal to `value` to the head; the elements ahead of
+  // it each shift back by one, so the rest keep their order. O(size()) under the
+  // lock, bounded by the lane capacity (the entity count).
+  //
+  // Returns false and leaves the buffer unchanged when no element equals
+  // `value`. Requires T to be equality-comparable (only instantiated by callers
+  // that use it, so POD lanes without operator== are unaffected).
+  [[nodiscard]] bool move_to_front(const T &value) {
+    LockGuard lock(this->mutex_);
+
+    for (std::size_t i = 0; i < this->count_; ++i) {
+      if (!(this->slots_[this->slot_unlocked_(i)] == value))
+        continue;
+      for (std::size_t j = i; j > 0; --j)
+        this->slots_[this->slot_unlocked_(j)] = this->slots_[this->slot_unlocked_(j - 1)];
+      this->slots_[this->head_] = value;
+      return true;
+    }
+    return false;
   }
 
   // Copy, but do not remove, the current front item.

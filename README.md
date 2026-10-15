@@ -77,7 +77,10 @@ lambdas:
   map), `device_id`, `ascii` and `utf16` string fields, and `raw` hex.
 - `number` — writable numeric setpoints (setpoints, heating-curve slope and
   level), with min/max/step and the usual ESPHome `mode:` (`box`, `slider`,
-  `auto`).
+  `auto`). `number`, `select` and `switch` also write fields that share their
+  byte or block with other datapoints (`bit_mask`, `byte_offset`) as a
+  read-modify-write of the whole byte or block, so the neighbours go back
+  exactly as read.
 - `select` — writable enumerated settings, including devices whose read and
   write addresses differ (`state_address`).
 - `switch` — writable on/off registers, likewise supporting a separate

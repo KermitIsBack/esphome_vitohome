@@ -110,17 +110,81 @@ attempt ceiling; a 42-byte read is hardware-proven, see the constant's note in
 4 bytes, can't be a scalar extract.
 `scripts/gen_catalog.py` emits this form automatically for interior fields.
 
-A writable `select`, `switch` or `number` supports the same extraction on its
-**state read**: with `byte_offset`, `length` is the block read at
-`state_address` and the field is the `byte_length` (default 1; max 2 for
-select/switch, 4 for number) bytes at `byte_offset`. Option / on-off values,
-the number's converter, and its `min_value`/`max_value` encode checks all run
-against `byte_length`, and the write encodes exactly `byte_length` bytes.
-`state_address` is **required** with `byte_offset` — the aligned block is read
-there, while `address` stays the field's own write register (writing
-field-width bytes at the block base would hit the wrong register). The write
-therefore targets an interior address; P300's rejection of unaligned access is
-hardware-confirmed for reads only, so verify interior **writes** on hardware.
+**Writable fields inside a block (block mode).** A writable `select`, `switch`
+or `number` with `byte_offset` and **no** `state_address` is in block mode:
+`address` is the block base, `length` the whole block (at most
+`MAX_RMW_BLOCK`, 16 bytes), and the field the `byte_length` (default 1; max 2
+for select/switch, 4 for number) bytes at `byte_offset`. A write is a
+**whole-block read-modify-write**: the hub reads the block, replaces the
+field, and writes the whole block back, so every other byte goes back exactly
+as it was read.
+
+```yaml
+number:
+  - platform: vitohome
+    name: "Neptun ZP Drehzahl"
+    address: 0x7953      # block base: read AND written here
+    length: 2            # the whole block
+    byte_offset: 1       # the field: byte 1
+    converter: noconv
+    min_value: 0
+    max_value: 100
+    step: 1
+```
+
+Why the whole block: the device writes its **whole datapoint**. A write
+narrower than the block is not a write of "just those bytes" -- the device
+fills the rest of the block from whatever follows the payload in the telegram.
+Hardware, VScotHO1_72 (P300): `0x7953` read `00 00`; after a 1-byte write it
+held `01 D6` -- byte 1 had become the checksum byte of our own telegram. The
+ACK and a field-only read-back both looked fine. Writing at the field's own
+interior address is no way out either: `block_base + offset` is not a declared
+write address (`0x7952` is not one; `0x7362` does not exist at all, design
+notes §8g).
+
+`byte_offset: 0` is meaningful here: it is what selects block mode for a field
+at the start of a wider block. Without it, `length: 2` would be a 2-byte field.
+
+Hardware-confirmed on VScotHO1_72 (P300): the Neptun output bit and the pump
+speed byte of `0x7951`, each written while the other held a non-zero value
+(`design_notes.md` §5b). `dump_config` names the mode:
+
+```
+Write: whole 2-byte block, read-modify-write of 1 byte(s) at offset 1
+```
+
+A writable entity at a block base **without** that line writes only its own
+`length` bytes; check it before toggling anything you wrote by hand.
+
+The rules from bit fields apply: nothing else is sent between the read and the
+write; if the read fails, **nothing is written**; the read-back after the write
+checks the whole block and warns if a byte outside the field changed. After the
+write, every other polled entity on the same block is re-read too, so they show
+the post-write block. Option / on-off values, the converter, and `min_value` /
+`max_value` all run against the field (`byte_length`), not the block. Details:
+`docs/design_notes.md` §5b.
+
+A block that also holds **live** (read-only) data should not be written this
+way: the hub writes back the value it read, which the device may have changed
+in the meantime. `scripts/gen_catalog.py` therefore emits block mode only for
+blocks whose datapoints are all writable settings, and keeps the rest
+read-only with a note.
+
+**Interior shape (deprecated, warns).** With `byte_offset` **and**
+`state_address`, the block is read at `state_address` and the field written to
+its own interior register at `address`. This was the original form; it still
+validates, but `esphome config` warns: the interior address need not exist,
+where one is declared it is generally another datapoint, and the write is
+narrower than the datapoint. Move to block mode -- drop `state_address` and set
+`address` to the block base:
+
+```yaml
+# before (warns)                     # after (block mode)
+address: 0x7952                      address: 0x7951
+state_address: 0x7951                length: 2
+length: 2                            byte_offset: 1
+byte_offset: 1
+```
 
 The read-only `text_sensor` `type: enum` supports the same extraction with no
 write side at all: `address` is simply the block base, `length` the block
@@ -168,7 +232,21 @@ bit. Everything downstream uses the field: option values, `on_value` /
 **Writes are read-modify-write.** A plain write replaces the whole byte, which
 for a bit field would overwrite every other datapoint sharing it. With
 `bit_mask`, the hub instead reads the byte, replaces only the masked bits, and
-writes it back, so the other bits go back exactly as they were read. Nothing
+writes it back, so the other bits go back exactly as they were read. A bit
+field in a byte of a wider block is written in block mode (`byte_offset`
+without `state_address`, see above): the whole block is read, the masked bits
+of that byte replaced, and the whole block written back.
+
+```yaml
+switch:
+  - platform: vitohome
+    name: "Neptun ZP"
+    address: 0x7953         # block base
+    length: 2               # whole block
+    byte_offset: 0          # selects block mode
+    bit_mask: 0x01          # Vitosoft BitPosition 7, BitLength 1 (MSB-first)
+```
+ Nothing
 else is sent between the read and the write, so two quick changes to fields of
 the same byte cannot undo each other. If the read fails, **nothing is written**.
 After the write, the usual read-back also checks that the bits outside the mask
@@ -196,7 +274,8 @@ prints the original next to the mask:
   `min_value` / `max_value` are checked after the converter scale;
 - `signed` cannot be combined with `bit_mask` (fields are decoded unsigned);
 - on `number`, `select` and `switch` the read and the write must be the same
-  register: no `state_address`, no `byte_offset`.
+  register: no `state_address` (a field inside a block uses block mode, with
+  `address` the block base).
 
 `binary_sensor` keeps its own meaning of `bit_mask`: ON when **any** masked bit is
 set. That is well defined for any mask, so it is not restricted to contiguous
@@ -231,9 +310,9 @@ reads and writes the one `address:`.
 
 This read/write-address split is available on `select`, `switch` and `number`
 alike: all three read (poll, read-back, response matching) at `state_address`
-when it is given and write to `address`. It also underpins the block
-extraction above -- with `byte_offset`, `state_address` carries the aligned
-block read while `address` stays the field's own write register.
+when it is given and write to `address`. Combined with `byte_offset` it is the
+deprecated interior shape above; a field inside a block uses block mode
+instead.
 
 **Schaltzeiten (`text`).** Each entity is one weekday's switching-time program
 -- a fixed 8-byte block (four ON/OFF switch-point pairs) at `address`, read and

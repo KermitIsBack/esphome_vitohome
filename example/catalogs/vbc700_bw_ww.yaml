@@ -1563,6 +1563,21 @@ sensor:
     disabled_by_default: true
     update_interval: 60s
 
+  # --- ProgrammingWP / Verdichter2 ---
+    # NOTE: conversion 'NoConversion' with fractional stepping: borders 0.5..30 step 0.5 imply value = raw * 0.5 (raw 1..60). UNVERIFIED inference -- read-only until a hardware write confirms it (writable in the export; not a number until confirmed)
+  - platform: vitohome
+    name: "WPR Verdichter2 differenz verdampfer wp"
+    id: WPR_Verdichter2_differenz_verdampfer_wp
+    address: 0x510E
+    length: 2
+    converter: noconv
+    unit_of_measurement: "K"
+    filters:
+      - multiply: 0.5
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 3600s
+
   # --- Statistic / Belastungsklasse ---
   - platform: vitohome
     name: "WPR Belastungsklasse1 Verdichter1"
@@ -5053,6 +5068,7 @@ number:
     address: 0x200A
     length: 1
     converter: div10
+    signed: false  # Vitosoft ParameterType Int, borders 0..5
     min_value: 0
     max_value: 5
     step: 1
@@ -5254,6 +5270,7 @@ number:
     address: 0x300A
     length: 1
     converter: div10
+    signed: false  # Vitosoft ParameterType Int, borders 0..5
     min_value: 0
     max_value: 5
     step: 1
@@ -5454,6 +5471,7 @@ number:
     address: 0x400A
     length: 1
     converter: div10
+    signed: false  # Vitosoft ParameterType Int, borders 0..5
     min_value: 0
     max_value: 5
     step: 1
@@ -5737,6 +5755,7 @@ number:
     address: 0x730C
     length: 2
     converter: div10
+    signed: false  # Vitosoft ParameterType Int, borders 0..70
     unit_of_measurement: "°C"
     device_class: temperature
     min_value: 0
@@ -5767,6 +5786,7 @@ number:
     address: 0x7204
     length: 2
     converter: div10
+    signed: false  # Vitosoft ParameterType Int, borders 1..70
     unit_of_measurement: "°C"
     device_class: temperature
     min_value: 1
@@ -6766,20 +6786,6 @@ number:
     update_interval: 3600s
 
   - platform: vitohome
-    name: "WPR Verdichter2 differenz verdampfer wp"
-    id: WPR_Verdichter2_differenz_verdampfer_wp
-    address: 0x510E
-    length: 2
-    converter: noconv
-    unit_of_measurement: "K"
-    min_value: 0.5
-    max_value: 30
-    step: 0.5
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  - platform: vitohome
     name: "WPR Verdichter2 Alarm Hochdruck Totband"
     id: WPR_Verdichter2_Alarm_Hochdruck_Totband
     address: 0x5123
@@ -7684,66 +7690,72 @@ select:
     id: WPR_Anlagenkonfig_ExternSperrenWirkung_HKP1
     address: 0x701A
     length: 1
+    bit_mask: 0x01  # Vitosoft BitPosition 7, BitLength 1 (MSB-first)
     disabled_by_default: true
     update_interval: 3600s
     options:
-      0x00: "REGELBETRIEB"
-      0x01: "AUS"
+      0: "REGELBETRIEB"
+      1: "AUS"
 
   - platform: vitohome
     name: "WPR Anlagenkonfig ExternSperrenWirkung HKP2"
     id: WPR_Anlagenkonfig_ExternSperrenWirkung_HKP2
     address: 0x701A
     length: 1
+    bit_mask: 0x02  # Vitosoft BitPosition 6, BitLength 1 (MSB-first)
     disabled_by_default: true
     update_interval: 3600s
     options:
-      0x00: "REGELBETRIEB"
-      0x01: "AUS"
+      0: "REGELBETRIEB"
+      1: "AUS"
 
   - platform: vitohome
     name: "WPR Anlagenkonfig ExternSperrenWirkung HKP3"
     id: WPR_Anlagenkonfig_ExternSperrenWirkung_HKP3
     address: 0x701A
     length: 1
+    bit_mask: 0x04  # Vitosoft BitPosition 5, BitLength 1 (MSB-first)
     disabled_by_default: true
     update_interval: 3600s
     options:
-      0x00: "REGELBETRIEB"
-      0x01: "AUS"
+      0: "REGELBETRIEB"
+      1: "AUS"
 
   - platform: vitohome
     name: "WPR Anlagenkonfig ExternSperrenWirkung PrimPumpeVentilator"
     id: WPR_Anlagenkonfig_ExternSperrenWirkung_PrimPumpeVentilator
     address: 0x701A
     length: 1
+    bit_mask: 0x20  # Vitosoft BitPosition 2, BitLength 1 (MSB-first)
     disabled_by_default: true
     update_interval: 3600s
     options:
-      0x00: "REGELBETRIEB"
-      0x01: "AUS"
+      0: "REGELBETRIEB"
+      1: "AUS"
 
   - platform: vitohome
     name: "WPR Anlagenkonfig ExternSperrenWirkung SekPumpe"
     id: WPR_Anlagenkonfig_ExternSperrenWirkung_SekPumpe
     address: 0x701A
     length: 1
+    bit_mask: 0x10  # Vitosoft BitPosition 3, BitLength 1 (MSB-first)
     disabled_by_default: true
     update_interval: 3600s
     options:
-      0x00: "REGELBETRIEB"
-      0x01: "AUS"
+      0: "REGELBETRIEB"
+      1: "AUS"
 
   - platform: vitohome
     name: "WPR Anlagenkonfig ExternSperrenWirkung SLP"
     id: WPR_Anlagenkonfig_ExternSperrenWirkung_SLP
     address: 0x701A
     length: 1
+    bit_mask: 0x08  # Vitosoft BitPosition 4, BitLength 1 (MSB-first)
     disabled_by_default: true
     update_interval: 3600s
     options:
-      0x00: "REGELBETRIEB"
-      0x01: "AUS"
+      0: "REGELBETRIEB"
+      1: "AUS"
 
   - platform: vitohome
     name: "WPR Anlagenkonfig ExternSperren MiZu"
@@ -8183,7 +8195,8 @@ switch:
     id: WPR_Verdichter1_Verdichter_DigitalScroll
     address: 0x5018
     length: 1
-    # on 0x01 = JA; off 0x00 = NEIN
+    bit_mask: 0x80  # Vitosoft BitPosition 0, BitLength 1 (MSB-first)
+    # on 1 = JA; off 0 = NEIN (field values)
     disabled_by_default: true
     update_interval: 3600s
 

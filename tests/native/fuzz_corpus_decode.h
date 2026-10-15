@@ -44,6 +44,18 @@ inline constexpr uint8_t kDSeed_bitfield_over_wide[] = {0x10, 0x01, 0x87, 0x0F, 
 // gapped mask 0x0A: must be refused
 inline constexpr uint8_t kDSeed_bitfield_gapped_mask[] = {0x10, 0x01, 0x87, 0x0A, 0x01};
 
+// Whole-block merge (decode.h merge_block_field). The block target reads payload
+// [0] block_len-1, [1] offset, [2] width, [3] mask, [4..7] field, [8..] old block.
+// Both seeds place the field at a NON-zero offset of a block whose other bytes
+// are non-zero -- the only case in which a merge that writes the field to the
+// wrong place (or drops the old bytes) is visible. Negative-controlled.
+// Neptun 0x7951 = 00 05: write the Drehzahl (byte 1) = 07 -> must give 00 07
+inline constexpr uint8_t kDSeed_block_interior_byte[] = {0x10, 0x01, 0x01, 0x01, 0x01, 0x00,
+                                                         0x07, 0x00, 0x00, 0x00, 0x00, 0x05};
+// 6-byte block, 2-byte field at offset 3, old bytes all non-zero
+inline constexpr uint8_t kDSeed_block_two_byte_field[] = {0x10, 0x01, 0x05, 0x03, 0x02, 0x00, 0xBE, 0xEF,
+                                                          0x00, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66};
+
 inline constexpr uint8_t kDSeed_hw_label_block_32[] = {
     0x50, 0x20, 0x00, 0x0B, 0x48, 0x00, 0x65, 0x00, 0x69, 0x00, 0x7A, 0x00, 0x6B, 0x00, 0x72, 0x00, 0x65,
     0x00, 0x69, 0x00, 0x73, 0x00, 0x20, 0x00, 0x31, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -242,6 +254,8 @@ inline constexpr DecodeSeed kDecodeSeeds[] = {
     {"bitfield_narrow_nibble", kDSeed_bitfield_narrow_nibble, sizeof(kDSeed_bitfield_narrow_nibble)},
     {"bitfield_over_wide", kDSeed_bitfield_over_wide, sizeof(kDSeed_bitfield_over_wide)},
     {"bitfield_gapped_mask", kDSeed_bitfield_gapped_mask, sizeof(kDSeed_bitfield_gapped_mask)},
+    {"block_interior_byte", kDSeed_block_interior_byte, sizeof(kDSeed_block_interior_byte)},
+    {"block_two_byte_field", kDSeed_block_two_byte_field, sizeof(kDSeed_block_two_byte_field)},
 };
 
 inline constexpr std::size_t kDecodeSeedCount = sizeof(kDecodeSeeds) / sizeof(kDecodeSeeds[0]);

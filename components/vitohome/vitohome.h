@@ -323,6 +323,12 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
   // write_in_flight_ and reports the error to the entity. `why` is logged.
   void rmw_abort_(VitoEntityBase *entity, optolink::OptolinkResult error, const char *why);
   void rmw_verify_read_back_(VitoEntityBase *entity, const ResponseView &response);
+  // After a write ACK: queue a read for every OTHER polled entity whose read
+  // datapoint is the written register, so entities sharing the block (a test
+  // output and its speed byte, coding flags of one byte, a climate setpoint and
+  // a switch on the same register) show the device's state now, not at their
+  // next poll.
+  void refresh_siblings_(VitoEntityBase *writer);
 
   // --- identification -------------------------------------------------------
 
@@ -466,14 +472,17 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
   OpType in_flight_op_{OpType::NONE};
   uint32_t in_flight_started_ms_{0};
 
-  // --- bit-field read-modify-write ------------------------------------------
+  // --- read-modify-write (bit fields and whole blocks) ------------------------
   //
-  // An entity with a field_mask() writes only the masked bits of one byte. The
-  // write lane turns its write into two transactions: an RMW_READ of the byte at
-  // the write address, then a WRITE of that byte with only the masked bits
-  // replaced (decode.h::merge_bit_field). Everything else in the byte -- other
-  // datapoints sharing it, e.g. eight coding flags at GWG EEPROM 0x0005 -- goes
-  // back exactly as read.
+  // An entity with needs_rmw() -- a field_mask(), or a field smaller than its
+  // block (block mode) -- writes only its field. The write lane turns its write
+  // into two transactions: an RMW_READ of the whole write datapoint (one byte for
+  // a plain bit field, the block in block mode), then a WRITE of all of it with
+  // only the field replaced (decode.h::merge_block_field). Everything else --
+  // other datapoints sharing the byte or the block, e.g. eight coding flags at
+  // GWG EEPROM 0x0005, or a Neptun test output and its speed byte -- goes back
+  // exactly as read. The block is written whole because the device writes its
+  // whole datapoint (docs/design_notes.md SS5b).
   //
   // INVARIANT (host-unprovable; docs/design_notes.md SS10a, invariant 3):
   //   between an RMW_READ response and the dispatch of its merged write,
@@ -486,19 +495,28 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
   // Fail closed: if the read fails for any reason, nothing is written. A blind
   // fallback write is exactly the corruption this exists to prevent.
   //
-  // All state is inline and fixed-size (one byte payload; every bit field fits
-  // one byte, enforced at config time), so there is no allocation (guidelines
-  // A4).
-  VitoEntityBase *rmw_pending_{nullptr};  // armed: merged byte ready to write
-  uint8_t rmw_byte_{0};                   // the merged byte to transmit
-  uint8_t rmw_old_{0};                    // the byte as read, for the log line
-  // The bit-field write most recently transmitted, for the read-back check:
-  // after the ACK the hub reads the byte back anyway (read_back), and every bit
-  // OUTSIDE the mask must still match what was written. A difference means the
-  // device changed a sibling field inside the read/write window, or did not take
-  // the write as sent; either way it is logged, never silently accepted.
+  // All state is inline and fixed-size (a block is at most MAX_RMW_BLOCK bytes,
+  // enforced at config time and again at runtime), so there is no allocation
+  // (guidelines A4).
+ public:
+  // Mirror of MAX_RMW_BLOCK in __init__.py. Hardware-proven P300 write sizes are
+  // 1, 2 and 8 bytes; 16 covers every writable block the export declares (the
+  // 42-byte label blocks are strings, not a read-modify-write).
+  static constexpr uint8_t MAX_RMW_BLOCK = 16;
+
+ private:
+  VitoEntityBase *rmw_pending_{nullptr};  // armed: merged block ready to write
+  uint8_t rmw_buf_[MAX_RMW_BLOCK]{};      // the merged block to transmit
+  uint8_t rmw_len_{0};
+  // The read-modify-write most recently transmitted, for the read-back check:
+  // after the ACK the hub reads the register back anyway (read_back), and every
+  // byte OUTSIDE the field -- and every bit outside the mask inside it -- must
+  // still match what was written. A difference means the device changed a
+  // sibling inside the read/write window, or did not take the write as sent;
+  // either way it is logged, never silently accepted.
   VitoEntityBase *rmw_verify_entity_{nullptr};
-  uint8_t rmw_verify_byte_{0};
+  uint8_t rmw_verify_buf_[MAX_RMW_BLOCK]{};
+  uint8_t rmw_verify_len_{0};
 
   // --- identification state -------------------------------------------------
 

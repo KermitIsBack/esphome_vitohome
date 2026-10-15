@@ -21,7 +21,10 @@
 //     hand-off (engine busy = RETAINED and retried; accepted = REMOVED),
 //   - the head/tail wraparound arithmetic is correct across the modulo
 //     boundary,
-//   - a POD struct element (like RawOp) round-trips by trivial copy.
+//   - a POD struct element (like RawOp) round-trips by trivial copy,
+//   - move_to_front() moves an already-queued element to the head and keeps
+//     the order of the rest, across the wrap boundary too; absent = no change
+//     (the read-back of an entity whose poll is already queued).
 //
 // Built under -fsanitize=address,undefined: any off-by-one in the wraparound,
 // a push_front underflow, or a read of the unallocated backing would be an
@@ -345,6 +348,54 @@ static void test_hub_pattern() {
   check(reads.try_front(out) && out == 2 && reads.size() == 4, "remaining polls keep their order");
 }
 
+static void test_move_to_front() {
+  std::printf("== move_to_front (read-back for an entity already queued) ==\n");
+  RingBuffer<int> q;
+  check(q.reserve(5), "reserve(5) succeeds");
+  int out = -1;
+  check(!q.move_to_front(1), "empty ring: nothing to move");
+  for (int e = 1; e <= 4; e++)
+    check(q.push_back(e), "queue 1..4");
+  check(q.move_to_front(1), "already at the head: found");
+  check(q.try_front(out) && out == 1 && q.size() == 4, "head unchanged, size unchanged");
+  check(q.move_to_front(3), "move 3 (mid-queue) to the head");
+  const int want[] = {3, 1, 2, 4};
+  bool order = true;
+  for (int w : want)
+    order = order && q.try_pop_front(out) && out == w;
+  check(order && q.empty(), "order is 3, 1, 2, 4: the rest keep their order");
+  check(q.push_back(7) && q.push_back(8) && !q.move_to_front(9), "absent element: false");
+  check(q.size() == 2 && q.try_front(out) && out == 7, "absent element: buffer unchanged");
+
+  // Across the wrap: head_ sits at the end of the backing, the target is
+  // physically before it.
+  RingBuffer<int> w;
+  check(w.reserve(4), "reserve(4) succeeds");
+  for (int e = 0; e < 3; e++)
+    check(w.push_back(e) && w.try_pop_front(out), "advance head_ to the last slot");
+  for (int e = 10; e <= 13; e++)
+    check(w.push_back(e), "fill across the wrap");
+  check(w.move_to_front(13), "move the wrapped tail element");
+  const int want_w[] = {13, 10, 11, 12};
+  order = true;
+  for (int x : want_w)
+    order = order && w.try_pop_front(out) && out == x;
+  check(order && w.empty(), "wrapped order is 13, 10, 11, 12");
+
+  // The log-24 scenario: a poll cycle queued the writer behind other polls;
+  // the write ACKs; siblings are prepended, then the writer's read-back must be
+  // served FIRST, not after the cycle.
+  RingBuffer<int> reads;
+  check(reads.reserve(8), "reserve(8) succeeds");
+  const int WRITER = 42;
+  for (int e : {1, 2, WRITER, 3, 4})
+    check(reads.push_back(e), "poll cycle queues the writer mid-lane");
+  check(reads.push_front(50) && reads.push_front(51), "sibling refresh prepends two siblings");
+  check(reads.move_to_front(WRITER), "writer's read-back moves its queued poll");
+  check(reads.try_pop_front(out) && out == WRITER, "the writer's read-back is served first");
+  check(reads.size() == 6, "no duplicate: one copy of the writer");
+}
+
 int main() {
   test_unreserved();
   test_reserve_one_shot();
@@ -355,6 +406,7 @@ int main() {
   test_wraparound();
   test_pod_element();
   test_hub_pattern();
+  test_move_to_front();
   std::printf("ring_buffer proof: %d failure(s)\n", g_fail);
   return g_fail == 0 ? 0 : 1;
 }

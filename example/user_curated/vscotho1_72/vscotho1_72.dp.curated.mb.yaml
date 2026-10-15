@@ -361,6 +361,18 @@ number:
     mode: box
     icon: "mdi:ruler"
     entity_category: config
+  - platform: vitohome
+    name: "Neptun Interne Pumpe Drehzahl"
+    id: Neptun_Interne_Pumpe_Drehzahl_nr
+    address: 0x7951
+    length: 2
+    byte_offset: 1
+    converter: noconv
+    min_value: 0
+    max_value: 100
+    step: 1
+    mode: box
+    update_interval: 3600s
 
 select:
   # Operating-mode dropdown (Betriebsart) on the COMMAND register 0x2323.
@@ -416,27 +428,13 @@ switch:
     icon: "mdi:leaf"
     update_interval: 60s
   - platform: vitohome
-    name: "RMW fail-closed test"
-    address: 0x7362
-    bit_mask: 0x01
-  - platform: vitohome
-    name: "RMW Partybetrieb test"
-    address: 0x2330
-    bit_mask: 0x01
-  - platform: vitohome
-    name: "RMW preserve test"
-    address: 0x2306
-    bit_mask: 0x01
-  - platform: vitohome
-    name: "RMW Neptun pump test"
+    name: "Neptun Interne Pumpe"
+    id: Neptun_Interne_Pumpe
     address: 0x7951
+    length: 2
+    byte_offset: 0       # selects block mode
     bit_mask: 0x01
-  # writes byte 0 of the 0x7953 block (circulation-pump test output),
-  # as a read-modify-write of that one byte -- same as "RMW Neptun pump test"
-  - platform: vitohome
-    name: "RMW Neptun ZP test"
-    address: 0x7953
-    bit_mask: 0x01
+    update_interval: 3600s
 
 climate:
   # Room climate for heating circuit 1: the slider edits the room setpoint
