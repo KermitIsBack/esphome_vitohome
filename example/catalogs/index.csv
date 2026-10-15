@@ -1,8 +1,8 @@
 file,token,ident,hw_index,sw_lo,sw_hi,f0_lo,f0_hi,events,entities,bytes,status,ext_raw
 bess.yaml,BESS,0x2502,,,,,,99,64,29462,ok,
-cu401b_a.yaml,CU401B_A,0x204C,,,,,,2149,2061,688174,ok,
-cu401b_g.yaml,CU401B_G,0x204B,,,,,,2154,2065,690664,ok,
-cu401b_s.yaml,CU401B_S,0x204D,,,,,,2283,2194,732894,ok,
+cu401b_a.yaml,CU401B_A,0x204C,,,,,,2149,2060,732901,ok,
+cu401b_g.yaml,CU401B_G,0x204B,,,,,,2154,2064,735025,ok,
+cu401b_s.yaml,CU401B_S,0x204D,,,,,,2283,2193,777357,ok,
 ,DEKATEL_F,0x2088,,,,,,586,1,,skipped: no Optolink-reachable datapoints,37343530353330
 ,DEKATEL_F_A,0x2088,,,,,,540,1,,skipped: no Optolink-reachable datapoints,37343533353330
 ,DEKATEL_F_CH,0x2088,,,,,,540,1,,skipped: no Optolink-reachable datapoints,37343531353330
@@ -10,7 +10,7 @@ cu401b_s.yaml,CU401B_S,0x204D,,,,,,2283,2194,732894,ok,
 ,DEKATEL_F_I,0x2088,,,,,,540,1,,skipped: no Optolink-reachable datapoints,37343532353330
 ,DEKATEL_F_R1,0x2088,,,,,,597,1,,skipped: no Optolink-reachable datapoints,37343530353333
 ,DEKATEL_F_R1_ETCPU,0x2088,,,,,,597,1,,skipped: no Optolink-reachable datapoints,37343037303931
-dekatel_m.yaml,DEKATEL_M,0x2081,,,,,,89,13,6994,ok,37343530353336
+dekatel_m.yaml,DEKATEL_M,0x2081,,,,,,89,13,65914,ok,37343530353336
 ,DEKATEL_M_A,0x2081,,,,,,87,1,,skipped: no Optolink-reachable datapoints,37343533353336
 ,DEKATEL_M_CH,0x2081,,,,,,87,1,,skipped: no Optolink-reachable datapoints,37343531353336
 ,Dekamatik_E,0x2000,,,,,,167,1,,skipped: no Optolink-reachable datapoints,01400e
@@ -33,30 +33,30 @@ dekatel_m.yaml,DEKATEL_M,0x2081,,,,,,89,13,6994,ok,37343530353336
 ,Dekamatik_M1,0x2000,,,,,,133,1,,skipped: no Optolink-reachable datapoints,014001
 ,Dekamatik_M2,0x2000,,,,,,52,1,,skipped: no Optolink-reachable datapoints,024002
 ,Dekamatik_M2_3,0x2000,,,,,,52,1,,skipped: no Optolink-reachable datapoints,034002
-ea2.yaml,EA2,0x20A3,,,,,,81,84,30187,ok,
-ecotronic.yaml,Ecotronic,0x2034,,,,,,1145,1030,336716,ok,
-ecotronic_100.yaml,Ecotronic_100,0x2035,,,,,,885,798,247167,ok,
-,GWG_BT2,0x2054,0,255,255,,,111,104,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,00FF
-,GWG_VBEM_00,0x2053,1,0,0,,,220,198,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0100
-,GWG_VBEM_03,0x2053,1,3,3,,,220,198,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0103
-,GWG_VBEM_21,0x2053,1,33,33,,,220,198,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0121
-,GWG_VBEM_35,0x2053,1,53,53,,,220,198,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0135
-,GWG_VBEM_36,0x2053,1,54,54,,,221,199,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0136
-,GWG_VBES_00,0x2053,2,0,0,,,195,177,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0200
-,GWG_VBES_03,0x2053,2,3,3,,,195,177,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0203
-,GWG_VBES_21,0x2053,2,33,33,,,195,177,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0221
-,GWG_VBES_35,0x2053,2,53,53,,,195,177,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0235
-,GWG_VBES_36,0x2053,2,54,54,,,196,178,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0236
-,GWG_VBT2_00,0x2053,16,0,0,,,192,175,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,1000
-,GWG_VBT2_03,0x2053,16,3,3,,,192,175,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,1003
-,GWG_VBT2_21,0x2053,16,33,33,,,192,175,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,1021
-,GWG_VBT2_35,0x2053,16,53,53,,,192,175,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,1035
-,GWG_VBT2_36,0x2053,16,54,54,,,193,176,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,1036
-,GWG_VWMS_00,0x2053,8,0,0,,,191,174,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0800
-,GWG_VWMS_03,0x2053,8,3,3,,,191,174,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0803
-,GWG_VWMS_21,0x2053,8,33,33,,,191,174,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0821
-,GWG_VWMS_35,0x2053,8,53,53,,,191,174,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0835
-,GWG_VWMS_36,0x2053,8,54,54,,,192,175,,missing: catalog not committed; generate it with scripts/gen_catalog.py --export-all,0836
+ea2.yaml,EA2,0x20A3,,,,,,81,84,89107,ok,
+ecotronic.yaml,Ecotronic,0x2034,,,,,,1145,1029,401012,ok,
+ecotronic_100.yaml,Ecotronic_100,0x2035,,,,,,885,797,310579,ok,
+gwg_bt2.yaml,GWG_BT2,0x2054,0,255,255,,,111,104,48580,ok,00FF
+gwg_vbem_00.yaml,GWG_VBEM_00,0x2053,1,0,0,,,220,198,83603,ok,0100
+gwg_vbem_03.yaml,GWG_VBEM_03,0x2053,1,3,3,,,220,198,83603,ok,0103
+gwg_vbem_21.yaml,GWG_VBEM_21,0x2053,1,33,33,,,220,198,83603,ok,0121
+gwg_vbem_35.yaml,GWG_VBEM_35,0x2053,1,53,53,,,220,198,83613,ok,0135
+gwg_vbem_36.yaml,GWG_VBEM_36,0x2053,1,54,54,,,221,199,83950,ok,0136
+gwg_vbes_00.yaml,GWG_VBES_00,0x2053,2,0,0,,,195,177,74811,ok,0200
+gwg_vbes_03.yaml,GWG_VBES_03,0x2053,2,3,3,,,195,177,74811,ok,0203
+gwg_vbes_21.yaml,GWG_VBES_21,0x2053,2,33,33,,,195,177,74811,ok,0221
+gwg_vbes_35.yaml,GWG_VBES_35,0x2053,2,53,53,,,195,177,74811,ok,0235
+gwg_vbes_36.yaml,GWG_VBES_36,0x2053,2,54,54,,,196,178,75148,ok,0236
+gwg_vbt2_00.yaml,GWG_VBT2_00,0x2053,16,0,0,,,192,175,73764,ok,1000
+gwg_vbt2_03.yaml,GWG_VBT2_03,0x2053,16,3,3,,,192,175,73764,ok,1003
+gwg_vbt2_21.yaml,GWG_VBT2_21,0x2053,16,33,33,,,192,175,73764,ok,1021
+gwg_vbt2_35.yaml,GWG_VBT2_35,0x2053,16,53,53,,,192,175,73764,ok,1035
+gwg_vbt2_36.yaml,GWG_VBT2_36,0x2053,16,54,54,,,193,176,74101,ok,1036
+gwg_vwms_00.yaml,GWG_VWMS_00,0x2053,8,0,0,,,191,174,73811,ok,0800
+gwg_vwms_03.yaml,GWG_VWMS_03,0x2053,8,3,3,,,191,174,73811,ok,0803
+gwg_vwms_21.yaml,GWG_VWMS_21,0x2053,8,33,33,,,191,174,73811,ok,0821
+gwg_vwms_35.yaml,GWG_VWMS_35,0x2053,8,53,53,,,191,174,73811,ok,0835
+gwg_vwms_36.yaml,GWG_VWMS_36,0x2053,8,54,54,,,192,175,74148,ok,0836
 ,HV_GWG,0x2000,,,,,,38,1,,skipped: no Optolink-reachable datapoints,015300
 ,HV_V050HK1M,0x2000,,,,,,19,1,,skipped: no Optolink-reachable datapoints,04b400
 ,HV_V050HK1M_5,0x2000,,,,,,19,1,,skipped: no Optolink-reachable datapoints,05b400
@@ -212,108 +212,108 @@ ecotronic_100.yaml,Ecotronic_100,0x2035,,,,,,885,798,247167,ok,
 ,OpenTherm_9_84,0x2621,1,9,9,132,132,81,1,,skipped: no Optolink-reachable datapoints,0109
 ,OpenTherm_DEFAULT,0x26FF,,,,,,68,1,,skipped: no Optolink-reachable datapoints,
 ,Solartrol_M,0x2000,,,,,,26,1,,skipped: no Optolink-reachable datapoints,0b6000
-v050hk1m.yaml,V050HK1M,0x20B4,1,0,6,,,305,254,82068,ok,0100
-v050hk1m_7.yaml,V050HK1M_7,0x20B4,1,7,7,,,198,183,61145,ok,0107
-v050hk1m_8.yaml,V050HK1M_8,0x20B4,1,8,8,,,196,182,60901,ok,0108
-v050hk1m_9.yaml,V050HK1M_9,0x20B4,1,9,15,,,200,186,62308,ok,0109
-v050hk1s.yaml,V050HK1S,0x20AC,1,0,6,,,349,301,95067,ok,0100
-v050hk1s_7.yaml,V050HK1S_7,0x20AC,1,7,7,,,266,238,76387,ok,0107
-v050hk1s_8.yaml,V050HK1S_8,0x20AC,1,8,8,,,275,247,78751,ok,0108
-v050hk1s_9.yaml,V050HK1S_9,0x20AC,1,9,15,,,278,250,79912,ok,0109
-v050hk1w.yaml,V050HK1W,0x20AA,1,0,6,,,349,301,95067,ok,0100
-v050hk1w_7.yaml,V050HK1W_7,0x20AA,1,7,7,,,267,239,77481,ok,0107
-v050hk1w_8.yaml,V050HK1W_8,0x20AA,1,8,8,,,276,248,79845,ok,0108
-v050hk1w_9.yaml,V050HK1W_9,0x20AA,1,9,15,,,279,251,81006,ok,0109
-v050hk3s.yaml,V050HK3S,0x20AD,1,0,6,,,534,506,158077,ok,0100
-v050hk3s_7.yaml,V050HK3S_7,0x20AD,1,7,7,,,411,405,126859,ok,0107
-v050hk3s_8.yaml,V050HK3S_8,0x20AD,1,8,8,,,420,414,129223,ok,0108
-v050hk3s_9.yaml,V050HK3S_9,0x20AD,1,9,15,,,431,425,133235,ok,0109
-v050hk3w.yaml,V050HK3W,0x20AB,1,0,6,,,534,506,158126,ok,0100
-v050hk3w_7.yaml,V050HK3W_7,0x20AB,1,7,7,,,411,405,126859,ok,0107
-v050hk3w_8.yaml,V050HK3W_8,0x20AB,1,8,8,,,420,414,129223,ok,0108
-v050hk3w_9.yaml,V050HK3W_9,0x20AB,1,9,15,,,431,425,133309,ok,0109
-v100cc1x.yaml,V100CC1x,0x20A7,,,,,,564,491,167646,ok,
-v100gc1.yaml,V100GC1,0x20A0,1,0,6,,,403,326,104235,ok,0100
-v100gc1a.yaml,V100GC1A,0x20A1,,,,,,448,388,127424,ok,
-v100gc1c.yaml,V100GC1C,0x20A2,,,,,,448,396,129991,ok,
-v100gc1_7.yaml,V100GC1_7,0x20A0,1,7,7,,,329,278,91054,ok,0107
-v100gc1_8.yaml,V100GC1_8,0x20A0,1,8,15,,,340,288,93626,ok,0108
-v100kc2.yaml,V100KC2,0x2091,1,0,5,,,207,198,61634,ok,0100
-v100kc2_6.yaml,V100KC2_6,0x2091,1,6,15,,,177,174,54211,ok,0106
-v100kc4b.yaml,V100KC4B,0x209D,,,,,,463,417,148241,ok,
-v150kb1.yaml,V150KB1,0x2092,1,0,3,,,243,245,73843,ok,0100
-v150kb1_4.yaml,V150KB1_4,0x2092,1,4,4,,,220,227,68218,ok,0104
-v150kb1_5.yaml,V150KB1_5,0x2092,1,5,5,,,218,225,67663,ok,0105
-v150kb1_6.yaml,V150KB1_6,0x2092,1,6,15,,,240,245,73261,ok,0106
-v200co1x.yaml,V200CO1x,0x20A9,,,,,,842,792,274152,ok,
-v200gw1.yaml,V200GW1,0x20A4,1,0,6,,,512,445,137523,ok,0100
-v200gw1_7.yaml,V200GW1_7,0x20A4,1,7,7,,,405,362,114369,ok,0107
-v200gw1_8.yaml,V200GW1_8,0x20A4,1,8,8,,,417,373,117252,ok,0108
-v200gw1_9.yaml,V200GW1_9,0x20A4,1,9,15,,,419,375,118174,ok,0109
-v200hk3a.yaml,V200HK3A,0x20AE,,,,,,587,570,191031,ok,
-v200ko2b.yaml,V200KO2B,0x209F,,,,,,619,585,199476,ok,
-v200kw1.yaml,V200KW1,0x2094,1,0,3,,,328,321,96183,ok,0100
-v200kw1_4.yaml,V200KW1_4,0x2094,1,4,4,,,298,298,88934,ok,0104
-v200kw1_5.yaml,V200KW1_5,0x2094,1,5,5,,,298,298,88934,ok,0105
-v200kw1_6.yaml,V200KW1_6,0x2094,1,6,15,,,319,318,94549,ok,0106
-v200kw2.yaml,V200KW2,0x2098,1,0,3,,,415,420,125591,ok,0100
-v200kw2_4.yaml,V200KW2_4,0x2098,1,4,4,,,370,381,113948,ok,0104
-v200kw2_5.yaml,V200KW2_5,0x2098,1,5,5,,,370,381,114246,ok,0105
-v200kw2_6.yaml,V200KW2_6,0x2098,1,6,15,,,398,408,121461,ok,0106
-v200wo1a.yaml,V200WO1A,0x2048,,,,,,1311,1264,420208,ok,
-v300cm1x.yaml,V300CM1x,0x20BF,,,,,,942,867,300253,ok,
-v300gw2.yaml,V300GW2,0x20A5,1,0,6,,,702,653,201089,ok,0100
-v300gw2a.yaml,V300GW2A,0x20A6,,,,,,638,612,206516,ok,
-v300gw2_7.yaml,V300GW2_7,0x20A5,1,7,7,,,551,529,164764,ok,0107
-v300gw2_8.yaml,V300GW2_8,0x20A5,1,8,8,,,562,539,167301,ok,0108
-v300gw2_9.yaml,V300GW2_9,0x20A5,1,9,15,,,573,550,171162,ok,0109
-v300gw6b.yaml,V300GW6B,0x20BE,,,,,,760,726,245582,ok,
-v300kmw1a.yaml,V300KMW1A,0x20BB,,,,,,665,640,217343,ok,
-v300kmw2a.yaml,V300KMW2A,0x20BC,,,,,,687,662,224913,ok,
-v300kw3.yaml,V300KW3,0x209C,1,0,3,,,507,517,154159,ok,0100
-v300kw3_4.yaml,V300KW3_4,0x209C,1,4,4,,,443,460,137371,ok,0104
-v300kw3_5.yaml,V300KW3_5,0x209C,1,5,5,,,443,460,137374,ok,0105
-v300kw3_6.yaml,V300KW3_6,0x209C,1,6,15,,,484,499,148257,ok,0106
-v300mw3b.yaml,V300MW3B,0x20BD,,,,,,746,714,246098,ok,
-v333mw1.yaml,V333MW1,0x20B8,1,0,6,,,685,637,199437,ok,0100
-v333mw1s.yaml,V333MW1S,0x20B9,1,0,6,,,685,637,199439,ok,0100
-v333mw1s_7.yaml,V333MW1S_7,0x20B9,1,7,7,,,545,520,164554,ok,0107
-v333mw1s_8.yaml,V333MW1S_8,0x20B9,1,8,8,,,556,530,167159,ok,0108
-v333mw1s_9.yaml,V333MW1S_9,0x20B9,1,9,15,,,571,542,171821,ok,0109
-v333mw1_7.yaml,V333MW1_7,0x20B8,1,7,7,,,545,520,164552,ok,0107
-v333mw1_8.yaml,V333MW1_8,0x20B8,1,8,8,,,556,530,167124,ok,0108
-v333mw1_9.yaml,V333MW1_9,0x20B8,1,9,15,,,567,541,171162,ok,0109
-v333mw2.yaml,V333MW2,0x20BA,,,,,,561,543,171586,ok,
-v333mw2_2.yaml,V333MW2_2,0x20BA,1,2,15,,,557,539,170546,ok,0102
-vbc550p.yaml,VBC550P,0x2033,,,,,,870,821,255729,ok,
-vbc550s.yaml,VBC550S,0x2032,,,,,,770,725,228443,ok,
-vbc700_aw.yaml,VBC700_AW,0x2047,,,,,,911,889,295414,ok,
-vbc700_bw_ww.yaml,VBC700_BW_WW,0x2046,,,,,,914,891,295935,ok,
+v050hk1m.yaml,V050HK1M,0x20B4,1,0,6,,,305,253,142345,ok,0100
+v050hk1m_7.yaml,V050HK1M_7,0x20B4,1,7,7,,,198,183,120979,ok,0107
+v050hk1m_8.yaml,V050HK1M_8,0x20B4,1,8,8,,,196,182,120735,ok,0108
+v050hk1m_9.yaml,V050HK1M_9,0x20B4,1,9,15,,,200,186,122142,ok,0109
+v050hk1s.yaml,V050HK1S,0x20AC,1,0,6,,,349,300,155540,ok,0100
+v050hk1s_7.yaml,V050HK1S_7,0x20AC,1,7,7,,,266,238,136715,ok,0107
+v050hk1s_8.yaml,V050HK1S_8,0x20AC,1,8,8,,,275,247,139143,ok,0108
+v050hk1s_9.yaml,V050HK1S_9,0x20AC,1,9,15,,,278,250,140304,ok,0109
+v050hk1w.yaml,V050HK1W,0x20AA,1,0,6,,,349,300,155540,ok,0100
+v050hk1w_7.yaml,V050HK1W_7,0x20AA,1,7,7,,,267,239,137809,ok,0107
+v050hk1w_8.yaml,V050HK1W_8,0x20AA,1,8,8,,,276,248,140237,ok,0108
+v050hk1w_9.yaml,V050HK1W_9,0x20AA,1,9,15,,,279,251,141398,ok,0109
+v050hk3s.yaml,V050HK3S,0x20AD,1,0,6,,,534,505,219585,ok,0100
+v050hk3s_7.yaml,V050HK3S_7,0x20AD,1,7,7,,,411,405,187771,ok,0107
+v050hk3s_8.yaml,V050HK3S_8,0x20AD,1,8,8,,,420,414,190199,ok,0108
+v050hk3s_9.yaml,V050HK3S_9,0x20AD,1,9,15,,,431,425,194211,ok,0109
+v050hk3w.yaml,V050HK3W,0x20AB,1,0,6,,,534,505,219634,ok,0100
+v050hk3w_7.yaml,V050HK3W_7,0x20AB,1,7,7,,,411,405,187771,ok,0107
+v050hk3w_8.yaml,V050HK3W_8,0x20AB,1,8,8,,,420,414,190199,ok,0108
+v050hk3w_9.yaml,V050HK3W_9,0x20AB,1,9,15,,,431,425,194285,ok,0109
+v100cc1x.yaml,V100CC1x,0x20A7,,,,,,564,491,228853,ok,
+v100gc1.yaml,V100GC1,0x20A0,1,0,6,,,403,325,165896,ok,0100
+v100gc1a.yaml,V100GC1A,0x20A1,,,,,,448,388,189040,ok,
+v100gc1c.yaml,V100GC1C,0x20A2,,,,,,448,396,191758,ok,
+v100gc1_7.yaml,V100GC1_7,0x20A0,1,7,7,,,329,278,152704,ok,0107
+v100gc1_8.yaml,V100GC1_8,0x20A0,1,8,15,,,340,288,155340,ok,0108
+v100kc2.yaml,V100KC2,0x2091,1,0,5,,,207,198,122866,ok,0100
+v100kc2_6.yaml,V100KC2_6,0x2091,1,6,15,,,177,174,113558,ok,0106
+v100kc4b.yaml,V100KC4B,0x209D,,,,,,463,417,208297,ok,
+v150kb1.yaml,V150KB1,0x2092,1,0,3,,,243,245,135207,ok,0100
+v150kb1_4.yaml,V150KB1_4,0x2092,1,4,4,,,220,227,127889,ok,0104
+v150kb1_5.yaml,V150KB1_5,0x2092,1,5,5,,,218,225,127270,ok,0105
+v150kb1_6.yaml,V150KB1_6,0x2092,1,6,15,,,240,245,133222,ok,0106
+v200co1x.yaml,V200CO1x,0x20A9,,,,,,842,792,335532,ok,
+v200gw1.yaml,V200GW1,0x20A4,1,0,6,,,512,444,199775,ok,0100
+v200gw1_7.yaml,V200GW1_7,0x20A4,1,7,7,,,405,362,175885,ok,0107
+v200gw1_8.yaml,V200GW1_8,0x20A4,1,8,8,,,417,373,178897,ok,0108
+v200gw1_9.yaml,V200GW1_9,0x20A4,1,9,15,,,419,375,179819,ok,0109
+v200hk3a.yaml,V200HK3A,0x20AE,,,,,,587,570,251673,ok,
+v200ko2b.yaml,V200KO2B,0x209F,,,,,,619,585,260119,ok,
+v200kw1.yaml,V200KW1,0x2094,1,0,3,,,328,321,158000,ok,0100
+v200kw1_4.yaml,V200KW1_4,0x2094,1,4,4,,,298,298,148930,ok,0104
+v200kw1_5.yaml,V200KW1_5,0x2094,1,5,5,,,298,298,148930,ok,0105
+v200kw1_6.yaml,V200KW1_6,0x2094,1,6,15,,,319,318,154899,ok,0106
+v200kw2.yaml,V200KW2,0x2098,1,0,3,,,415,420,187924,ok,0100
+v200kw2_4.yaml,V200KW2_4,0x2098,1,4,4,,,370,381,174332,ok,0104
+v200kw2_5.yaml,V200KW2_5,0x2098,1,5,5,,,370,381,174630,ok,0105
+v200kw2_6.yaml,V200KW2_6,0x2098,1,6,15,,,398,408,182134,ok,0106
+v200wo1a.yaml,V200WO1A,0x2048,,,,,,1311,1263,438043,ok,
+v300cm1x.yaml,V300CM1x,0x20BF,,,,,,942,867,362532,ok,
+v300gw2.yaml,V300GW2,0x20A5,1,0,6,,,702,652,264311,ok,0100
+v300gw2a.yaml,V300GW2A,0x20A6,,,,,,638,612,267543,ok,
+v300gw2_7.yaml,V300GW2_7,0x20A5,1,7,7,,,551,529,226893,ok,0107
+v300gw2_8.yaml,V300GW2_8,0x20A5,1,8,8,,,562,539,229494,ok,0108
+v300gw2_9.yaml,V300GW2_9,0x20A5,1,9,15,,,573,550,233355,ok,0109
+v300gw6b.yaml,V300GW6B,0x20BE,,,,,,760,726,307850,ok,
+v300kmw1a.yaml,V300KMW1A,0x20BB,,,,,,665,640,278601,ok,
+v300kmw2a.yaml,V300KMW2A,0x20BC,,,,,,687,662,286694,ok,
+v300kw3.yaml,V300KW3,0x209C,1,0,3,,,507,517,216884,ok,0100
+v300kw3_4.yaml,V300KW3_4,0x209C,1,4,4,,,443,460,198019,ok,0104
+v300kw3_5.yaml,V300KW3_5,0x209C,1,5,5,,,443,460,198022,ok,0105
+v300kw3_6.yaml,V300KW3_6,0x209C,1,6,15,,,484,499,209259,ok,0106
+v300mw3b.yaml,V300MW3B,0x20BD,,,,,,746,714,307495,ok,
+v333mw1.yaml,V333MW1,0x20B8,1,0,6,,,685,636,263327,ok,0100
+v333mw1s.yaml,V333MW1S,0x20B9,1,0,6,,,685,636,263329,ok,0100
+v333mw1s_7.yaml,V333MW1S_7,0x20B9,1,7,7,,,545,520,227748,ok,0107
+v333mw1s_8.yaml,V333MW1S_8,0x20B9,1,8,8,,,556,530,230417,ok,0108
+v333mw1s_9.yaml,V333MW1S_9,0x20B9,1,9,15,,,571,542,235079,ok,0109
+v333mw1_7.yaml,V333MW1_7,0x20B8,1,7,7,,,545,520,227746,ok,0107
+v333mw1_8.yaml,V333MW1_8,0x20B8,1,8,8,,,556,530,230382,ok,0108
+v333mw1_9.yaml,V333MW1_9,0x20B8,1,9,15,,,567,541,234420,ok,0109
+v333mw2.yaml,V333MW2,0x20BA,,,,,,561,543,234716,ok,
+v333mw2_2.yaml,V333MW2_2,0x20BA,1,2,15,,,557,539,233676,ok,0102
+vbc550p.yaml,VBC550P,0x2033,,,,,,870,820,319266,ok,
+vbc550s.yaml,VBC550S,0x2032,,,,,,770,724,291545,ok,
+vbc700_aw.yaml,VBC700_AW,0x2047,,,,,,911,889,296478,ok,
+vbc700_bw_ww.yaml,VBC700_BW_WW,0x2046,,,,,,914,891,296999,ok,
 ,VBC701,0x2043,,,,,,5,1,,skipped: no Optolink-reachable datapoints,
-vbc702_aw.yaml,VBC702_AW,0x2049,,,,,,1310,1263,420064,ok,
-vbc702_s.yaml,VBC702_S,0x204A,,,,,,1420,1371,456210,ok,
-vblock-unbekannt.yaml,VBlock-Unbekannt,0x3000,,,,,,112,109,38919,ok,
-vblockbm123-177.yaml,VBlockBM123-177,0x300D,,,,,,110,107,38337,ok,
-vblockbm190-238.yaml,VBlockBM190-238,0x300E,,,,,,111,108,38619,ok,
-vblockbm36-66.yaml,VBlockBM36-66,0x300A,,,,,,106,103,37271,ok,
-vblockbm366-437.yaml,VBlockBM366-437,0x300F,,,,,,112,109,38899,ok,
-vblockbm55-80.yaml,VBlockBM55-80,0x300B,,,,,,106,103,37271,ok,
-vblockbm98-150.yaml,VBlockBM98-150,0x300C,,,,,,106,103,37273,ok,
-vblockem140-207.yaml,VBlockEM140-207,0x3004,,,,,,106,103,37275,ok,
-vblockem18-36.yaml,VBlockEM18-36,0x3001,,,,,,106,103,37271,ok,
-vblockem199-263.yaml,VBlockEM199-263,0x3005,,,,,,111,108,38619,ok,
-vblockem199-293.yaml,VBlockEM199-293,0x3006,,,,,,111,108,38619,ok,
-vblockem20-39.yaml,VBlockEM20-39,0x3010,,,,,,106,103,37271,ok,
-vblockem20-39_18.yaml,VBlockEM20-39_18,0x3012,,,,,,108,104,37557,ok,
-vblockem238-363.yaml,VBlockEM238-363,0x3007,,,,,,109,106,38099,ok,
-vblockem363-498.yaml,VBlockEM363-498,0x3008,,,,,,112,109,38899,ok,
-vblockem401-549.yaml,VBlockEM401-549,0x3009,,,,,,112,109,38899,ok,
-vblockem5.yaml,VBlockEM5,0x3011,,,,,,107,104,37517,ok,
-vblockem50-81.yaml,VBlockEM50-81,0x3002,,,,,,106,103,37271,ok,
-vblockem530-660.yaml,VBlockEM530-660,0x3015,,,,,,112,109,38899,ok,
-vblockem6-15.yaml,VBlockEM6-15,0x3013,,,,,,107,104,37523,ok,
-vblockem70-115.yaml,VBlockEM70-115,0x3003,,,,,,106,103,37273,ok,
-vblockem9-20.yaml,VBlockEM9-20,0x3014,,,,,,107,104,37523,ok,
+vbc702_aw.yaml,VBC702_AW,0x2049,,,,,,1310,1262,437899,ok,
+vbc702_s.yaml,VBC702_S,0x204A,,,,,,1420,1370,474113,ok,
+vblock-unbekannt.yaml,VBlock-Unbekannt,0x3000,,,,,,112,109,97839,ok,
+vblockbm123-177.yaml,VBlockBM123-177,0x300D,,,,,,110,107,97257,ok,
+vblockbm190-238.yaml,VBlockBM190-238,0x300E,,,,,,111,108,97539,ok,
+vblockbm36-66.yaml,VBlockBM36-66,0x300A,,,,,,106,103,96191,ok,
+vblockbm366-437.yaml,VBlockBM366-437,0x300F,,,,,,112,109,97819,ok,
+vblockbm55-80.yaml,VBlockBM55-80,0x300B,,,,,,106,103,96191,ok,
+vblockbm98-150.yaml,VBlockBM98-150,0x300C,,,,,,106,103,96193,ok,
+vblockem140-207.yaml,VBlockEM140-207,0x3004,,,,,,106,103,96195,ok,
+vblockem18-36.yaml,VBlockEM18-36,0x3001,,,,,,106,103,96191,ok,
+vblockem199-263.yaml,VBlockEM199-263,0x3005,,,,,,111,108,97539,ok,
+vblockem199-293.yaml,VBlockEM199-293,0x3006,,,,,,111,108,97539,ok,
+vblockem20-39.yaml,VBlockEM20-39,0x3010,,,,,,106,103,96191,ok,
+vblockem20-39_18.yaml,VBlockEM20-39_18,0x3012,,,,,,108,104,96477,ok,
+vblockem238-363.yaml,VBlockEM238-363,0x3007,,,,,,109,106,97019,ok,
+vblockem363-498.yaml,VBlockEM363-498,0x3008,,,,,,112,109,97819,ok,
+vblockem401-549.yaml,VBlockEM401-549,0x3009,,,,,,112,109,97819,ok,
+vblockem5.yaml,VBlockEM5,0x3011,,,,,,107,104,96437,ok,
+vblockem50-81.yaml,VBlockEM50-81,0x3002,,,,,,106,103,96191,ok,
+vblockem530-660.yaml,VBlockEM530-660,0x3015,,,,,,112,109,97819,ok,
+vblockem6-15.yaml,VBlockEM6-15,0x3013,,,,,,107,104,96443,ok,
+vblockem70-115.yaml,VBlockEM70-115,0x3003,,,,,,106,103,96193,ok,
+vblockem9-20.yaml,VBlockEM9-20,0x3014,,,,,,107,104,96443,ok,
 ,VCOM100_DEKM_R1,0x2081,,,,,,90,1,,skipped: no Optolink-reachable datapoints,37343530353337
 ,VCOM100_DEKM_R1_EXP,0x2081,,,,,,90,1,,skipped: no Optolink-reachable datapoints,37343135333233
 ,VCOM100_DEKM_R2,0x2081,,,,,,94,1,,skipped: no Optolink-reachable datapoints,37313432303537
@@ -324,77 +324,77 @@ vblockem9-20.yaml,VBlockEM9-20,0x3014,,,,,,107,104,37523,ok,
 ,VCOM300_ETCPU3,0x2089,,,,,,623,1,,skipped: no Optolink-reachable datapoints,37343135323238
 ,VCOM300_ETCPU4,0x2089,,,,,,623,1,,skipped: no Optolink-reachable datapoints,37313738313838
 ,VCOM300_X_Marktmanager,0x0701,,,,,,118,1,,skipped: no Optolink-reachable datapoints,
-vcaldens.yaml,VCaldens,0x20C9,1,130,149,,,9,15,7555,ok,0182
+vcaldens.yaml,VCaldens,0x20C9,1,130,149,,,9,15,66539,ok,0182
 ,VCaldens_HO1,0x20CB,1,130,149,,,5,1,,skipped: no Optolink-reachable datapoints,0182
-vdenshc1.yaml,VDensHC1,0x20C0,1,0,3,,,471,326,111614,ok,0100
-vdenshc1_4.yaml,VDensHC1_4,0x20C0,1,4,159,,,429,293,100381,ok,0104
-vdenshc2.yaml,VDensHC2,0x20C1,1,0,3,,,440,342,111138,ok,0100
-vdenshc2_4.yaml,VDensHC2_4,0x20C1,1,4,159,,,407,318,102848,ok,0104
-vdensho1.yaml,VDensHO1,0x20C2,1,0,3,,,581,451,147730,ok,0100
-vdensho1_4.yaml,VDensHO1_4,0x20C2,1,4,159,,,560,444,145180,ok,0104
-vpendhc1.yaml,VPendHC1,0x20C3,1,0,3,,,450,310,107088,ok,0100
-vpendhc1_4.yaml,VPendHC1_4,0x20C3,1,4,19,,,430,294,101101,ok,0104
-vpendhc1_40.yaml,VPendHC1_40,0x20C3,1,40,159,,,527,380,128777,ok,0128
-vpendhc2.yaml,VPendHC2,0x20C4,1,0,3,,,439,341,110547,ok,0100
-vpendhc2_4.yaml,VPendHC2_4,0x20C4,1,4,19,,,404,316,102247,ok,0104
-vpendhc2_40.yaml,VPendHC2_40,0x20C4,1,40,159,,,502,403,130215,ok,0128
-vpendho1.yaml,VPendHO1,0x20C5,1,0,3,,,581,451,147671,ok,0100
-vpendho1_4.yaml,VPendHO1_4,0x20C5,1,4,39,,,567,445,145487,ok,0104
-vpendho1_40.yaml,VPendHO1_40,0x20C5,1,40,159,,,767,639,208350,ok,0128
-vplushc1.yaml,VPlusHC1,0x20C6,1,0,3,,,442,325,111098,ok,0100
-vplushc1_130.yaml,VPlusHC1_130,0x20C6,1,130,149,,,16,22,10362,ok,0182
-vplushc1_20.yaml,VPlusHC1_20,0x20C6,1,20,39,,,409,302,102999,ok,0114
-vplushc1_4.yaml,VPlusHC1_4,0x20C6,1,4,19,,,406,300,102710,ok,0104
-vplushc1_40.yaml,VPlusHC1_40,0x20C6,1,40,129,,,502,384,129953,ok,0128
-vplushc2.yaml,VPlusHC2,0x20C7,1,0,3,,,417,347,112201,ok,0100
-vplushc2_4.yaml,VPlusHC2_4,0x20C7,1,4,19,,,355,299,97959,ok,0104
-vplushc2_40.yaml,VPlusHC2_40,0x20C7,1,40,159,,,476,406,131043,ok,0128
-vplusho1.yaml,VPlusHO1,0x20C8,1,0,3,,,558,457,149281,ok,0100
-vplusho1_20.yaml,VPlusHO1_20,0x20C8,1,20,39,,,542,454,147817,ok,0114
-vplusho1_4.yaml,VPlusHO1_4,0x20C8,1,4,19,,,536,450,146819,ok,0104
-vplusho1_40.yaml,VPlusHO1_40,0x20C8,1,40,159,,,741,642,208997,ok,0128
-vscothc1.yaml,VScotHC1,0x20C9,1,0,3,,,465,320,109703,ok,0100
-vscothc1_20.yaml,VScotHC1_20,0x20C9,1,20,39,,,435,298,101982,ok,0114
-vscothc1_200.yaml,VScotHC1_200,0x20C9,1,200,255,0,9,535,388,128211,ok,01C8
-vscothc1_200_10.yaml,VScotHC1_200_10,0x20C9,1,200,255,16,25,535,388,131493,ok,01C8
-vscothc1_200_30.yaml,VScotHC1_200_30,0x20C9,1,200,255,48,57,525,380,128999,ok,01C8
-vscothc1_4.yaml,VScotHC1_4,0x20C9,1,4,19,,,431,295,101464,ok,0104
-vscothc1_40.yaml,VScotHC1_40,0x20C9,1,40,89,,,527,380,128940,ok,0128
-vscothc1_90.yaml,VScotHC1_90,0x20C9,1,90,129,,,526,380,128940,ok,015A
-vscothc2.yaml,VScotHC2,0x20CA,1,0,3,,,439,341,110756,ok,0100
-vscothc2_200_11.yaml,VScotHC2_200_11,0x20CA,1,200,255,17,25,538,403,134323,ok,01C8
-vscothc2_4.yaml,VScotHC2_4,0x20CA,1,4,19,,,405,317,102682,ok,0104
-vscothc2_40.yaml,VScotHC2_40,0x20CA,1,40,159,,,501,402,130102,ok,0128
-vscotho1.yaml,VScotHO1,0x20CB,1,0,3,,,581,451,147692,ok,0100
-vscotho1_20.yaml,VScotHO1_20,0x20CB,1,20,39,,,566,449,146400,ok,0114
-vscotho1_200.yaml,VScotHO1_200,0x20CB,1,200,255,0,0,945,777,255571,ok,01C8
-vscotho1_200_01.yaml,VScotHO1_200_01,0x20CB,1,200,255,1,9,1058,852,288387,ok,01C8
-vscotho1_200_10.yaml,VScotHO1_200_10,0x20CB,1,200,255,16,16,1030,726,235869,ok,01C8
-vscotho1_200_11.yaml,VScotHO1_200_11,0x20CB,1,200,255,17,25,1062,734,240903,ok,01C8
-vscotho1_200_20.yaml,VScotHO1_200_20,0x20CB,1,200,255,32,41,860,718,233949,ok,01C8
-vscotho1_200_30.yaml,VScotHO1_200_30,0x20CB,1,200,255,48,57,859,718,233949,ok,01C8
-vscotho1_4.yaml,VScotHO1_4,0x20CB,1,4,19,,,561,445,145508,ok,0104
-vscotho1_40.yaml,VScotHO1_40,0x20CB,1,40,69,,,766,636,207490,ok,0128
-vscotho1_70.yaml,VScotHO1_70,0x20CB,1,70,71,,,824,684,222859,ok,0146
-vscotho1_72.yaml,VScotHO1_72,0x20CB,1,72,89,,,853,710,230952,ok,0148
-vscotho1_90.yaml,VScotHO1_90,0x20CB,1,90,129,,,848,706,229997,ok,015A
-vsorp.yaml,VSorp,0x20CB,1,150,199,,,915,745,242295,ok,0196
-virtualhydrauliccalibration.yaml,VirtualHydraulicCalibration,0xFFFF,,,,,,5,5,2939,ok,
+vdenshc1.yaml,VDensHC1,0x20C0,1,0,3,,,471,326,171453,ok,0100
+vdenshc1_4.yaml,VDensHC1_4,0x20C0,1,4,159,,,429,293,159891,ok,0104
+vdenshc2.yaml,VDensHC2,0x20C1,1,0,3,,,440,342,170848,ok,0100
+vdenshc2_4.yaml,VDensHC2_4,0x20C1,1,4,159,,,407,318,162321,ok,0104
+vdensho1.yaml,VDensHO1,0x20C2,1,0,3,,,581,451,208025,ok,0100
+vdensho1_4.yaml,VDensHO1_4,0x20C2,1,4,159,,,560,444,205366,ok,0104
+vpendhc1.yaml,VPendHC1,0x20C3,1,0,3,,,450,310,166633,ok,0100
+vpendhc1_4.yaml,VPendHC1_4,0x20C3,1,4,19,,,430,294,160538,ok,0104
+vpendhc1_40.yaml,VPendHC1_40,0x20C3,1,40,159,,,527,380,188377,ok,0128
+vpendhc2.yaml,VPendHC2,0x20C4,1,0,3,,,439,341,170196,ok,0100
+vpendhc2_4.yaml,VPendHC2_4,0x20C4,1,4,19,,,404,316,161720,ok,0104
+vpendhc2_40.yaml,VPendHC2_40,0x20C4,1,40,159,,,502,403,189882,ok,0128
+vpendho1.yaml,VPendHO1,0x20C5,1,0,3,,,581,451,207966,ok,0100
+vpendho1_4.yaml,VPendHO1_4,0x20C5,1,4,39,,,567,445,205673,ok,0104
+vpendho1_40.yaml,VPendHO1_40,0x20C5,1,40,159,,,767,637,268756,ok,0128
+vplushc1.yaml,VPlusHC1,0x20C6,1,0,3,,,442,325,170643,ok,0100
+vplushc1_130.yaml,VPlusHC1_130,0x20C6,1,130,149,,,16,22,69345,ok,0182
+vplushc1_20.yaml,VPlusHC1_20,0x20C6,1,20,39,,,409,302,162435,ok,0114
+vplushc1_4.yaml,VPlusHC1_4,0x20C6,1,4,19,,,406,300,162146,ok,0104
+vplushc1_40.yaml,VPlusHC1_40,0x20C6,1,40,129,,,502,384,189516,ok,0128
+vplushc2.yaml,VPlusHC2,0x20C7,1,0,3,,,417,347,171783,ok,0100
+vplushc2_4.yaml,VPlusHC2_4,0x20C7,1,4,19,,,355,299,157328,ok,0104
+vplushc2_40.yaml,VPlusHC2_40,0x20C7,1,40,159,,,476,406,190643,ok,0128
+vplusho1.yaml,VPlusHO1,0x20C8,1,0,3,,,558,457,209576,ok,0100
+vplusho1_20.yaml,VPlusHO1_20,0x20C8,1,20,39,,,542,454,208003,ok,0114
+vplusho1_4.yaml,VPlusHO1_4,0x20C8,1,4,19,,,536,450,207005,ok,0104
+vplusho1_40.yaml,VPlusHO1_40,0x20C8,1,40,159,,,741,640,269439,ok,0128
+vscothc1.yaml,VScotHC1,0x20C9,1,0,3,,,465,320,169285,ok,0100
+vscothc1_20.yaml,VScotHC1_20,0x20C9,1,20,39,,,435,298,161418,ok,0114
+vscothc1_200.yaml,VScotHC1_200,0x20C9,1,200,255,0,9,535,388,187811,ok,01C8
+vscothc1_200_10.yaml,VScotHC1_200_10,0x20C9,1,200,255,16,25,535,388,191056,ok,01C8
+vscothc1_200_30.yaml,VScotHC1_200_30,0x20C9,1,200,255,48,57,525,380,188562,ok,01C8
+vscothc1_4.yaml,VScotHC1_4,0x20C9,1,4,19,,,431,295,160900,ok,0104
+vscothc1_40.yaml,VScotHC1_40,0x20C9,1,40,89,,,527,380,188503,ok,0128
+vscothc1_90.yaml,VScotHC1_90,0x20C9,1,90,129,,,526,380,188503,ok,015A
+vscothc2.yaml,VScotHC2,0x20CA,1,0,3,,,439,341,170301,ok,0100
+vscothc2_200_11.yaml,VScotHC2_200_11,0x20CA,1,200,255,17,25,538,403,193886,ok,01C8
+vscothc2_4.yaml,VScotHC2_4,0x20CA,1,4,19,,,405,317,162118,ok,0104
+vscothc2_40.yaml,VScotHC2_40,0x20CA,1,40,159,,,501,402,189665,ok,0128
+vscotho1.yaml,VScotHO1,0x20CB,1,0,3,,,581,451,207987,ok,0100
+vscotho1_20.yaml,VScotHO1_20,0x20CB,1,20,39,,,566,449,206586,ok,0114
+vscotho1_200.yaml,VScotHO1_200,0x20CB,1,200,255,0,0,945,775,318938,ok,01C8
+vscotho1_200_01.yaml,VScotHO1_200_01,0x20CB,1,200,255,1,9,1058,850,358175,ok,01C8
+vscotho1_200_10.yaml,VScotHO1_200_10,0x20CB,1,200,255,16,16,1030,724,299236,ok,01C8
+vscotho1_200_11.yaml,VScotHO1_200_11,0x20CB,1,200,255,17,25,1062,732,304270,ok,01C8
+vscotho1_200_20.yaml,VScotHO1_200_20,0x20CB,1,200,255,32,41,860,716,296932,ok,01C8
+vscotho1_200_30.yaml,VScotHO1_200_30,0x20CB,1,200,255,48,57,859,716,296932,ok,01C8
+vscotho1_4.yaml,VScotHO1_4,0x20CB,1,4,19,,,561,445,205694,ok,0104
+vscotho1_40.yaml,VScotHO1_40,0x20CB,1,40,69,,,766,634,267932,ok,0128
+vscotho1_70.yaml,VScotHO1_70,0x20CB,1,70,71,,,824,682,285842,ok,0146
+vscotho1_72.yaml,VScotHO1_72,0x20CB,1,72,89,,,853,708,293935,ok,0148
+vscotho1_90.yaml,VScotHO1_90,0x20CB,1,90,129,,,848,704,292980,ok,015A
+vsorp.yaml,VSorp,0x20CB,1,150,199,,,915,743,305233,ok,0196
+virtualhydrauliccalibration.yaml,VirtualHydraulicCalibration,0xFFFF,,,,,,5,5,3134,ok,
 vitocom100_lan.yaml,Vitocom100_LAN,0x208D,,,,,,11,4,2380,ok,
-vitocom200_lan.yaml,Vitocom200_LAN,0x208C,,,,,,421,46,24560,ok,
-vitocom200_lan_gp.yaml,Vitocom200_LAN_GP,0x208E,,,,,,45,14,7633,ok,
-vitocom300.yaml,Vitocom300,0x208A,,,,,,621,110,37499,ok,
-vitocom300_10.yaml,Vitocom300_10,0x208A,1,10,15,,,576,62,25665,ok,010A
-vitocom300_lan.yaml,Vitocom300_LAN,0x208A,1,16,47,,,989,55,28359,ok,0110
-vitocom300_lan_gp_analog.yaml,Vitocom300_LAN_GP_Analog,0x208F,,,,,,389,18,8932,ok,
+vitocom200_lan.yaml,Vitocom200_LAN,0x208C,,,,,,421,46,83337,ok,
+vitocom200_lan_gp.yaml,Vitocom200_LAN_GP,0x208E,,,,,,45,14,66553,ok,
+vitocom300.yaml,Vitocom300,0x208A,,,,,,621,109,96595,ok,
+vitocom300_10.yaml,Vitocom300_10,0x208A,1,10,15,,,576,62,84585,ok,010A
+vitocom300_lan.yaml,Vitocom300_LAN,0x208A,1,16,47,,,989,55,87136,ok,0110
+vitocom300_lan_gp_analog.yaml,Vitocom300_LAN_GP_Analog,0x208F,,,,,,389,18,67852,ok,
 vitogate200eib.yaml,Vitogate200EIB,,,,,,,5,4,2052,ok,
-vitogate200knx.yaml,Vitogate200KNX,0x0820,,,,,,7,6,2541,ok,
-vitogate300bn.yaml,Vitogate300BN,0x0830,,,,,,7,13,7014,ok,
-vitotwingw_bati.yaml,VitotwinGW_BATI,0x0810,1,0,1,,,158,156,70829,ok,0100
-vitotwingw_bati_02.yaml,VitotwinGW_BATI_02,0x0810,1,2,2,,,160,148,65748,ok,0102
-vitotwingw_bati_03.yaml,VitotwinGW_BATI_03,0x0810,1,3,255,,,160,148,65813,ok,0103
-vitovalor.yaml,Vitovalor,0x20E3,,,,,,1284,1140,402679,ok,
-wilo.yaml,WILO,0x0700,,,,,,79,12,6633,ok,
+vitogate200knx.yaml,Vitogate200KNX,0x0820,,,,,,7,6,2685,ok,
+vitogate300bn.yaml,Vitogate300BN,0x0830,,,,,,7,13,65934,ok,
+vitotwingw_bati.yaml,VitotwinGW_BATI,0x0810,1,0,1,,,158,156,193742,ok,0100
+vitotwingw_bati_02.yaml,VitotwinGW_BATI_02,0x0810,1,2,2,,,160,148,186877,ok,0102
+vitotwingw_bati_03.yaml,VitotwinGW_BATI_03,0x0810,1,3,255,,,160,148,186942,ok,0103
+vitovalor.yaml,Vitovalor,0x20E3,,,,,,1284,1138,466263,ok,
+wilo.yaml,WILO,0x0700,,,,,,79,12,65553,ok,
 ,_VITODATA,,,,,,,1,1,,skipped: no Optolink-reachable datapoints,-
 ,ecnStatusDataPoint,,,,,,,1,1,,skipped: no Optolink-reachable datapoints,
 puffermgm.yaml,puffermgm,0x30FF,,,,,,230,212,91305,ok,

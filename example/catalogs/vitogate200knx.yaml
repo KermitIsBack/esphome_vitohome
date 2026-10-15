@@ -21,24 +21,13 @@
 sensor:
   # --- Konfiguration / Datenbankversion ---
   - platform: vitohome
-    name: "Vitogate Entwicklerversion"
-    id: Vitogate_Entwicklerversion
-    address: 0x0100
-    length: 2
-    byte_offset: 1
-    converter: noconv
-    state_class: measurement
-    disabled_by_default: true
-    update_interval: 60s
-
-binary_sensor:
-  # --- Konfiguration / Datenbankversion ---
-  - platform: vitohome
     name: "Vitogate Hauptversion"
     id: Vitogate_Hauptversion
     address: 0x0100
-    length: 2
-    bit_mask: 0x80
+    length: 1
+    bit_mask: 0xF0  # Vitosoft BitPosition 0, BitLength 4 (MSB-first)
+    converter: noconv
+    state_class: measurement
     disabled_by_default: true
     update_interval: 60s
 
@@ -46,8 +35,21 @@ binary_sensor:
     name: "Vitogate Nebenversion"
     id: Vitogate_Nebenversion
     address: 0x0100
+    length: 1
+    bit_mask: 0x0F  # Vitosoft BitPosition 4, BitLength 4 (MSB-first)
+    converter: noconv
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "Vitogate Entwicklerversion"
+    id: Vitogate_Entwicklerversion
+    address: 0x0100
     length: 2
-    bit_mask: 0x08
+    byte_offset: 1
+    converter: noconv
+    state_class: measurement
     disabled_by_default: true
     update_interval: 60s
 

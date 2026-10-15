@@ -28,6 +28,7 @@ sensor:
     byte_offset: 12
     byte_length: 2
     converter: div10
+    signed: false  # Vitosoft ParameterType Byte, lower border 0
     unit_of_measurement: "°C"
     device_class: temperature
     state_class: measurement
@@ -43,6 +44,7 @@ sensor:
     byte_offset: 12
     byte_length: 2
     converter: div10
+    signed: false  # Vitosoft ParameterType Byte, lower border 0
     unit_of_measurement: "°C"
     device_class: temperature
     state_class: measurement
@@ -58,6 +60,7 @@ sensor:
     byte_offset: 12
     byte_length: 2
     converter: div10
+    signed: false  # Vitosoft ParameterType Byte, lower border 0
     unit_of_measurement: "°C"
     device_class: temperature
     state_class: measurement
