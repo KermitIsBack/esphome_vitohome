@@ -521,36 +521,33 @@ static void test_schaltzeiten_day() {
   CHECK(encode_schaltzeiten_day("00:00-00:00", buf));
   CHECK(std::memcmp(buf, equal_times, 8) == 0);
 
-  // An end before the start clears only the affected pair.
-  const uint8_t cleared_pair[] = {
-      0xFF, 0xFF, 0x30, 0xB0, 0xFF, 0xFF, 0xFF, 0xFF};
-  CHECK(encode_schaltzeiten_day("22:00-06:00 06:00-22:00", buf));
-  CHECK(std::memcmp(buf, cleared_pair, 8) == 0);
-
-  // A reversed single interval clears the whole day.
-  CHECK(encode_schaltzeiten_day("22:00-06:00", buf));
-  CHECK(std::memcmp(buf, none, 8) == 0);
-
-  // Equality is also accepted away from midnight.
+  // Equal times are also accepted away from midnight.
   CHECK(encode_schaltzeiten_day("12:00-12:00", buf));
   CHECK(buf[0] == 0x60 && buf[1] == 0x60);
 
-  // Compare the encoded times after truncation to 10-minute steps.
+  // Compare encoded times after truncation to 10-minute steps.
   CHECK(encode_schaltzeiten_day("06:09-06:01", buf));
   CHECK(buf[0] == 0x30 && buf[1] == 0x30);
 
-  // Restore a nonempty program for the unchanged-on-error checks below.
-  CHECK(encode_schaltzeiten_day("22:00-06:00 06:00-22:00", buf));
-  CHECK(std::memcmp(buf, cleared_pair, 8) == 0);
+  // Seed a valid program. Rejected inputs must leave it unchanged.
+  CHECK(encode_schaltzeiten_day("06:00-22:00", buf));
+  CHECK(std::memcmp(buf, one, 8) == 0);
+
+  // Reject reversed intervals, including after an already parsed valid pair.
+  CHECK(!encode_schaltzeiten_day("22:00-06:00", buf));
+  CHECK(std::memcmp(buf, one, 8) == 0);
+  CHECK(!encode_schaltzeiten_day("06:00-22:00 22:00-06:00", buf));
+  CHECK(std::memcmp(buf, one, 8) == 0);
+  CHECK(!encode_schaltzeiten_day("22:00-06:00 06:00-22:00", buf));
+  CHECK(std::memcmp(buf, one, 8) == 0);
 
   // Only exactly 24:00 is valid, and only as an end time.
-  // Rejected input must leave the existing program unchanged.
   CHECK(!encode_schaltzeiten_day("05:30-24:01", buf));
-  CHECK(std::memcmp(buf, cleared_pair, 8) == 0);
+  CHECK(std::memcmp(buf, one, 8) == 0);
   CHECK(!encode_schaltzeiten_day("05:30-24:10", buf));
-  CHECK(std::memcmp(buf, cleared_pair, 8) == 0);
+  CHECK(std::memcmp(buf, one, 8) == 0);
   CHECK(!encode_schaltzeiten_day("24:00-24:00", buf));
-  CHECK(std::memcmp(buf, cleared_pair, 8) == 0);
+  CHECK(std::memcmp(buf, one, 8) == 0);
 
   // Malformed input is rejected; buf is left unchanged (no torn write).
   // Seed buf to all 0xFF before checking rejected inputs.
