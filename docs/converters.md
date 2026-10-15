@@ -145,6 +145,17 @@ notes §8g).
 `byte_offset: 0` is meaningful here: it is what selects block mode for a field
 at the start of a wider block. Without it, `length: 2` would be a 2-byte field.
 
+Hardware-confirmed on VScotHO1_72 (P300): the Neptun output bit and the pump
+speed byte of `0x7951`, each written while the other held a non-zero value
+(`design_notes.md` §5b). `dump_config` names the mode:
+
+```
+Write: whole 2-byte block, read-modify-write of 1 byte(s) at offset 1
+```
+
+A writable entity at a block base **without** that line writes only its own
+`length` bytes; check it before toggling anything you wrote by hand.
+
 The rules from bit fields apply: nothing else is sent between the read and the
 write; if the read fails, **nothing is written**; the read-back after the write
 checks the whole block and warns if a byte outside the field changed. After the

@@ -22,6 +22,10 @@ void VitoSelect::dump_config() {
   if (this->field_mask_ != 0) {
     ESP_LOGCONFIG(TAG, "    Bit mask: 0x%02X (writes are read-modify-write)", this->field_mask_);
   }
+  if (this->block_field_width_ != 0) {
+    ESP_LOGCONFIG(TAG, "    Write: whole %u-byte block, read-modify-write of %u byte(s) at offset %u",
+                  this->get_write_datapoint().length(), this->block_field_width_, this->block_field_offset_);
+  }
 }
 
 void VitoSelect::control(size_t index) {

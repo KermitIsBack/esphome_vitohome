@@ -682,6 +682,16 @@ companion bookkeeping** (`read_queued_`/`write_queued_`) rather than leave an
 entity marked queued but absent — the scheduler, `request_write()` and the
 read-back path all follow that set-flag-then-push-then-roll-back pattern.
 
+**A priority read for an entity that is already queued moves it.** The
+`read_queued_` flag allows one copy per entity, so `request_priority_read()`
+used to return early when the entity's ordinary poll was already waiting in
+the lane -- and the "priority" read then ran at the poll's position. Hardware,
+VScotHO1_72, 2026-10-15: a write ACKed during a poll cycle that already held
+the writer got its read-back 2.3 s later, after the whole cycle. Now
+`move_to_front()` moves the queued copy to the head, keeping the order of the
+rest (O(n) under the lock, n bounded by the entity count). An entity flagged
+but not in the lane has its read in flight; there is nothing to move.
+
 **Synchronization scope, stated precisely.** Each ring serializes its own
 operations through `esphome::Mutex` (FreeRTOS-backed on ESP32; an inline no-op
 on the single-threaded ESP8266/RP2040; the host proofs build with
@@ -694,7 +704,9 @@ entity-lane invariants (flag *and* queue updated together) multi-task-safe;
 entity control paths must stay on the ESPHome loop. Not ISR-safe by design.
 Semantics are pinned in `tests/native/proof_ring_buffer.cpp` under ASan/UBSan
 (one-shot reserve, FIFO, wraparound, `push_front`, full-rejection,
-`consume_front_if` outcomes, POD round-trip, the hub dispatch pattern).
+`consume_front_if` outcomes, POD round-trip, the hub dispatch pattern,
+`move_to_front` including across the wrap and the read-back-behind-a-poll
+scenario, negative-controlled).
 
 ---
 
@@ -861,14 +873,35 @@ warns at `esphome config`: the interior address is not a declared write
 address (§8g), and the write is narrower than the datapoint. Kept so existing
 configs keep building; the generator no longer emits it.
 
-**Status: host-proven, not yet on hardware.** `test_decode.cpp::test_block_field`
-is exhaustive over blocks of 1..6 bytes, every in-bounds offset and width, and
-all 36 contiguous masks (916k checks), plus the Neptun `00 05` cases; the fuzz
-target has a block-merge oracle, negative-controlled (a merge that copies the
-field to the block start instead of `offset` trips the `kDSeed_block_*`
-seeds). On hardware still to do: the Neptun output toggled with a non-zero
-Drehzahl byte (byte 1 must survive), an interior Drehzahl write (byte 0 must
-survive), and the sibling refresh.
+**Status: hardware-confirmed on P300.** On the host,
+`test_decode.cpp::test_block_field` is exhaustive over blocks of 1..6 bytes,
+every in-bounds offset and width, and all 36 contiguous masks (916k checks),
+plus the Neptun `00 05` cases; the fuzz target has a block-merge oracle,
+negative-controlled (a merge that copies the field to the block start instead
+of `offset` trips the `kDSeed_block_*` seeds). On VScotHO1_72, 2026-10-15, on
+the `0x7951` block (`Neptun_Interne_Pumpe`, bit `0x01` of byte 0, and
+`Neptun_Interne_Pumpe_Drehzahl`, byte 1), with the frame log on:
+
+| test | read → merged | wire | read-back |
+|---|---|---|---|
+| switch ON (bit field, block mode) | `00 00` → `01 00` | `41:07:00:02:79:51:02:01:00:D6` | `01 00` |
+| Drehzahl 7 with the output ON (interior field) | `01 00` → `01 07` | `41:07:00:02:79:51:02:01:07:DD` | `01 07` |
+| Drehzahl 8 after a raw `00 05` | `00 05` → `00 08` | `41:07:00:02:79:51:02:00:08:DD` | `00 08` |
+| Drehzahl 100 after a raw `00 D3` | `00 D3` → `00 64` | `41:07:00:02:79:51:02:00:64:39` | `00 64` |
+
+Every write is two bytes at the block base -- never `0x7952` -- and the byte
+outside the field went back as read: byte 1 stayed `00` through the switch
+write, where a 1-byte write leaves the checksum (`D4`) there, and byte 0 stayed
+`01` through the Drehzahl write. Each read-back compared the whole block; each
+sibling refresh re-read the other two entities on `0x7951` within 0.4 s, and
+the switch showed OFF right after a Drehzahl write that followed a raw write
+clearing its bit. The same session (log 24) also ran a hand-written
+`length: 1` `bit_mask` switch at `0x7951` and reproduced the narrow-write
+corruption a third time (`00 05` → `01 D4` → `00 D3`), with a 1-byte read-back
+"confirming" it: the component cannot know a block it was not told about, so
+that shape stays the user's to avoid. Not run: the switch toggled with a
+non-zero byte 1 (`00 05` → `01 05`); it goes through the same merge that the
+Drehzahl-with-output-ON row proves.
 
 ### 5c. No state before the device has answered
 
@@ -1782,12 +1815,12 @@ happen in production.
   write is confirmed -- two flags of `0x0005` toggled back-to-back, and an
   `FF FF` address being refused. A 1-byte write into a 2-byte block was shown to
   overwrite byte 1 (§5b, §8g).
-- **Whole-block read-modify-write on hardware (§5b, block mode).** Host-proven
-  only. On VScotHO1_72: toggle `Neptun_ZP` (bit `0x01` of `0x7953`) with byte 1
-  set to a known non-zero value first (a full 2-byte raw write) -- byte 1 must
-  survive both ways; write `Neptun_ZP_Drehzahl` (byte 1) -- byte 0 must
-  survive; and the sibling entity must update right after the write. Then
-  restore `00 00`.
+- **Whole-block read-modify-write (§5b, block mode).** Confirmed on
+  VScotHO1_72 (P300) on 2026-10-15: bit field and interior field, preservation
+  of the other byte both ways, whole-block read-back, sibling refresh. Still to
+  do: the bit field with a non-zero neighbouring byte, a block wider than 2
+  bytes, and anything on GWG (the generator emits no block-mode write for any
+  GWG token in the 2026 export, so block mode is P300-only in practice).
 - **GWG hardware verification.** GWG is implemented and host-proven, and as of
   2026-08-23 has one capture from a live GWG unit. That capture confirmed the
   request framing (`01 CB <addr> <len> 04`) and the `RECV $len` completion rule

@@ -681,7 +681,13 @@ bool VitoHomeComponent::request_priority_read(VitoEntityBase *entity) {
 
   if (entity->read_queued_) {
     // Already pending in the read lane; a second copy would poll the same
-    // datapoint twice. Nothing to add, and not a failure.
+    // datapoint twice. But "priority" must still mean "next": move the queued
+    // copy to the head. Hardware, VScotHO1_72, 2026-10-15: a write ACKed during
+    // a poll cycle whose polls already held the writer got its read-back only
+    // after the whole cycle, 2.3 s later.
+    // Not found means flagged but not in the lane (its read is in flight):
+    // nothing to move, and a second copy would only repeat that read.
+    static_cast<void>(this->read_queue_.move_to_front(entity));
     return true;
   }
 
@@ -1130,8 +1136,9 @@ void VitoHomeComponent::on_response_(const ResponseView &response, uint16_t requ
     if (this->rmw_verify_entity_ == entity && !entity->wants_read_back())
       this->rmw_verify_entity_ = nullptr;  // no read-back is coming
 
-    // Siblings first, then the writer's own read-back pushed in front of them:
-    // the writer's read-back is the one the check above is waiting for.
+    // Siblings first, then the writer's own read-back pushed (or, if its poll
+    // is already queued, moved) in front of them: the writer's read-back is the
+    // one the check above is waiting for.
     this->refresh_siblings_(entity);
 
     if (entity->wants_read_back()) {
