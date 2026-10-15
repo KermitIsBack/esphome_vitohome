@@ -29,8 +29,9 @@ the design is what it is:
   re-runs the validation in §4.
 - **The reverse-engineering write-ups are dated.** InsideViessmannVitosoft's
   docs are a map, not the territory — e.g. they describe per-language
-  `Textresource_de.xml`/`Textresource_en.xml`, but current Vitosoft ships a
-  single `Textresource.xml` keyed by `CultureId`, and `DPDefinitions.xml` now
+  `Textresource_de.xml`/`Textresource_en.xml`; the 2026 definition export ships
+  only a slim multi-culture `Textresource.xml`, while the full per-language files
+  live in the Vitosoft installation (§8i), and `DPDefinitions.xml` now
   wraps its tables in an `ImportExportDataHolder` with an extra
   `DocumentServerDataSet` the docs don't mention (§8). Datapoint facts are
   verified against a *current* export, never recalled from the docs.
@@ -950,7 +951,8 @@ Mapping the tuple to a catalog file is done off-device. The hub logs a link to
 the catalog finder (https://soulsolistice.github.io/esphome_vitohome/) with the bytes it
 read as a query string (`?id=20CB&hw=03&sw=51`); the page looks them up in
 `example/catalogs/resolve.json`, which `gen_catalog.py --export-all` writes by
-enumerating `Catalog.resolve_pool()`. The firmware carries the URL and nothing
+enumerating `Catalog.resolve_pool()` (language-independent: one table serves
+`example/catalogs/de/` and `…/en/`, and the finder picks the folder). The firmware carries the URL and nothing
 of the table, and never contacts the site itself. `0xF0` is not read, so for
 the software-index ranges that F0 subdivides the finder lists the variants.
 
@@ -966,9 +968,10 @@ The load-bearing fact for anyone **adding new datapoints**:
   product. On the reference unit `VScotHO1_72` ("Projekt Neptun") is the
   **Vitotronic 200 controller in a Vitodens 300-W (type B3HA)** — corroborated by
   the `Neptun_Durchfluss_*` / `Neptun_Volumenstromgrenzwert_*` flow-sensor
-  datapoints in its catalog, a Vitodens-300-W feature. The fault-code default is
-  therefore the Vitodens 300-W B3HA set (`fault_codes.VITOTRONIC_VD300_B3HA`),
-  not the Vitodens 200 one.
+  datapoints in its catalog, a Vitodens-300-W feature. Its fault texts now come
+  from Vitosoft itself (§8i); the hand-curated Vitodens 300-W B3HA set
+  (`fault_codes.VITOTRONIC_VD300_B3HA`) is the fallback for exports without
+  them.
 - **Authoring a new datapoint from the Vitosoft export → match your unit's
   `0xFB`.** Address and conversion can differ between `VScotHO1` and
   `VScotHO1_72`; picking the wrong variant row is a **silent-wrong-decode trap**.
@@ -1018,17 +1021,19 @@ correction). The current, hardware-confirmed picture on VScotHO1_72:
   burner control unit)** history — a different subsystem with a different code
   space (`GFA_Kennung` @ `0x7650`; K38 is `KonfiFehlerByteGFA`). Emitted as
   "GFA Fehler NN", all disabled by default, with **no** Vitotronic code map
-  attached.
+  attached. Its own texts are keyed by the GFA chip, which the unit reports
+  at `0x7650` (`--gfa-chip`, §8i; VScotHO1_72 reads `0x24`).
 
 `gen_catalog.py` emits both when the export carries both, all under
 `entity_category: diagnostic`; a genuinely distinct **second system archive**
 on the same unit (e.g. the Vitotwin's `0x7000` SW02 archive) gets a
-name/seed tag so the two do not collide. The `codes:` map is selected with
-`--error-code-set` from `scripts/fault_codes.py` (the single source of truth:
-`openv` (41 codes), `vd200` (59), `vd300` (94, the Vitodens 300-W B3HA =
-VScotHO1_72 set and the **default**), or `union` (105, all merged,
-most-specific manual wins); openv-vs-VD200 disagreements are kept in
-`fault_codes.CONFLICTS`, not overwritten — see `NOTICE.md`). It maps
+name/seed tag so the two do not collide. The `codes:` map is Vitosoft's own
+text set for the device by default (`--error-code-set auto`, §8i); the
+hand-curated maps in `scripts/fault_codes.py` -- `openv` (41 codes), `vd200`
+(59), `vd300` (94, Vitodens 300-W B3HA) and `union` (105, all merged,
+most-specific manual wins), with openv-vs-VD200 disagreements kept in
+`fault_codes.CONFLICTS`, not overwritten (see `NOTICE.md`) -- are selectable
+explicitly and are the fallback for exports without fault texts. It maps
 the display-Stoerungscode space (byte[0]) of the **system** archive only — not
 the GFA slots above, the GFA byte (`0x5738`), the LON alarm record, or the
 self-describing sensor-status enums.
@@ -1059,12 +1064,17 @@ Concrete shape of a full 2026 export, recorded in case it shifts again:
   `DocumentServerDataSet` (mobile-client / error-code extensions). Parses in ~27 s
   at ~1.6 GB peak via a DOM; prefer a streaming parse on a low-RAM target.
 - **`Textresource.xml`**: UTF-16 LE, consolidated multi-culture (15 cultures,
-  `de` = CultureId 1) — but **UI strings only**. `Textresource_de.xml` is a
-  byte-identical copy, not a German subset.
+  `de` = CultureId 1) — but **UI strings only** (~350 per culture). In the
+  definition export, `Textresource_de.xml` is a byte-identical copy, not a
+  German subset. The *full* per-language files are a different thing (§8i).
 - The installer ships **stale** XML; it is regenerated from the embedded SQL
   database on first launch of Vitosoft. Verify against a freshly-generated export.
 
-### The operational catch: display names are not in the offline export
+### The operational catch: display names are not in the definition export
+
+(Superseded in practice by §8i: the names are in the Vitosoft installation's
+full `Textresource_<culture>.xml` files. What follows still holds for the
+definition export on its own, and is what the generator falls back to.)
 
 Every event, value and group references its display name via an
 `@@viessmann.*.name.*` label, but the strings those labels resolve to are
@@ -1520,6 +1530,87 @@ negative) and 2 have a negative border. The `*HighByteFirst` types are left
 alone: they also reverse the byte order, which no reachable `div2`/`div10`
 datapoint needs.
 
+### 8i. Vitosoft texts: languages, units, fault texts
+
+The display names §8 calls absent exist -- not in the definition export, but in
+the Vitosoft installation: `Textresource_<culture>.xml`, one language per file,
+18 languages (`cs da de en es fr hr hu it lt nl no pl ro ru sk sv tr`; culture
+ids 1..18 as every file header declares them), ~30 MB and 95,625 labels each
+(Norwegian 95,596). The copies in the installer's `data\OFFLINE\…\` folder are
+byte-identical to an installed one's (2025-07-17). They carry entity names,
+option labels, unit labels and 35,640 `viessmann.errorcode.*` fault texts.
+`gen_catalog.py` layers them per label (`_load_text_layers`): slim
+`Textresource.xml` < `Textresource_de.xml` < `Textresource_<culture>.xml`; an
+empty translation never hides German (English leaves many option and unit
+labels empty).
+
+Four things the texts do NOT get to decide:
+
+- **Units.** Unit labels are translated (`kWh` -> "кВтч" in Russian), empty
+  (`ecnUnit.sech` in English), or not symbols at all (`ecnUnit.dBm` is "-dBm" in
+  German, "dBm" in English, "#NAME?" in Russian). `scripts/units.py` maps all
+  60 unit tokens of the export to one HA/SI symbol and device class, so a
+  catalog's units do not depend on its language. "-dBm" is a real signal: the
+  RF level datapoints are unsigned `Byte`s, so the stored value is the
+  magnitude, emitted as `dBm` with `multiply: -1` (UNVERIFIED: no RF
+  participant on the reference unit).
+- **Entity types.** `_boolean_pair` (switch vs select) knows German and English
+  on/off words. It always decides on the German labels (`_enum_bool_pair`), so
+  a French catalog has the same switches as a German one.
+- **German option labels.** `ecnEventValueType.Description` stays first for
+  German: it is per heating circuit ("1 M2 setzt Anforderung an Int.Pumpe")
+  where the UI label is shared ("1: HK setzt ..."), and has no hyphenation
+  artefacts ("Betriebsarten-umschaltung"). The German catalog is unchanged by
+  this; other languages show their translation.
+- **Ids.** `id:` is the technical name in every language.
+
+A key-spelling trap: DPDefinitions names an option
+`@@viessmann.eventvaluetype.name.X~0`, the text files key it
+`viessmann.eventvaluetype.X~0` (no `.name.`); `_lookup_label` tries both.
+Event names carry `.name.` in both places.
+
+**Names must be unique per platform** in ESPHome, and Vitosoft UI names are not
+(45 repeats on VScotHO1_72: one "Pegel" per RF participant, the "(23)..(28)"
+coding names per circuit). `_make_names_unique` qualifies every member of a
+colliding group with its `id:`, comparing names the way ESPHome does
+(lower-case, non-`[a-z0-9_-]` to `_`). `/` in a name becomes U+2044, as
+ESPHome itself substitutes (an error from ESPHome 2027.7.0).
+
+**Fault texts are per device.** 88 distinct sets across 206 device types; a set
+belongs to the Vitosoft token (`viessmann.errorcode.VScotHO1_72.<XX>`, hex code
+byte), so each generated catalog carries its own device's texts. Coverage over
+the 166 catalogs with a system history: 144 have their own set; the other 22
+are Vitobloc CHP units and `WILO`. The generic set
+(`viessmann.errorcode.<XX>`, 72 codes) is the Vitotronic boiler meaning and is
+used only where `ecnDataPointType.ErrorType` is 1 (Default) -- 131 of the 132
+such devices have their own set anyway; a BHKW (`ErrorType` 4) gets no map
+rather than boiler codes. Against the hand-curated `vd300` map on VScotHO1_72:
+Vitosoft has all 94 codes plus 16, and 48 texts differ, several in meaning
+(`0x49`/`0x4D` return-temperature sensor vs coding, `0x93`/`0x9B` solar
+collector vs storage sensor, `0x1D`).
+
+**GFA texts are per chip.** `viessmann.errorcode.fa.<chip>.<XX>`, 9 chips
+(`20`-`26`, `41`, `42`; 8 distinct sets, `41` = `42`). All 53 devices with a
+burner control read the chip from `GFA_Kennung` at `0x7650`, one byte, and the
+key is that byte in hex -- Vitosoft's own chip table says so
+(`Kennung_FA_Chip~36` = "24h - NEC"; the table: `20` GFA, `21` SCOT, `22`
+Dover, `23` CES, `24` NEC, `25` ET, `26` Scot eSTB, `27` Vi (no texts), `41`
+ÖFA, `42` ÖFA (Vi) -- ÖFA being the oil burner control, which fits the
+Ölvorwärmer/BV2 texts of `41`/`42`). Hardware, VScotHO1_72, 2026-10-15:
+`0x7650` = `0x24` (`>>> 41:05:00:01:76:50:01:CD`, `<<< ...:76:50:01:24:F3`),
+NEC. Nothing in the export ties a device to a chip: `GFA_Kennung` carries no
+value list on any of the 53 devices, and the chip table is used only by the
+burner-control-side `VSKO_Scot_CES_P80~0x4050` (`GFA_READ`). The sets overlap
+heavily -- 60 of the 72 codes they share read the same everywhere -- but 7
+codes genuinely contradict between chips (`0x09` LAS vs low water pressure,
+`0x12` dLP sensor vs water-pressure sensor, `0x05`, `0x10`/`0x11`, `0x1D`), so
+no merged set is safe. The chip is a property of the installed unit, so
+`--gfa-chip` takes it for one catalog; selecting the set at runtime from the
+boot-time read is component work (§11). The GFA texts keep Vitosoft's decimal
+prefix ("10: Flammenausfall ..."); three of them carry a wrong one in the
+source (`20.8C` "8c: ...", `24.8A` and `26.8A` "139: Fehler 8Ah"), passed
+through unchanged.
+
 ---
 
 ### 9a. Frame logging belongs in the component, not in `uart: debug:`
@@ -1815,6 +1906,15 @@ happen in production.
   write is confirmed -- two flags of `0x0005` toggled back-to-back, and an
   `FF FF` address being refused. A 1-byte write into a 2-byte block was shown to
   overwrite byte 1 (§5b, §8g).
+- **GFA fault texts selected at runtime (§8i).** `--gfa-chip` bakes one chip's
+  texts into one catalog. The component could read `GFA_Kennung` (`0x7650`) in
+  the identify block -- only when GFA history entities are configured, so
+  devices without a burner control never see the read -- and pick from all 8
+  distinct sets carried as shared tables, with the chip in the identification
+  log line and the finder link. Planned as 0009.
+- **RF level sign (§8i).** `ecnUnit.dBm` values are emitted negated, on the
+  strength of the German "-dBm" label and the unsigned `Byte` type. Unverified:
+  the reference unit has no RF participant.
 - **Whole-block read-modify-write (§5b, block mode).** Confirmed on
   VScotHO1_72 (P300) on 2026-10-15: bit field and interior field, preservation
   of the other byte both ways, whole-block read-back, sibling refresh. Still to

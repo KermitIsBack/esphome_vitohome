@@ -104,6 +104,7 @@ import xml.etree.ElementTree as ET
 # import the fault-code maps from the single source of truth.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import fault_codes  # noqa: E402  (sibling import after path insert)
+import units  # noqa: E402  (sibling import after path insert)
 
 # --- conversion -> vitohome converter --------------------------------------
 # Maps the Vitosoft ``Conversion`` name to a vitohome ``converter:`` plus a
@@ -313,40 +314,8 @@ COMMAND_STATE_ADDR = {
 
 # Best-effort unit symbols for Viessmann's ecnUnit.* tokens (Textresource.xml
 # does not carry these). Unknown ecnUnit.* tokens fall back to the bare suffix.
-ECN_UNITS = {
-    "ecnUnit.Grad C": "°C",
-    "ecnUnit.Kelvin": "K",
-    "ecnUnit.KelvinProStunde": "K/h",
-    "ecnUnit.Prozent": "%",
-    "ecnUnit.ProzentProStunde": "%/h",
-    "ecnUnit.Stunden": "h",
-    "ecnUnit.Minuten": "min",
-    "ecnUnit.Sekunden": "s",
-    "ecnUnit.Tage": "d",
-    "ecnUnit.Monate": "months",
-    "ecnUnit.Jahre": "a",
-    "ecnUnit.Bar": "bar",
-    "ecnUnit.MilliBar": "mbar",
-    "ecnUnit.Pascal": "Pa",
-    "ecnUnit.HektoPascal": "hPa",
-    "ecnUnit.Watt": "W",
-    "ecnUnit.KiloWatt": "kW",
-    "ecnUnit.KiloWattStunden": "kWh",
-    "ecnUnit.KiloWattstunde": "kWh",
-    "ecnUnit.MegaWattStunden": "MWh",
-    "ecnUnit.Liter": "L",
-    "ecnUnit.LiterProStunde": "L/h",
-    "ecnUnit.LiterProMinute": "L/min",
-    "ecnUnit.KubikMeter": "m³",
-    "ecnUnit.KubikMeterProStunde": "m³/h",
-    "ecnUnit.Ampere": "A",
-    "ecnUnit.MilliAmpere": "mA",
-    "ecnUnit.Volt": "V",
-    "ecnUnit.Hertz": "Hz",
-    "ecnUnit.Umdrehungen": "rpm",
-    "ecnUnit.UmdrehungenProMinute": "rpm",
-    "ecnUnit.Grad": "°",
-}
+# Unit symbols and device classes live in units.py (one row per Vitosoft unit
+# token); see its docstring for why the translated unit text is never used.
 
 # Poll tiers (seconds).
 POLL_FAST = 60  # live temperatures / measurements
@@ -357,10 +326,11 @@ POLL_ERROR = 300  # error history
 PROFILES = ("minimal", "standard", "full")
 
 # Culture name -> CultureId in Textresource.xml. Mirrors the full ecnCulture
-# table of the 2026 export (13 cultures). NOTE: the export ships only Vitosoft
-# UI strings in Textresource.xml -- no eventtype / eventvaluetype / ecnUnit
-# labels -- so the culture choice currently has no effect on entity naming;
-# the map is kept complete for exports that do carry translations.
+# table, as every Textresource*.xml header declares it (18 cultures). The slim
+# Textresource.xml of the 2026 export carries ~350 UI strings per culture; the
+# full Textresource_<culture>.xml files (one culture each, from the Vitosoft
+# installation) carry every name, option label and fault text -- see
+# _load_text_layers.
 _CULTURES = {
     "de": "1",
     "en": "2",
@@ -375,6 +345,11 @@ _CULTURES = {
     "tr": "11",
     "lt": "12",
     "cs": "13",
+    "sv": "14",
+    "no": "15",
+    "sk": "16",
+    "hr": "17",
+    "ro": "18",
 }
 
 # Identification reads (0xF8 group, 0xF9 ident, 0xFA hardware, 0xFB software).
@@ -408,7 +383,14 @@ class EventValue:
     # eventvaluetype strings in Textresource, so it is the only reliable label
     # source for enum options. Preferred first by _enum_options().
     description: str = ""
+    # The option's Textresource label in the catalog language ("" for a German
+    # catalog) and in German; "" when the text files do not carry it (slim
+    # Textresource). See _enum_options for the priority, _enum_bool_pair for
+    # why the German one is kept separately.
+    label: str = ""
+    label_de: str = ""
     unit: str = ""
+    unit_token: str = ""  # raw Vitosoft unit token (units.py key)
     lower: str = ""
     upper: str = ""
     stepping: str = ""
@@ -437,6 +419,7 @@ class Event:
     stepping: str = ""
     enum_type: bool = False
     unit: str = ""  # resolved unit from the access layer (fallback for _unit_for)
+    unit_token: str = ""  # its raw Vitosoft token (units.py key)
     tech: str = ""  # stable Viessmann technical identifier (the join key; -> id:)
     token: str = ""  # raw DPDefinitions Address token (e.g. "ecnsysEventType~Error")
     fc_read: str = ""  # access function code for reads (Virtual_READ, GFA_READ, ...)
@@ -578,6 +561,59 @@ def _load_textresources(path, culture="de"):
     return out
 
 
+def _overlay(base: dict, top: dict) -> dict:
+    """base updated with top, except that an EMPTY value in top never hides a
+    real one below it (English leaves e.g. ecnUnit.sech and many option labels
+    empty)."""
+    out = dict(base)
+    for k, v in top.items():
+        if v or k not in out:
+            out[k] = v
+    return out
+
+
+def _load_text_layers(data_dir: str, culture: str = "de") -> tuple[dict, dict]:
+    """(textmap, german) for *culture*, layered per label, lowest first:
+
+    1. German: the slim ``Textresource.xml`` (~350 UI strings per culture), then
+       ``Textresource_de.xml`` -- German is Vitosoft's own base language and the
+       only one every label exists in;
+    2. the slim file's strings in *culture*;
+    3. ``Textresource_<culture>.xml``.
+
+    A label missing (or empty) in the chosen language therefore falls back to
+    German for that one label, never to the raw key. ``german`` is layers 1-2
+    alone, used where the text must not vary with the language (unit fallback).
+    """
+    slim_path = _find_file(data_dir, "Textresource.xml")
+    german = _overlay(
+        _load_textresources(slim_path, "de"),
+        _load_textresources(_find_file(data_dir, "Textresource_de.xml"), "de"),
+    )
+    if culture == "de":
+        return dict(german), german
+    # The chosen language on top of German: its slim UI strings, then its full file.
+    textmap = _overlay(german, _load_textresources(slim_path, culture))
+    textmap = _overlay(textmap, _load_textresources(_find_file(data_dir, f"Textresource_{culture}.xml"), culture))
+    return textmap, german
+
+
+def _lookup_label(raw: str, textmap: dict) -> str:
+    """The Textresource text for an @@-prefixed label, or "" if there is none.
+
+    DPDefinitions names an option ``@@viessmann.eventvaluetype.name.<X>~<N>``
+    while the text files key it ``viessmann.eventvaluetype.<X>~<N>`` -- no
+    ``.name.`` -- so both spellings are tried. Event names carry ``.name.`` in
+    both places and resolve on the first try."""
+    if not raw or not raw.startswith("@@"):
+        return ""
+    key = raw[2:]
+    for k in (key, key.replace(".name.", ".", 1)):
+        if textmap.get(k):
+            return textmap[k]
+    return ""
+
+
 def _resolve_label(raw: str, textmap: dict) -> str:
     """Resolve a possibly @@-prefixed label. If unresolved (this export ships no
     eventvaluetype strings in Textresource.xml), trim the ``viessmann.<cat>.``
@@ -585,21 +621,27 @@ def _resolve_label(raw: str, textmap: dict) -> str:
     if not raw:
         return raw
     if raw.startswith("@@"):
+        hit = _lookup_label(raw, textmap)
+        if hit:
+            return hit
         key = raw[2:]
-        if key in textmap:
-            return textmap[key]
         return re.sub(r"^viessmann\.[a-z]+\.(name\.)?", "", key) or key
     return raw
 
 
-def _resolve_unit(raw: str, textmap: dict) -> str:
+def _resolve_unit(raw: str, german: dict) -> str:
+    """The unit SYMBOL for a raw Vitosoft unit token (units.py). Never the
+    translated label: that differs by language and is not a symbol. A token
+    units.py does not know falls back to its German label, then to the bare
+    token -- tests/unit/test_units.py keeps the table complete for the export."""
     if not raw:
         return ""
-    if raw in ECN_UNITS:
-        return ECN_UNITS[raw]
+    row = units.lookup(raw)
+    if row is not None:
+        return row[0]
     key = raw.removeprefix("@@")
-    if key in textmap:
-        return textmap[key]
+    if german.get(key):
+        return german[key]
     if raw.startswith("ecnUnit."):
         return raw[len("ecnUnit.") :]
     return raw
@@ -697,6 +739,10 @@ def _load_identification(path):
                     "extt": _hx(extt),
                     "f0": _hx(_child(e, "F0")),
                     "f0t": _hx(_child(e, "F0Till")),
+                    # Vitosoft's fault-code family: 1 Default (Vitotronic),
+                    # 2 Vitocom, 3 heat pump, 4 BHKW, 6 WPR3, 7 Vitotwin; absent
+                    # on M-Bus/GWG/gateway rows. Gates the generic fault texts.
+                    "error_type": _child(e, "ErrorType"),
                 }
             )
     return rows
@@ -735,7 +781,20 @@ class Catalog:
     layer) + value types + identification."""
 
     def __init__(
-        self, types, dp_name, links, raw_events, vlinks, raw_values, access, ident_rows, textmap, groups=None, glinks=None
+        self,
+        types,
+        dp_name,
+        links,
+        raw_events,
+        vlinks,
+        raw_values,
+        access,
+        ident_rows,
+        textmap,
+        groups=None,
+        glinks=None,
+        german=None,
+        culture="de",
     ):
         self.devices = types  # token -> datapoint-type Id
         self._dp_name = dp_name  # Id -> display name
@@ -744,6 +803,10 @@ class Catalog:
         self._access = access  # token -> access dict
         self._ident = ident_rows
         self._text = textmap
+        # German layers only: the unit fallback must not vary with the language.
+        self._german = german if german is not None else textmap
+        self._fault_index = None  # built on first use, see fault_texts()
+        self.culture = culture
         # Vitosoft navigation tree (ecnEventTypeGroup): group id -> {"path":
         # readable "TOKEN~10_Bedienung_A1~20_Warmwasser", "dp": DataPointTypeId,
         # "order": OrderIndex}; glinks: event id -> [(group id, EventTypeOrder)].
@@ -800,7 +863,12 @@ class Catalog:
             enum_address_value=_intval(f.get("EnumAddressValue")),
             enum_replace_value=_resolve_label(f.get("EnumReplaceValue", ""), self._text),
             description=(f.get("Description", "") or "").strip(),
-            unit=_resolve_unit(f.get("Unit", ""), self._text),
+            # German needs no translation: Description is German already, and
+            # more specific than the UI label (see _enum_options).
+            label="" if self.culture == "de" else _lookup_label(f.get("Name", ""), self._text),
+            label_de=_lookup_label(f.get("Name", ""), self._german),
+            unit=_resolve_unit(f.get("Unit", ""), self._german),
+            unit_token=(f.get("Unit", "") or "").strip(),
             lower=f.get("LowerBorder", "") or "",
             upper=f.get("UpperBorder", "") or "",
             stepping=f.get("Stepping", "") or "",
@@ -865,7 +933,8 @@ class Catalog:
             upper=pick_str("upper_border", "UpperBorder"),
             stepping=pick_str("stepping", "Stepping"),
             enum_type=(f.get("EnumType", "") or "").lower() in ("1", "true"),
-            unit=_resolve_unit(acc.get("unit", ""), self._text),
+            unit=_resolve_unit(acc.get("unit", ""), self._german),
+            unit_token=(acc.get("unit", "") or "").strip(),
             tech=_tech_id(raw_name, token),
             token=token,
             fc_read=(acc.get("fc_read") or f.get("FCRead") or ""),
@@ -893,6 +962,43 @@ class Catalog:
                     ev.values.append(val)
             out.append(ev)
         return out
+
+    def fault_texts(self) -> tuple[dict, dict, dict]:
+        """(per_device, generic, gfa) fault-code texts from the loaded language:
+
+        * per_device -- token -> {code: text}, ``viessmann.errorcode.<token>.<XX>``
+        * generic    -- {code: text}, ``viessmann.errorcode.<XX>`` (Vitotronic)
+        * gfa        -- chip -> {code: text}, ``viessmann.errorcode.fa.<chip>.<XX>``;
+                        the chip is the byte GFA_Kennung (0x7650) reads, in hex
+
+        The keys are hex code bytes; anything that is not one is skipped. Only
+        the full Textresource_<culture>.xml files carry these (35,640 labels);
+        the slim Textresource.xml has none, and then all three are empty.
+        Built once per catalog -- --export-all asks for every device."""
+        if self._fault_index is None:
+            per_device: dict = defaultdict(dict)
+            generic: dict = {}
+            gfa: dict = defaultdict(dict)
+            prefix = "viessmann.errorcode."
+            for label, text in self._text.items():
+                if not label.startswith(prefix) or not (text or "").strip():
+                    continue
+                parts = label[len(prefix) :].split(".")
+                try:
+                    code = int(parts[-1], 16)
+                except ValueError:
+                    continue
+                if not 0 <= code <= 0xFF:
+                    continue
+                text = text.strip()
+                if len(parts) == 1:
+                    generic[code] = text
+                elif len(parts) == 2:
+                    per_device[parts[0]][code] = text
+                elif len(parts) == 3 and parts[0] == "fa":
+                    gfa[parts[1].upper()][code] = text
+            self._fault_index = (dict(per_device), generic, dict(gfa))
+        return self._fault_index
 
     def identification_for(self, token: str) -> dict:
         for r in self._ident:
@@ -1021,7 +1127,7 @@ def load_catalog(data_dir: str, culture: str = "de") -> Catalog:
         )
     access = _load_access(_find_file(data_dir, "ecnEventType.xml"))
     ident = _load_identification(_find_file(data_dir, "ecnDataPointType.xml"))
-    textmap = _load_textresources(_find_file(data_dir, f"Textresource_{culture}.xml", "Textresource.xml"), culture)
+    textmap, german = _load_text_layers(data_dir, culture)
     if not access:
         print(
             "warning: ecnEventType.xml not found next to DPDefinitions.xml; "
@@ -1077,7 +1183,19 @@ def load_catalog(data_dir: str, culture: str = "de") -> Catalog:
             el.clear()  # free table rows / datasets we have finished reading
 
     return Catalog(
-        types, dp_name, links, raw_events, vlinks, raw_values, access, ident, textmap, groups=groups, glinks=glinks
+        types,
+        dp_name,
+        links,
+        raw_events,
+        vlinks,
+        raw_values,
+        access,
+        ident,
+        textmap,
+        groups=groups,
+        glinks=glinks,
+        german=german,
+        culture=culture,
     )
 
 
@@ -1209,15 +1327,19 @@ def _poll_for(ev: Event, conv_kind: str, protocol: str = PROTO_P300) -> int:
     return POLL_FAST
 
 
-def _enum_options(ev: Event) -> list:
+def _enum_options(ev: Event, german: bool = False) -> list:
     """Return [(raw_value, label)] from the event's value types, if any.
 
-    Label priority: Description (pre-resolved German, column O of the Vitosoft
-    export) -> resolved EnumReplaceValue -> Name -> hex. Description is first
-    because this export ships no eventvaluetype strings in Textresource, so the
-    token paths resolve only to a trimmed stem (e.g. "Allgemein_Sensorstatus~0")
-    while Description already holds "OK". ~87% of this device's enum option
-    values carry a Description; the rest fall through to the old behaviour.
+    Label priority: the option's Textresource label in the catalog language
+    (never for German) -> Description (pre-resolved German, column O of the
+    Vitosoft export) -> the German Textresource label -> resolved
+    EnumReplaceValue -> Name -> hex. ``german=True`` skips the first step.
+
+    German keeps Description first: it is the German text already, and it is
+    often more specific than the shared UI label ("1 M2 setzt Anforderung an
+    Int.Pumpe" vs "1: HK setzt ..."), which also carries hyphenation artefacts
+    ("Betriebsarten-umschaltung"). The UI label only fills the ~13% of options
+    without a Description. Other languages have only the translation.
     """
     out = []
     seen_values: set[int] = set()
@@ -1240,7 +1362,16 @@ def _enum_options(ev: Event) -> list:
             # first (deterministic by document order) and drop the rest.
             continue
         seen_values.add(v.enum_address_value)
-        label = v.description or v.enum_replace_value or v.name or f"0x{v.enum_address_value:02X}"
+        # getattr: hand-built stand-ins in tests may lack the label fields.
+        shown = "" if german else getattr(v, "label", "")
+        label = (
+            shown
+            or v.description
+            or getattr(v, "label_de", "")
+            or v.enum_replace_value
+            or v.name
+            or f"0x{v.enum_address_value:02X}"
+        )
         out.append((v.enum_address_value, label))
     return out
 
@@ -1328,6 +1459,21 @@ def _boolean_pair(opts: list):
     return None
 
 
+def _enum_bool_pair(ev: Event, enum_opts: list):
+    """_boolean_pair for *ev*, decided on its GERMAN option labels and returned
+    with the display labels of *enum_opts*.
+
+    _boolean_pair recognises German and English on/off words only; deciding on
+    the catalog language would make an entity a switch in a German catalog and
+    a select in a French one. German is the language every label exists in."""
+    pair = _boolean_pair(_dedup_option_labels(_enum_options(ev, german=True)))
+    if pair is None:
+        return None
+    on_v, off_v, on_l, off_l = pair
+    shown = dict(enum_opts)
+    return (on_v, off_v, shown.get(on_v, on_l), shown.get(off_v, off_l))
+
+
 def _enum_read_length(enum_opts: list, fallback: int) -> int:
     """Minimal byte width that holds every enum value. A status enum living in a
     larger block (e.g. SM1_Sensor_*_Status_GWG, a 1-byte field inside the 20-byte
@@ -1340,25 +1486,10 @@ def _enum_read_length(enum_opts: list, fallback: int) -> int:
     return 1 if hi < 0x100 else (2 if hi < 0x10000 else fallback)
 
 
-# Unit -> Home Assistant device_class, for proper cards and long-term
-# statistics. Grounded in the units the full VScotHO1_72 export actually
-# emits; deliberately conservative -- unmapped units (%, K deltas,
-# "Prozent pro K", "l pro h", ...) get no device_class rather than a wrong
-# one. "mBar" is normalised to HA's canonical "mbar" spelling by _unit_for.
-_DEVICE_CLASS_BY_UNIT = {
-    "\u00b0C": "temperature",
-    "kWh": "energy",
-    "Wh": "energy",
-    "mbar": "pressure",
-    "dBm": "signal_strength",
-    "h": "duration",
-    "min": "duration",
-    "s": "duration",
-}
-
-
 def _device_class_for(unit: str):
-    return _DEVICE_CLASS_BY_UNIT.get(unit or "")
+    """Home Assistant device_class for a unit SYMBOL (units.py); None for units
+    that do not fix the quantity (%, K deltas, m³, ...)."""
+    return units.DEVICE_CLASS_BY_SYMBOL.get(unit or "")
 
 
 def _unit_for(ev: Event) -> str:
@@ -1370,6 +1501,18 @@ def _unit_for(ev: Event) -> str:
     unit = unit or ev.unit or ""
     # HA's canonical pressure spelling is "mbar"; the export writes "mBar".
     return "mbar" if unit == "mBar" else unit
+
+
+def _unit_negated(ev: Event) -> bool:
+    """Whether the stored value is a magnitude whose sign lives in the unit
+    (units.py `negate`: the RF level bytes, German label "-dBm")."""
+    token = ""
+    for v in ev.values:
+        if getattr(v, "unit_token", ""):
+            token = v.unit_token
+            break
+    row = units.lookup(token or getattr(ev, "unit_token", ""))
+    return bool(row and row[2])
 
 
 def _yaml_str(s: str) -> str:
@@ -1674,7 +1817,7 @@ def _emit_bit_field(ev: Event, protocol: str, partial_writes: bool = True, ro_bl
         if not fit:
             return ("comment", [f"# {name} @ 0x{addr:04X}: no enum option fits the {bit_len}-bit field"])
         if writable:
-            pair = _boolean_pair(fit)
+            pair = _enum_bool_pair(ev, fit)
             if pair:
                 on_v, off_v, on_l, off_l = pair
                 lines = head() + read_lines() + [mask_line]
@@ -2178,7 +2321,7 @@ def emit_entity(
     # binary automation conditions). _boolean_pair is deliberately
     # conservative -- non-boolean two-option enums (Celsius/Fahrenheit,
     # Einkessel/Mehrkessel) keep falling through to the select branch.
-    bool_pair = _boolean_pair(enum_opts) if enum_opts else None
+    bool_pair = _enum_bool_pair(ev, enum_opts) if enum_opts else None
     if writable and bool_pair and length in (1, 2) and all(0 <= v < (1 << (8 * length)) for v, _ in enum_opts):
         on_v, off_v, on_l, off_l = bool_pair
         state_addr = COMMAND_STATE_ADDR.get(ev.address)
@@ -2428,6 +2571,11 @@ def emit_entity(
     dc = _device_class_for(unit)
     if dc:
         lines.append(f"  device_class: {dc}")
+    if _unit_negated(ev):
+        # The device stores the magnitude; German Vitosoft labels it "-dBm"
+        # (units.py). UNVERIFIED on hardware -- no RF participant here.
+        lines.append("  # stored as a magnitude (Vitosoft unit '-dBm'); negated to dBm")
+        value_filters = list(value_filters) + [("multiply", -1.0)]
     if value_filters:
         # The true value transform (see the conversion resolution above); an
         # ESPHome sensor filter, applied after the raw noconv decode.
@@ -2450,7 +2598,8 @@ def _is_identification(ev: Event) -> bool:
 
 # German weekday names for the per-day Schaltzeiten text entities (Monday
 # first, matching the vcontrold base+day*8 convention and the component's
-# decode). (label, id-suffix) pairs.
+# decode). (label, id-suffix) pairs. The id suffix never changes with the
+# language; the label comes from _UI_TEXT.
 _WEEKDAYS = (
     ("Montag", "mo"),
     ("Dienstag", "di"),
@@ -2460,6 +2609,31 @@ _WEEKDAYS = (
     ("Samstag", "sa"),
     ("Sonntag", "so"),
 )
+
+# Names the generator makes up itself (Vitosoft has no label for them). German
+# keeps the spellings earlier catalogs used, so a German catalog does not rename
+# them; every other language gets English. Entity ids never change.
+_UI_TEXT = {
+    "de": {
+        "last_fault": "Letzter Fehler",
+        "fault": "Fehler",
+        "device_type": "Geraete-Typ",
+        "switching_time": "Schaltzeit",
+        "weekdays": tuple(day for day, _sfx in _WEEKDAYS),
+    },
+    "en": {
+        "last_fault": "Last fault",
+        "fault": "Fault",
+        "device_type": "Device type",
+        "switching_time": "Switching times",
+        "weekdays": ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"),
+    },
+}
+
+
+def _ui(lang: str, key: str):
+    return _UI_TEXT.get(lang, _UI_TEXT["en"])[key]
+
 
 # The ONLY Schaltzeiten shape the component's `text` platform can decode: a
 # 56-byte weekday program = 7 records of 8 bytes (four ON/OFF switch-point
@@ -2497,7 +2671,7 @@ def _schaltzeiten_program_label(ev: Event) -> str:
     return label or tok
 
 
-def _schaltzeiten_entries(ev: Event) -> list[dict]:
+def _schaltzeiten_entries(ev: Event, lang: str = "de") -> list[dict]:
     """Expand one 56-byte Schaltzeiten block into 7 per-day `text` specs at
     base + day*8 (Monday first), matching the component's decode. Returns dicts
     with: address, name, seed, program (the shared program label)."""
@@ -2505,11 +2679,12 @@ def _schaltzeiten_entries(ev: Event) -> list[dict]:
     seed_prog = re.sub(r"[^a-z0-9]+", "_", prog.lower()).strip("_")
     base = ev.address or 0
     entries = []
-    for day, (label, sfx) in enumerate(_WEEKDAYS):
+    for day, (_label, sfx) in enumerate(_WEEKDAYS):
+        label = _ui(lang, "weekdays")[day]
         entries.append(
             {
                 "address": base + day * _SCHALTZEITEN_RECORD_LEN,
-                "name": f"Schaltzeit {prog} {label}",
+                "name": f"{_ui(lang, 'switching_time')} {prog} {label}",
                 "seed": f"schaltzeit_{seed_prog}_{sfx}",
                 "program": prog,
             }
@@ -2609,7 +2784,7 @@ def _error_history_archive_tag(ev: Event) -> str:
     return tag or sub
 
 
-def _error_history_entries(ev: Event) -> list[dict]:
+def _error_history_entries(ev: Event, lang: str = "de") -> list[dict]:
     """Expand one error-history event into per-slot emission specs.
 
     Returns dicts with: address, name, seed, disabled, system (bool),
@@ -2657,15 +2832,16 @@ def _error_history_entries(ev: Event) -> list[dict]:
         return [
             {
                 "address": ev.address,
-                "name": f"{fam_name} Fehler {fa_slot:02d}",
+                "name": f"{fam_name} {_ui(lang, 'fault')} {fa_slot:02d}",
                 "seed": f"{fam_seed}_fehler_{fa_slot:02d}",
                 "disabled": True,
                 "system": False,
+                "gfa": fam_name == "GFA",
                 "comment": [
                     f"# {fam_name} history slot {fa_slot} (a burner/subsystem fault archive",
                     "# DISTINCT from the Vitotronic system history). Its lockout codes are",
-                    "# a different code space from the F-codes, so no codes map is attached",
-                    "# and the code byte displays as raw hex. On VScotHO1_72 the GFA slot 1",
+                    "# a different code space from the F-codes, keyed by the burner-control",
+                    "# chip (--gfa-chip); without it the code byte displays as raw hex. On VScotHO1_72 the GFA slot 1",
                     "# was HARDWARE-CONFIRMED distinct (read 0x00, its own timestamp 42 s",
                     "# after the system slot's 0x38). No public GFA code enumeration is",
                     "# known (export + community search both empty).",
@@ -2701,7 +2877,7 @@ def _error_history_entries(ev: Event) -> list[dict]:
             entries.append(
                 {
                     "address": (ev.address or 0) + i * stride,
-                    "name": ("Letzter Fehler" if slot == 1 else f"Fehler {slot:02d}") + name_suffix,
+                    "name": (_ui(lang, "last_fault") if slot == 1 else f"{_ui(lang, 'fault')} {slot:02d}") + name_suffix,
                     "seed": ("letzter_fehler" if slot == 1 else f"fehler_{slot:02d}") + seed_suffix,
                     "disabled": slot > 1,
                     "system": True,
@@ -2716,7 +2892,7 @@ def _error_history_entries(ev: Event) -> list[dict]:
     return [
         {
             "address": ev.address,
-            "name": "Letzter Fehler" + name_suffix,
+            "name": _ui(lang, "last_fault") + name_suffix,
             "seed": "letzter_fehler" + seed_suffix,
             "disabled": False,
             "system": True,
@@ -2761,23 +2937,32 @@ def _inject_diagnostic(lines: list[str]) -> list[str]:
     return lines
 
 
-def _device_id_lines(oid: str) -> list[str]:
+def _device_id_lines(oid: str, lang: str = "de") -> list[str]:
     """The hub-fed device identity text_sensor (no address)."""
     return [
         "- platform: vitohome",
         "  type: device_id",
-        '  name: "Geraete-Typ"',
+        f"  name: {_yaml_str(_ui(lang, 'device_type'))}",
         f"  id: {oid}",
         '  icon: "mdi:identifier"',
         "  entity_category: diagnostic",
     ]
 
 
-def _error_history_lines(entry: dict, oid: str, codes_map: dict | None, set_name: str = "") -> list[str]:
+def _error_history_lines(
+    entry: dict,
+    oid: str,
+    codes_map: dict | None,
+    codes_note: str = "",
+    gfa_map: dict | None = None,
+    gfa_note: str = "",
+) -> list[str]:
     """One error-history slot (from _error_history_entries) as a 9-byte block
     (code byte + 8-byte BCD timestamp), decoded by the component's
-    error_history type. ``codes_map`` is attached only to SYSTEM slots -- the
-    GFA archive is a different code space and renders raw hex instead."""
+    error_history type. ``codes_map`` is attached only to SYSTEM slots;
+    ``gfa_map`` only to the GFA burner-control slots (a different code space,
+    keyed by the GFA chip -- see _resolve_fault_codes). ``*_note`` is the
+    comment stating where the texts come from."""
     lines = list(entry["comment"])
     lines += [
         "# If the device NAKs the 9-byte block read, drop length to 1 (code only).",
@@ -2794,14 +2979,133 @@ def _error_history_lines(entry: dict, oid: str, codes_map: dict | None, set_name
         lines.append("  disabled_by_default: true")
     lines.append(f"  update_interval: {POLL_ERROR}s")
     if entry["system"] and codes_map:
-        label = f"'{set_name}' set" if set_name else "set"
-        lines.append(f"  # Fault-code map ({label}) - DEFAULT, verify for this unit (see fault_codes.CONFLICTS):")
+        lines.append(f"  # {codes_note}" if codes_note else "  # Fault-code map:")
         lines.append("  codes:")
         for code, text in sorted(codes_map.items()):
             lines.append(f"    0x{code:02X}: {_yaml_str(text)}")
     elif entry["system"]:
         lines.append('  # codes: { 0x00: "kein Fehler", ... }  # add a code->text map')
+    elif entry.get("gfa") and gfa_map:
+        lines.append(f"  # {gfa_note}")
+        lines.append("  codes:")
+        for code, text in sorted(gfa_map.items()):
+            lines.append(f"    0x{code:02X}: {_yaml_str(text)}")
+    elif entry.get("gfa") and gfa_note:
+        lines.append(f"  # {gfa_note}")
     return lines
+
+
+def _resolve_fault_codes(catalog, device: str, error_codes: bool, error_code_set: str):
+    """(codes_map, note) for the SYSTEM fault history of *device*.
+
+    ``auto`` (the default) and ``vitosoft`` take Vitosoft's own texts from the
+    full Textresource_<culture>.xml, in the catalog language:
+
+    1. the device's own set (``viessmann.errorcode.<token>.*``) -- 144 of the 166
+       catalogs with a system history have one, 88 distinct sets in all;
+    2. else the generic Vitotronic set, but only for ``ErrorType`` 1 (Default):
+       it is the boiler meaning, wrong for a BHKW (ErrorType 4) or heat pump;
+    3. else nothing -- ``auto`` then falls back to the hand-curated vd300 map
+       only when the export carries no fault texts at all (slim Textresource),
+       which keeps the pre-0008 behaviour for such exports.
+
+    An explicit fault_codes set name (vd300, vd200, openv, union) is used as is.
+    """
+    if not error_codes:
+        return None, ""
+    if error_code_set in fault_codes.SETS:
+        return (
+            fault_codes.SETS[error_code_set],
+            f"Fault-code map ('{error_code_set}' set) - DEFAULT, verify for this unit (see fault_codes.CONFLICTS):",
+        )
+    per_device, generic, _gfa = catalog.fault_texts()
+    if device in per_device:
+        return per_device[device], f"Fault-code texts: Vitosoft, for this device (viessmann.errorcode.{device}.*)"
+    if generic and catalog.identification_for(device).get("error_type") == "1":
+        return generic, "Fault-code texts: Vitosoft generic Vitotronic set (no device-specific set) - verify"
+    if error_code_set == "auto" and not (per_device or generic):
+        return (
+            fault_codes.SETS["vd300"],
+            "Fault-code map ('vd300' set) - this export has no fault texts (slim Textresource); verify for this unit:",
+        )
+    return None, ""
+
+
+def _resolve_gfa_codes(catalog, gfa_chip: str | None):
+    """(gfa_map, note) for the GFA burner-control history slots.
+
+    The texts are keyed by the burner control's chip, which the boiler reports
+    in GFA_Kennung (0x7650, one byte; all 53 devices that have it agree on the
+    address). It is a property of the installed unit, not of the device type,
+    so it cannot come from the export: pass the byte you read as --gfa-chip.
+    The chip's name comes from Vitosoft's own table (eventvaluetype
+    Kennung_FA_Chip~<decimal>: 0x24 = "24h - NEC"); VScotHO1_72 reads 0x24."""
+    _per, _gen, gfa = catalog.fault_texts()
+    if not gfa:
+        return None, ""
+    if not gfa_chip:
+        return None, "GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>"
+    chip = gfa_chip.upper().removeprefix("0X").zfill(2)
+    if chip not in gfa:
+        known = ", ".join(sorted(gfa))
+        raise SystemExit(f"--gfa-chip {gfa_chip}: no GFA texts for chip {chip} (known: {known})")
+    name = catalog._text.get(f"viessmann.eventvaluetype.Kennung_FA_Chip~{int(chip, 16)}", "")
+    label = f"{chip} ({name.split(' - ', 1)[-1]})" if name else chip
+    return gfa[chip], f"GFA fault texts: Vitosoft, burner-control chip {label} (viessmann.errorcode.fa.{chip}.*)"
+
+
+def _esphome_object_id(name: str) -> str:
+    """The id ESPHome derives from an entity name -- and compares for
+    uniqueness -- per esphome.helpers: lower-case, spaces to "_", anything
+    outside [a-z0-9_-] to "_". So "Pegel" and "pegel", or two names differing
+    only in an umlaut, collide."""
+    return re.sub(r"[^a-z0-9_-]", "_", (name or "").lower().replace(" ", "_"))
+
+
+_NAME_LINE = re.compile(r'^(\s*name: )"(.*)"$')
+_ID_LINE = re.compile(r"^\s*id: (\S+)$")
+
+
+def _clean_name(name: str) -> str:
+    """A Vitosoft UI label made fit for an ESPHome entity name: surrounding and
+    repeated whitespace removed (several labels end in a space), and "/"
+    replaced by U+2044 FRACTION SLASH -- the look-alike ESPHome itself
+    substitutes, since "/" is reserved as a URL path separator (a warning
+    today, an error from ESPHome 2027.7.0)."""
+    return re.sub(r"\s+", " ", (name or "").strip()).replace("/", "\u2044")
+
+
+def _make_names_unique(buckets: dict) -> int:
+    """Clean every name (_clean_name), then give every entity whose name collides
+    within its platform a qualifier.
+
+    Vitosoft UI names are not unique (one "Pegel" per RF participant, "nicht
+    belegt" for every unused slot), and ESPHome refuses a duplicate name per
+    platform. ALL members of a colliding group get " (<id>)" appended -- the
+    first one too, so none of them reads as the canonical one -- where <id> is
+    the entity's own, already unique ``id:`` (the Viessmann technical name).
+    Returns the number of renamed entities. Mutates the bucket chunks."""
+    renamed = 0
+    for chunks in buckets.values():
+        seen: dict[str, int] = {}
+        found = []
+        for _key, _label, lines in chunks:
+            name_idx = next((i for i, ln in enumerate(lines) if _NAME_LINE.match(ln)), None)
+            if name_idx is None:
+                continue
+            m = _NAME_LINE.match(lines[name_idx])
+            name = _clean_name(m.group(2))
+            lines[name_idx] = f'{m.group(1)}"{name}"'
+            oid = next((m.group(1) for ln in lines if (m := _ID_LINE.match(ln))), None)
+            slug = _esphome_object_id(name.replace('\\"', '"'))
+            seen[slug] = seen.get(slug, 0) + 1
+            found.append((lines, name_idx, slug, oid))
+        for lines, name_idx, slug, oid in found:
+            if seen[slug] > 1 and oid:
+                m = _NAME_LINE.match(lines[name_idx])
+                lines[name_idx] = f'{m.group(1)}"{m.group(2)} ({oid})"'
+                renamed += 1
+    return renamed
 
 
 def _mode_select_caveat() -> list[str]:
@@ -2929,6 +3233,7 @@ def generate(
     protocol: str | None = None,
     stats: dict | None = None,
     partial_writes: bool = True,
+    gfa_chip: str | None = None,
 ) -> str:
     """Render the package for one device token. ``order`` is "address"
     (default; entities sorted by Optolink address, byte-identical to earlier
@@ -2948,9 +3253,11 @@ def generate(
             f"device {device!r} not found or has no events. Run with --list-devices to see available device tokens."
         )
 
-    # Resolve the fault-code map once: the chosen set, or None when codes are off.
-    codes_map = fault_codes.SETS.get(error_code_set) if error_codes else None
-    codes_set_name = error_code_set if error_codes else ""
+    lang = getattr(catalog, "culture", "de")  # the generator's own names (_UI_TEXT)
+
+    # Resolve the fault-code maps once (see _resolve_fault_codes / _resolve_gfa_codes).
+    codes_map, codes_note = _resolve_fault_codes(catalog, device, error_codes, error_code_set)
+    gfa_map, gfa_note = _resolve_gfa_codes(catalog, gfa_chip) if error_codes else (None, "")
 
     inc = re.compile(include_re) if include_re else None
     exc = re.compile(exclude_re) if exclude_re else None
@@ -3024,7 +3331,7 @@ def generate(
     # are then suppressed below).
     if emit_device_id:
         oid = _make_obj_id("device_type", used_ids)
-        _add_chunk("text_sensor", None, _device_id_lines(oid))
+        _add_chunk("text_sensor", None, _device_id_lines(oid, lang))
         kept += 1
 
     ro_blocks = _read_only_blocks(events, protocol)
@@ -3089,7 +3396,7 @@ def generate(
             if ev.address is not None:
                 seen_addr.add(_field_key(ev))
             sz_access = _access_for(ev, protocol)
-            for entry in _schaltzeiten_entries(ev):
+            for entry in _schaltzeiten_entries(ev, lang):
                 oid = _make_obj_id(entry["seed"], used_ids)
                 _add_chunk("text", ev, _schaltzeiten_lines(entry, oid, sz_access))
                 kept += 1
@@ -3171,7 +3478,7 @@ def generate(
             history_suppressed = True
             gwg_system_history_suppressed = True
             continue
-        for entry in _error_history_entries(ev):
+        for entry in _error_history_entries(ev, lang):
             if entry["address"] is None:
                 continue
             # Same 8-bit guard as the main pass: a wide address would be
@@ -3184,7 +3491,7 @@ def generate(
                 continue
             seen_addr.add(key)
             oid = _make_obj_id(entry["seed"], used_ids)
-            lines = _error_history_lines(entry, oid, codes_map, codes_set_name)
+            lines = _error_history_lines(entry, oid, codes_map, codes_note, gfa_map, gfa_note)
             # Error-history slots are ordinary reads, so under GWG they need
             # their access mode like anything else.
             access = _access_for(ev, protocol)
@@ -3196,6 +3503,8 @@ def generate(
             _add_chunk("text_sensor", ev, lines)
             kept += 1
             real_entities += 1
+
+    renamed = _make_names_unique(buckets)
 
     out: list[str] = []
     out.append("# ============================================================")
@@ -3251,6 +3560,11 @@ def generate(
         out.append("# System error history omitted: this unit has NO Optolink-reachable")
         out.append("# datapoints (KBUS/GFA/RPC-only device), so the generic 0x7507 fault")
         out.append("# archive can never answer. Re-run with --no-reachable-only to force it.")
+        out.append("#")
+    if renamed:
+        out.append(f"# {renamed} entity name(s) repeat within their platform in Vitosoft (e.g. one")
+        out.append("# 'Pegel' per RF participant); each such name carries its id in parentheses,")
+        out.append("# since ESPHome requires a unique name per platform.")
         out.append("#")
     out.append("# VERIFY ON HARDWARE: not every address answers on every firmware.")
     out.append("# Run `esphome config` then `esphome compile`/`run` before relying")
@@ -3513,12 +3827,11 @@ def export_all(
         print(f"no device tokens{where} to export", file=sys.stderr)
         return 1
 
-    if error_codes:
+    if error_codes and error_code_set in fault_codes.SETS:
         print(
             f"note: --export-all attaches the same fault-code map ({error_code_set!r}) to "
-            "every unit, but fault-code semantics are device-variant-specific -- pass "
-            "--no-error-codes for a neutral bulk export, or regenerate an individual unit "
-            "with the correct --error-code-set. See index.csv for what was written.",
+            "every unit, but fault-code semantics are device-variant-specific -- use the "
+            "default --error-code-set auto (Vitosoft's per-device texts) instead.",
             file=sys.stderr,
         )
 
@@ -3648,8 +3961,10 @@ def main(argv=None):
     p.add_argument(
         "--culture",
         default="de",
-        help="Textresource language for names/labels (de,en,fr,it,ru,nl,pl,da,hu,es,tr,lt,cs); "
-        "note the 2026 export ships no translated entity strings, so this is currently a no-op",
+        choices=sorted(_CULTURES),
+        help="language for entity names, option labels and fault texts, from "
+        "Textresource_<culture>.xml in --data (German per label where a text is missing). "
+        "Units never change with the language (units.py). Default: de",
     )
     p.add_argument(
         "--device-id",
@@ -3684,11 +3999,18 @@ def main(argv=None):
     )
     p.add_argument(
         "--error-code-set",
-        choices=sorted(fault_codes.SETS),
-        default="vd300",
-        help="which fault-code map to attach: vd300 (Vitodens 300-W B3HA = VScotHO1_72, default), "
-        "vd200 (Vitodens 200 WB2A), openv (generic), or union (all, most-specific wins); "
-        "fault-code semantics are device-variant-specific -- verify on the unit",
+        choices=["auto", "vitosoft", *sorted(fault_codes.SETS)],
+        default="auto",
+        help="fault-code texts for the system error history. auto (default): Vitosoft's own texts "
+        "for this device from Textresource_<culture>.xml, else its generic Vitotronic set "
+        "(ErrorType 1 devices only), else none; vd300 when the export has no fault texts at all. "
+        "vitosoft: the same without the vd300 fallback. vd300/vd200/openv/union: the "
+        "hand-curated maps in fault_codes.py",
+    )
+    p.add_argument(
+        "--gfa-chip",
+        help="hex byte read from GFA_Kennung (0x7650), e.g. 24: attach Vitosoft's texts for that "
+        "burner-control chip to the GFA error-history slots (single device only)",
     )
     p.add_argument(
         "--protocol",
@@ -3835,6 +4157,7 @@ def main(argv=None):
         partial_writes=args.partial_writes,
         order=args.order,
         protocol=args.protocol,
+        gfa_chip=args.gfa_chip,
     )
     if args.out:
         with open(args.out, "w", encoding="utf-8") as fh:

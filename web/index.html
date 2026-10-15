@@ -41,6 +41,10 @@
   textarea { min-height: 3.4rem; resize: vertical; }
   input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.7rem; margin-top: 0.9rem; }
+  fieldset.lang { border: 0; padding: 0; margin: 0.9rem 0 0; display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; align-items: center; }
+  fieldset.lang legend { float: left; font-size: 0.85rem; color: var(--muted); margin-right: 0.4rem; padding: 0; }
+  fieldset.lang label { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0; font-size: 0.95rem; color: var(--ink); cursor: pointer; }
+  fieldset.lang input { width: auto; accent-color: var(--accent); }
   @media (max-width: 30rem) { .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .hint { font-size: 0.82rem; color: var(--muted); margin: 0.5rem 0 0; }
   .badge { display: inline-block; font-size: 0.78rem; font-weight: 600; padding: 0.12rem 0.55rem; border-radius: 999px; margin: 0 0.3rem 0.3rem 0; }
@@ -80,6 +84,12 @@
       <div><label for="f0">F0 (optional)</label><input id="f0" autocomplete="off" placeholder=""></div>
     </div>
     <p class="hint">All values are hexadecimal, exactly as logged. The line appears as <code>Device identification: …</code> at start-up and as <code>Device: …</code> in the configuration dump.</p>
+    <fieldset class="lang">
+      <legend>Catalog language</legend>
+      <label><input type="radio" name="lang" value="de"> Deutsch</label>
+      <label><input type="radio" name="lang" value="en"> English</label>
+    </fieldset>
+    <p class="hint">Entity names, option labels and fault texts come from Vitosoft in that language; units are the same in both. Home Assistant derives entity IDs from the names, so switching the language of an installed catalog creates new entities. Other languages: <code>scripts/gen_catalog.py --culture fr</code> (or it, nl, pl, …) from your own Vitosoft export.</p>
   </section>
 
   <section id="result" aria-live="polite"></section>
@@ -94,6 +104,21 @@
 "use strict";
 const REPO = "https://github.com/SoulSolistice/esphome_vitohome";
 const RAW = "https://raw.githubusercontent.com/SoulSolistice/esphome_vitohome/main/example/catalogs/";
+// Catalogs are committed per language under example/catalogs/<lang>/ (same
+// file names in both); resolve.json is language-independent and sits above them.
+const LANGS = ["de", "en"];
+let lang = pickLanguage();
+const catalogPath = (file) => "example/catalogs/" + lang + "/" + file;
+
+function pickLanguage() {
+  const asked = new URLSearchParams(location.search).get("lang");
+  if (LANGS.includes(asked)) return asked;
+  try {
+    const kept = localStorage.getItem("vitohome-lang");
+    if (LANGS.includes(kept)) return kept;
+  } catch (error) { /* storage unavailable: fall through */ }
+  return (navigator.language || "").toLowerCase().startsWith("de") ? "de" : "en";
+}
 const $ = (id) => document.getElementById(id);
 const fields = { id: $("id"), hw: $("hw"), sw: $("sw"), f0: $("f0") };
 const limits = { id: 0xffff, hw: 0xff, sw: 0xff, f0: 0xffff };
@@ -114,7 +139,7 @@ const note = (kind, ...children) => el("div", { class: "note " + kind }, ...chil
 
 function catalogCell(entry) {
   const c = entry.catalog;
-  if (c.status === "ok") return el("a", { href: REPO + "/blob/main/example/catalogs/" + c.file }, c.file);
+  if (c.status === "ok") return el("a", { href: REPO + "/blob/main/" + catalogPath(c.file) }, c.file);
   if (c.status === "missing") return "not in the repository";
   if (c.status === "skipped") return "none: " + c.detail.replace(/^skipped:\s*/, "");
   return c.detail;
@@ -149,8 +174,8 @@ function catalogBlock(entry) {
       navigator.clipboard.writeText(snippet).then(() => { copy.textContent = "Copied"; }, () => { copy.textContent = "Copy failed"; });
     });
     out.append(
-      el("p", {}, "Catalog file: ", el("a", { href: REPO + "/blob/main/example/catalogs/" + c.file }, el("code", {}, "example/catalogs/" + c.file)),
-        " (", el("a", { href: RAW + c.file, download: c.file }, "raw"), ")"),
+      el("p", {}, "Catalog file: ", el("a", { href: REPO + "/blob/main/" + catalogPath(c.file) }, el("code", {}, catalogPath(c.file))),
+        " (", el("a", { href: RAW + lang + "/" + c.file, download: c.file }, "raw"), ")"),
       el("p", {}, "Save it next to your device YAML in a ", el("code", {}, "catalogs/"), " folder and include it as a package:"),
       el("pre", {}, snippet), copy,
       note("warn-note", el("p", {}, "A full catalog registers every datapoint, including the ones left disabled in Home Assistant. On a small ESP, copy only the entities you need into your own file. Not every address answers on every firmware: verify values on your unit.")),
@@ -279,6 +304,14 @@ async function loadData() {
   return null;
 }
 
+for (const radio of document.querySelectorAll('input[name="lang"]')) {
+  radio.checked = radio.value === lang;
+  radio.addEventListener("change", () => {
+    lang = radio.value;
+    try { localStorage.setItem("vitohome-lang", lang); } catch (error) { /* not persisted */ }
+    render();
+  });
+}
 $("line").addEventListener("input", fromLine);
 for (const input of Object.values(fields)) input.addEventListener("input", render);
 fromQuery();

@@ -144,9 +144,10 @@ after several consecutive read failures, not on a single transient glitch.
 
 **Catalog generator.** The repository ships a generator that turns a Viessmann
 Vitosoft export into a ready-to-use YAML datapoint catalog for a specific
-controller, complete with units, device classes, fault-code maps and the
-correct converters — see [`scripts/README.md`](scripts/README.md) and the
-`example/` catalogs.
+controller, complete with units, device classes, the device's own fault texts
+and the correct converters, in any of Vitosoft's 18 languages. The committed
+catalogs come in German and English (`example/catalogs/de/`, `…/en/`) — see
+[`scripts/README.md`](scripts/README.md) and the `example/` catalogs.
 
 **Finding the catalog for your unit.** At boot the hub logs the controller's
 identification and a link to the [catalog finder](https://soulsolistice.github.io/esphome_vitohome/), for example:

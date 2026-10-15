@@ -4,7 +4,8 @@
 enumerates its answers into ``resolve.json`` and ``web/lookup.js`` reads that
 table. These tests pin the rules, prove the table reproduces them for every
 identification byte, run the JavaScript against the same table, and guard the
-committed ``example/catalogs`` set against drifting from its manifest.
+committed ``example/catalogs/{de,en}`` sets against drifting from their
+manifests and from each other.
 
 Run under any Python (gen_catalog is stdlib-only)::
 
@@ -30,6 +31,9 @@ import gen_catalog as gc  # noqa: E402
 
 _FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 _CATALOG_DIR = os.path.join(_REPO_ROOT, "example", "catalogs")
+# One folder per shipped language (scripts/export_catalogs.sh); resolve.json is
+# language-independent and lives in _CATALOG_DIR itself.
+_CATALOG_LANGS = ("de", "en")
 _LOOKUP_JS = os.path.join(_REPO_ROOT, "web", "lookup.js")
 
 
@@ -271,17 +275,25 @@ def test_export_all_manifest_uses_lf_and_writes_lookup(tmp_path):
 # --- the committed catalog set ----------------------------------------------
 
 
-def test_committed_catalogs_agree_with_manifest_and_lookup():
-    _raw, rows = _index_rows(_CATALOG_DIR)
+@pytest.mark.parametrize("lang", _CATALOG_LANGS)
+def test_committed_catalogs_agree_with_manifest_and_lookup(lang):
+    lang_dir = os.path.join(_CATALOG_DIR, lang)
+    _raw, rows = _index_rows(lang_dir)
     with open(os.path.join(_CATALOG_DIR, gc.RESOLVE_FILENAME), encoding="utf-8") as fh:
         lookup = json.load(fh)
     assert lookup["schema"] == gc.RESOLVE_SCHEMA
 
-    on_disk = {f for f in os.listdir(_CATALOG_DIR) if f.endswith(".yaml")}
+    on_disk = {f for f in os.listdir(lang_dir) if f.endswith(".yaml")}
     listed = {r["file"] for r in rows.values() if r["status"] == "ok"}
     # A row marked ok whose file is missing sends a user to a dead link; a file
     # with no ok row is unreachable from the finder.
     assert listed == on_disk
+    # The finder serves both languages from one lookup table, so a language
+    # must not carry a file the other lacks.
+    other = os.path.join(_CATALOG_DIR, next(x for x in _CATALOG_LANGS if x != lang))
+    assert on_disk == {f for f in os.listdir(other) if f.endswith(".yaml")}
+    # No generated catalog may linger at the top level (the pre-0008 layout).
+    assert not [f for f in os.listdir(_CATALOG_DIR) if f.endswith(".yaml")]
 
     assert set(lookup["tokens"]) == set(rows)
     for token, row in rows.items():
