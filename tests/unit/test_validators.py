@@ -376,6 +376,8 @@ def test_cpp_string_literal_escapes():
     assert cpp_string_literal("plain") == '"plain"'
     assert cpp_string_literal('a"b') == '"a\\"b"'
     assert cpp_string_literal("a\\b") == '"a\\\\b"'
+    # "??)" would be a trigraph; every "?" is escaped (GFA code 0xFF's text).
+    assert cpp_string_literal("neu??)") == '"neu\\?\\?)"'
 
 
 def test_datapoint_expression_uses_noconv_and_hex():

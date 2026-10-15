@@ -48,8 +48,22 @@ secrets.
 
 `catalogs/` is the **entire generated catalog**: one ready-to-include package
 per Viessmann unit, produced from the Vitosoft **2026** XML export by
-`scripts/gen_catalog.py --export-all`. It holds **180 device catalogs**
-(group-ordered) plus a manifest.
+`scripts/export_catalogs.sh`. It holds **201 device catalogs** (group-ordered,
+GWG units included) **in two languages**, with the same file names in both:
+
+- **`catalogs/de/`** — German entity names, option labels and fault texts;
+- **`catalogs/en/`** — English, German where Vitosoft has no translation.
+
+Units and entity types are identical in both. Home Assistant derives entity
+IDs from the names, so pick a language once: switching an installed catalog to
+the other language creates new entities. Other languages are one
+`gen_catalog.py --culture` away (see [`scripts/README.md`](../scripts/README.md)).
+
+> **Upgrading from the single-language set.** The previous `catalogs/*.yaml`
+> files had technical names ("TiefpassTemperaturwert KTS"); the new ones carry
+> Vitosoft's display names ("Kesseltemperatur"). The new path
+> (`catalogs/de/…`) makes this a deliberate step: Home Assistant will see new
+> entity IDs for every renamed entity.
 
 > :warning: **Warning**
 > Do not blindly add full catalogs since ESPHome registers all data points
@@ -62,15 +76,12 @@ per Viessmann unit, produced from the Vitosoft **2026** XML export by
   after it. The finder applies the same matching rules as
   `gen_catalog.py --identify` and tells you when a match is only approximate.
 
-- **`catalogs/index.csv`** — the manifest behind the finder.
-  It has one row per device token in the export (**399** rows): **180** are
-  `status: ok` (a catalog file was written), **198** are
+- **`catalogs/<lang>/index.csv`** — the manifest behind the finder, one per
+  language (they differ only in the `bytes` column).
+  It has one row per device token in the export (**399** rows): **201** are
+  `status: ok` (a catalog file was written) and **198** are
   `status: skipped: no Optolink-reachable datapoints` (no file — every datapoint
-  on that unit needs a non-Optolink access method), and **21** are
-  `status: missing: …` — the GWG units, whose catalogs are not committed here.
-  `gen_catalog.py --export-all` writes them like any other unit; this one row
-  status is set by hand for the committed set and is never produced by the
-  generator. Columns:
+  on that unit needs a non-Optolink access method). Columns:
 
   | Column | Meaning |
   |---|---|
@@ -83,8 +94,9 @@ per Viessmann unit, produced from the Vitosoft **2026** XML export by
   | `events` | Datapoints linked to the unit in the export |
   | `entities` | Entities actually emitted (after profile/filters) |
   | `bytes` | File size |
-  | `status` | `ok`, `skipped: …`, or `error: …` (`missing: …` in the committed set only) |
+  | `status` | `ok`, `skipped: …`, or `error: …` |
   | `ext_raw` | Raw identification-extension field |
+  | `gfa_slots` | Burner-control (GFA) history slots in the catalog; such a catalog takes a `gfa/` companion |
 
   Reading it by hand takes three steps, and the device id alone is not enough
   (most ids have several rows):
@@ -99,16 +111,22 @@ per Viessmann unit, produced from the Vitosoft **2026** XML export by
      address `0x00F0`, which the hub does not read.
 
 - **`catalogs/resolve.json`** — the same mapping, precomputed for every device
-  id, hardware index and software index. The finder reads this file; it is
-  written by `gen_catalog.py --export-all` together with `index.csv`.
+  id, hardware index and software index, for both languages. The finder reads
+  this file; `scripts/export_catalogs.sh` writes it together with the two
+  `index.csv` files.
 
 - **`catalogs/README.md`** — a short pointer stub for the directory.
 
-> **Fault codes in the bulk set.** `--export-all` attaches the default `vd300`
-> (Vitodens 300-W B3HA) fault-code map to *every* unit. Fault-code semantics are
-> device-variant-specific, so for any unit other than the reference one,
-> regenerate that catalog individually with the right `--error-code-set` — see
-> [`scripts/README.md`](../scripts/README.md).
+- **`catalogs/<lang>/gfa/chip_<XX>.yaml`** — burner-control (GFA) fault texts,
+  one small companion per chip. Its texts depend on the chip the unit reports at
+  `0x7650`, not on the device type, so they cannot be part of a catalog.
+
+> **Fault texts.** Every catalog carries Vitosoft's own fault texts for its
+> device (or the generic Vitotronic set where the device has none and is a
+> Vitotronic); units without either show the raw code. For the burner-control
+> (GFA) history, include the companion for the `GFA=0x..` the hub logs at boot
+> next to the catalog; the catalog finder link already carries the chip and
+> shows the line. See [`scripts/README.md`](../scripts/README.md).
 
 ## Using a catalog
 
@@ -117,7 +135,8 @@ from `vscotho1_72.vitohome.yaml`, which already does):
 
 ```yaml
 packages:
-  heater: !include vscotho1_72.dp.curated.yaml   # or catalogs/<your-unit>.yaml
+  heater: !include vscotho1_72.dp.curated.yaml   # or catalogs/de/<your-unit>.yaml
+  # gfa: !include catalogs/de/gfa/chip_24.yaml   # GFA texts for chip 0x24 (a generated catalog only)
 ```
 
 Every generated entity is `disabled_by_default: true`, so you opt in to each one

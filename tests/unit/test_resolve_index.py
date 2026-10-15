@@ -4,7 +4,8 @@
 enumerates its answers into ``resolve.json`` and ``web/lookup.js`` reads that
 table. These tests pin the rules, prove the table reproduces them for every
 identification byte, run the JavaScript against the same table, and guard the
-committed ``example/catalogs`` set against drifting from its manifest.
+committed ``example/catalogs/{de,en}`` sets against drifting from their
+manifests and from each other.
 
 Run under any Python (gen_catalog is stdlib-only)::
 
@@ -30,6 +31,9 @@ import gen_catalog as gc  # noqa: E402
 
 _FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 _CATALOG_DIR = os.path.join(_REPO_ROOT, "example", "catalogs")
+# One folder per shipped language (scripts/export_catalogs.sh); resolve.json is
+# language-independent and lives in _CATALOG_DIR itself.
+_CATALOG_LANGS = ("de", "en")
 _LOOKUP_JS = os.path.join(_REPO_ROOT, "web", "lookup.js")
 
 
@@ -197,6 +201,10 @@ _LOG_LINES = [
     "nothing here",
     # A pasted log without a Device line: an address in it is not a device id.
     "read 0x5525 ok\nRaw: 0x00F8: 20",
+    # The burner-control chip, which selects the GFA companion.
+    "Device: 0x20CB (VScotHO1) HW=0x03 SW=0x51 GFA=0x24",
+    # Exactly as the hub logs it at boot (ident_string_), chip name included.
+    "[I][vitohome:1771]: Device identification: 0x20CB (VScotHO1) HW=0x03 SW=0x51 GFA=0x41 (ÖFA)",
 ]
 
 
@@ -222,12 +230,14 @@ def test_javascript_lookup_matches_resolve(catalog):
     expected = [catalog.resolve(*case)[0] for case in cases]
     assert out["answers"] == expected
     assert out["parsed"] == [
-        {"id": 0x2053, "hw": 0x01, "sw": 0x7A, "f0": None},
-        {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": None},
-        {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": 0x10},
-        {"id": 0x20A3, "hw": None, "sw": None, "f0": None},
-        {"id": None, "hw": None, "sw": None, "f0": None},
-        {"id": None, "hw": None, "sw": None, "f0": None},
+        {"id": 0x2053, "hw": 0x01, "sw": 0x7A, "f0": None, "gfa": None},
+        {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": None, "gfa": None},
+        {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": 0x10, "gfa": None},
+        {"id": 0x20A3, "hw": None, "sw": None, "f0": None, "gfa": None},
+        {"id": None, "hw": None, "sw": None, "f0": None, "gfa": None},
+        {"id": None, "hw": None, "sw": None, "f0": None, "gfa": None},
+        {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": None, "gfa": 0x24},
+        {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": None, "gfa": 0x41},
     ]
     assert out["unknown_without_id"] == {"kind": "unknown", "ident": None}
 
@@ -271,25 +281,37 @@ def test_export_all_manifest_uses_lf_and_writes_lookup(tmp_path):
 # --- the committed catalog set ----------------------------------------------
 
 
-def test_committed_catalogs_agree_with_manifest_and_lookup():
-    _raw, rows = _index_rows(_CATALOG_DIR)
+@pytest.mark.parametrize("lang", _CATALOG_LANGS)
+def test_committed_catalogs_agree_with_manifest_and_lookup(lang):
+    lang_dir = os.path.join(_CATALOG_DIR, lang)
+    _raw, rows = _index_rows(lang_dir)
     with open(os.path.join(_CATALOG_DIR, gc.RESOLVE_FILENAME), encoding="utf-8") as fh:
         lookup = json.load(fh)
     assert lookup["schema"] == gc.RESOLVE_SCHEMA
 
-    on_disk = {f for f in os.listdir(_CATALOG_DIR) if f.endswith(".yaml")}
+    on_disk = {f for f in os.listdir(lang_dir) if f.endswith(".yaml")}
     listed = {r["file"] for r in rows.values() if r["status"] == "ok"}
     # A row marked ok whose file is missing sends a user to a dead link; a file
     # with no ok row is unreachable from the finder.
     assert listed == on_disk
+    # The finder serves both languages from one lookup table, so a language
+    # must not carry a file the other lacks.
+    other = os.path.join(_CATALOG_DIR, next(x for x in _CATALOG_LANGS if x != lang))
+    assert on_disk == {f for f in os.listdir(other) if f.endswith(".yaml")}
+    # No generated catalog may linger at the top level (the pre-0008 layout).
+    assert not [f for f in os.listdir(_CATALOG_DIR) if f.endswith(".yaml")]
 
     assert set(lookup["tokens"]) == set(rows)
     for token, row in rows.items():
-        assert lookup["tokens"][token] == {
-            "file": row["file"],
-            "status": row["status"].split(":", 1)[0],
-            "detail": row["status"],
-        }
+        expected = {"file": row["file"], "status": row["status"].split(":", 1)[0], "detail": row["status"]}
+        if row.get("gfa_slots"):
+            expected["gfa"] = True
+        assert lookup["tokens"][token] == expected
+
+    # Every chip the finder offers has its companion in this language.
+    gfa_dir = os.path.join(lang_dir, gc.GFA_DIRNAME)
+    on_disk_gfa = set(os.listdir(gfa_dir)) if os.path.isdir(gfa_dir) else set()
+    assert on_disk_gfa == {gc.gfa_companion_name(chip) for chip in lookup.get("gfa_chips", {})}
 
     referenced = set()
     for entry in lookup["idents"].values():

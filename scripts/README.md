@@ -30,24 +30,37 @@ reads up to four files from it:
 | `DPDefinitions.xml` | Device types, event links, enum value types, units, borders |
 | `ecnEventType.xml` | Per-event Optolink address, lengths, bit position, read/write access, conversion |
 | `ecnDataPointType.xml` | Identification ranges (group/ident, hardware/software index) used by `--identify` |
-| `Textresource.xml` | UI names in the chosen language (optional; see note) |
+| `Textresource.xml` | ~350 UI strings per language (optional) |
+| `Textresource_<culture>.xml` | Entity names, option labels and fault texts, one language per file (optional, but needed for readable names; see note) |
 
 `DPDefinitions.xml` does not carry datapoint lengths; those live in
 `ecnEventType.xml`, so keep the export files together in one directory.
 
-> **Label source (2026 export).** `Textresource.xml` carries UI strings only and,
-> in current exports, **none** of the per-event/value display names — so
-> `--culture` mainly affects those (mostly absent) names. Enum **option** labels
-> are independent: they come from `ecnEventValueType.Description` in
-> `DPDefinitions.xml` (pre-resolved German, ~87% coverage), so an enum/`select`'s
-> `options:` are readable regardless of `--culture`. Entity `name:` falls back to
-> a snake_case derivation of the technical id where no UI name exists.
+> **Label source.** The slim `Textresource.xml` that comes with the definition
+> export carries UI strings only (~350 per language) and **none** of the entity
+> names. The full `Textresource_<culture>.xml` files of a Vitosoft installation
+> (about 30 MB each, 18 languages, e.g. from the installer's
+> `data\OFFLINE\…\` folder) carry all of them: entity names, option labels and
+> 35,640 fault texts. Put them next to the other files. They are layered per
+> label: the slim file < `Textresource_de.xml` < `Textresource_<culture>.xml`,
+> and a label missing or empty in the chosen language falls back to German.
+> Without them, entity `name:` falls back to the technical id with `_` turned
+> into spaces, and options to `ecnEventValueType.Description` (pre-resolved
+> German, ~87% coverage).
 >
-> One `--culture` side effect: the switch-vs-select decision
-> (`_boolean_pair`) recognises German/English on-off label pairs only
-> (EIN/AUS, ON/OFF, Ja/Nein, ...). Under other cultures a boolean pair whose
-> labels are localised differently is emitted as a two-option `select` instead
-> of a `switch` -- functionally equivalent, just not a native HA toggle.
+> German catalogs keep `Description` first for options: it is more specific than
+> the shared UI label (per heating circuit) and has no hyphenation artefacts.
+> Other languages use their translation, German where it is missing. The
+> switch-vs-select decision is always made on the German labels, so a catalog's
+> entity types do not depend on its language.
+>
+> **Units never come from the text files.** A unit label is translated
+> (`kWh` is "кВтч" in Russian), sometimes empty, sometimes not a symbol at all
+> (`ecnUnit.dBm` is "-dBm" in German). [`units.py`](units.py) maps every
+> Vitosoft unit token to its Home Assistant / SI symbol and device class, so all
+> languages carry the same units. A sign carried in the unit is applied as a
+> filter: the RF level bytes are stored as magnitudes and become `dBm` with
+> `multiply: -1` (unverified on hardware).
 
 ### Options
 
@@ -62,25 +75,80 @@ reads up to four files from it:
 | `--include <regex>` / `--exclude <regex>` | Keep / drop events whose name matches |
 | `--[no-]reachable-only` | Emit only datapoints VitoWiFi can read over Optolink; drop `GFA_READ`/`RPC`/`PROZESS`/`KBUS`/`OT` (default: on). `--no-reachable-only` adds them back — they need custom decode |
 | `--order {address,group}` | Entity order: `address` (sorted by Optolink address) or `group` (by the Vitosoft navigation tree, with a section comment per group). Default: `group` with `--export-all`, `address` otherwise |
-| `--culture {de,en,fr,it,ru,nl,pl,da,hu,es,tr,lt,cs}` | Language for names/labels (default: `de`). Currently a near-no-op — see the label-source note above |
+| `--culture {cs,da,de,en,es,fr,hr,hu,it,lt,nl,no,pl,ro,ru,sk,sv,tr}` | Language for entity names, option labels and fault texts (default: `de`); see the label-source note above. Units do not change. Home Assistant derives entity IDs from names, so changing the language of an installed catalog creates new entities |
 | `--[no-]device-id` | Emit a `device_id` diagnostic `text_sensor` and suppress the raw `0xF8`–`0xFB` reads (default: on) |
 | `--[no-]partial-writes` | Emit writable fields that are smaller than their datapoint -- bit fields (`bit_mask`) and fields inside a block (`byte_offset`) -- as `number` / `select` / `switch`; the component writes them as a read-modify-write of the whole byte or block (default: on). `--no-partial-writes` keeps them all read-only. `--[no-]bitfield-writes` is the older spelling. See *Bit fields* and *Fields inside a block* below |
 | `--[no-]error-history` | Emit `error_history` entities for the `FehlerHis*` slots (default: on) |
 | `--[no-]error-codes` | Attach a fault-code map to those entities (default: on) |
-| `--error-code-set {openv,vd200,vd300,union}` | Which fault-code map to attach (default: `vd300`) |
+| `--error-code-set {auto,vitosoft,openv,vd200,vd300,union}` | Which fault texts to attach to the system fault history (default: `auto`); see *Fault texts* below |
+| `--gfa-chip <hex>` | The byte read from `GFA_Kennung` (`0x7650`), e.g. `24`: attach Vitosoft's texts for that burner-control chip to the GFA history slots (single device) |
 | `--export-all` | Bulk mode: one catalog per token into `--out` (a directory) plus an `index.csv` manifest and a `resolve.json` lookup table — see below |
 | `--export-filter <regex>` | With `--export-all`: only export tokens whose ID matches (e.g. `^V`) |
 | `--export-suffix <ext>` | With `--export-all`: catalog file extension (default: `.yaml`) |
 | `--out <file>` | Output file (default: stdout); with `--export-all`, the output **directory** |
 
-The fault-code maps live in [`fault_codes.py`](fault_codes.py) (one module, the
-single source of truth): `vd300` is the Vitodens 300-W (B3HA) set and the default
-(VScotHO1_72 / "Projekt Neptun" is the Vitotronic 200 controller in that boiler),
-`vd200` is the Vitodens 200 (WB2A) set, `openv` is the generic openv/community
-map, and `union` merges all three (most-specific manual wins). **Fault-code
-semantics are device-variant-specific** — these are a default to verify on the
-unit; openv-vs-VD200 disagreements are in `fault_codes.CONFLICTS`, and the VD300
-set carries OCR caveats (a few codes to verify against the PDF) in its header.
+### Fault texts
+
+Fault-code meanings differ by device: the 2026 texts have 88 distinct sets
+across 206 device types. With the full `Textresource_<culture>.xml` in `--data`,
+the default `--error-code-set auto` attaches Vitosoft's own texts, in the
+catalog language:
+
+1. the device's own set (`viessmann.errorcode.<token>.<code>`; 144 of the 166
+   catalogs with a system fault history have one);
+2. else the generic Vitotronic set, but only for devices Vitosoft gives
+   `ErrorType` 1 (Default): it is the boiler meaning, wrong for a Vitobloc CHP
+   unit (`ErrorType` 4);
+3. else no map: the code shows as raw hex.
+
+Only an export without fault texts at all (slim `Textresource.xml` alone) falls
+back to the hand-curated `vd300` map, as before. `--error-code-set vitosoft` is
+`auto` without that fallback.
+
+The burner-control (GFA) history is a different code space, keyed by the GFA
+chip, which is a property of the installed unit, not of the device type. The
+hub reads it at boot (`0x7650`, `GFA_Kennung`) and logs it with the
+identification, `GFA=0x24 (NEC)` on VScotHO1_72. The sets differ by chip, not by device type, and 7
+codes mean different things on different chips, so there is no safe default.
+Two ways to attach them:
+
+- **Companion package** (bulk export): `--export-all` writes
+  `gfa/chip_<XX>.yaml` next to the catalogs, one per chip that has texts. It
+  extends the catalog's GFA slots by id (`id: !extend gfa_fehler_01`, the map
+  written once as a YAML anchor), so it is included next to the catalog:
+
+  ```yaml
+  packages:
+    heater: !include catalogs/vscotho1_72.yaml
+    gfa: !include catalogs/gfa/chip_24.yaml
+  ```
+
+  The catalog finder offers the right one when the chip is entered.
+- **`--gfa-chip 24`** (single device): the texts are written into the catalog
+  itself.
+
+Without either, the GFA slots show raw hex and say how to get the texts. The texts keep Vitosoft's own decimal prefix ("10: Flammenausfall in der
+Sicherheitszeit"), the number the boiler display and the manuals use.
+
+The hand-curated maps stay in [`fault_codes.py`](fault_codes.py) for explicit
+use: `vd300` (Vitodens 300-W B3HA), `vd200` (Vitodens 200 WB2A), `openv`
+(generic openv/community) and `union` (all three, most-specific wins);
+openv-vs-VD200 disagreements are in `fault_codes.CONFLICTS`. On VScotHO1_72,
+Vitosoft's own set covers all 94 `vd300` codes plus 16 more, and words 48 of
+them differently, several with a different meaning (`0x49`, `0x4D`, `0x93`,
+`0x9B`, `0x1D`).
+
+### Entity names
+
+Vitosoft UI names are not unique (one "Pegel" per RF participant, "nicht
+belegt" for every unused slot), and ESPHome refuses two entities of one platform
+with the same name. Every member of such a group gets its `id:` in parentheses,
+`Pegel (RF_TeilnehmerInfo_0_Pegel)`, and the catalog header says how many. A
+`/` in a name becomes U+2044 FRACTION SLASH, the look-alike ESPHome substitutes
+itself (`/` is reserved as a URL separator: a warning now, an error from ESPHome
+2027.7.0). The few names the generator makes up itself (`Letzter Fehler`,
+`Geraete-Typ`, the weekday `Schaltzeit` entities) are German in a German
+catalog and English in every other.
 
 ### Signedness
 
@@ -192,7 +260,7 @@ batch.
 
 ```
 python3 scripts/gen_catalog.py --data <export-dir> \
-    --export-all --no-error-codes --out catalogs/
+    --export-all --culture en --out catalogs/
 ```
 
 `index.csv` maps every token to its file and identification signature (`ident`,
@@ -204,20 +272,27 @@ matching rules for every device id, hardware index and software index, plus
 each token's file and status. The [catalog finder](https://soulsolistice.github.io/esphome_vitohome/)
 (`web/` in this repository, published by `.github/workflows/pages.yml`) reads
 it, so the page carries no copy of the rules. `tests/unit/test_resolve_index.py`
-runs `web/lookup.js` under Node against `Catalog.resolve()`. To preview the
-page locally, copy `example/catalogs/resolve.json` next to `web/index.html` and
-serve that folder (`python3 -m http.server`).
+runs `web/lookup.js` under Node against `Catalog.resolve()`. It does not depend
+on the language. To preview the page locally, copy `example/catalogs/resolve.json`
+next to `web/index.html` and serve that folder (`python3 -m http.server`).
 
 Bulk mode orders entities by group (`--order group`) unless you say otherwise,
 which is how the catalogs in [`example/catalogs/`](../example/catalogs/) were
 produced — so a re-export diffs against them entity by entity instead of
 reordering every file. Pass `--order address` for the address-sorted layout.
+Each unit gets its own fault texts (see *Fault texts*), so a bulk export needs
+no `--error-code-set`.
 
-Because fault-code semantics are device-variant-specific, `--export-all`
-attaches the *same* default map (`vd300`) to every unit — pass `--no-error-codes`
-for a neutral bulk export, or regenerate an individual unit with the right
-`--error-code-set`. The committed result of this command lives in
-[`example/catalogs/`](../example/catalogs/).
+The committed set, German and English, is regenerated in one go with
+
+```
+bash scripts/export_catalogs.sh <export-dir>
+```
+
+which writes `example/catalogs/de/` and `example/catalogs/en/` (same files,
+each with its `index.csv` and `gfa/` companions) and the shared
+`example/catalogs/resolve.json` (which also lists the GFA chips), and
+refuses to run without the full `Textresource_de.xml` / `Textresource_en.xml`.
 
 ### Using the output
 
