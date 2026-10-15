@@ -3672,7 +3672,7 @@ text_sensor:
     entity_category: diagnostic
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V200KW1.*)
-    codes:
+    codes: &letzter_fehler_codes
       0x00: "No faults in the system"
       0x0F: "Service required"
       0x10: "Short circuit outside temperature sensor"
@@ -3723,42 +3723,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V200KW1.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x50: "Short circuit cylinder temperature sensor 1"
-      0x51: "Short circuit cylinder temperature sensor 2"
-      0x58: "Lead break cylinder temperature sensor 1"
-      0x59: "Lead break cylinder temperature sensor 2"
-      0xAE: "Internal fault mixer extension"
-      0xAF: "Internal fault mixer extension"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB6: "Hardware detection invalid"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xC1: "External safety device"
-      0xC4: "Communication fault function extension 0-10V"
-      0xC5: "Fault variable speed pump heating circuit 1"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 3"
-      0xCD: "Communication error, Vitocom 100"
-      0xD1: "Burner fault boiler"
-      0xD4: "Fault high limit safety cut-out boiler"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 3 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 2*9; vcontrold getError2).
@@ -3774,42 +3739,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V200KW1.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x50: "Short circuit cylinder temperature sensor 1"
-      0x51: "Short circuit cylinder temperature sensor 2"
-      0x58: "Lead break cylinder temperature sensor 1"
-      0x59: "Lead break cylinder temperature sensor 2"
-      0xAE: "Internal fault mixer extension"
-      0xAF: "Internal fault mixer extension"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB6: "Hardware detection invalid"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xC1: "External safety device"
-      0xC4: "Communication fault function extension 0-10V"
-      0xC5: "Fault variable speed pump heating circuit 1"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 3"
-      0xCD: "Communication error, Vitocom 100"
-      0xD1: "Burner fault boiler"
-      0xD4: "Fault high limit safety cut-out boiler"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 4 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 3*9; vcontrold getError3).
@@ -3825,42 +3755,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V200KW1.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x50: "Short circuit cylinder temperature sensor 1"
-      0x51: "Short circuit cylinder temperature sensor 2"
-      0x58: "Lead break cylinder temperature sensor 1"
-      0x59: "Lead break cylinder temperature sensor 2"
-      0xAE: "Internal fault mixer extension"
-      0xAF: "Internal fault mixer extension"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB6: "Hardware detection invalid"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xC1: "External safety device"
-      0xC4: "Communication fault function extension 0-10V"
-      0xC5: "Fault variable speed pump heating circuit 1"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 3"
-      0xCD: "Communication error, Vitocom 100"
-      0xD1: "Burner fault boiler"
-      0xD4: "Fault high limit safety cut-out boiler"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 5 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 4*9; vcontrold getError4).
@@ -3876,42 +3771,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V200KW1.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x50: "Short circuit cylinder temperature sensor 1"
-      0x51: "Short circuit cylinder temperature sensor 2"
-      0x58: "Lead break cylinder temperature sensor 1"
-      0x59: "Lead break cylinder temperature sensor 2"
-      0xAE: "Internal fault mixer extension"
-      0xAF: "Internal fault mixer extension"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB6: "Hardware detection invalid"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xC1: "External safety device"
-      0xC4: "Communication fault function extension 0-10V"
-      0xC5: "Fault variable speed pump heating circuit 1"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 3"
-      0xCD: "Communication error, Vitocom 100"
-      0xD1: "Burner fault boiler"
-      0xD4: "Fault high limit safety cut-out boiler"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 6 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 5*9; vcontrold getError5).
@@ -3927,42 +3787,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V200KW1.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x50: "Short circuit cylinder temperature sensor 1"
-      0x51: "Short circuit cylinder temperature sensor 2"
-      0x58: "Lead break cylinder temperature sensor 1"
-      0x59: "Lead break cylinder temperature sensor 2"
-      0xAE: "Internal fault mixer extension"
-      0xAF: "Internal fault mixer extension"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB6: "Hardware detection invalid"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xC1: "External safety device"
-      0xC4: "Communication fault function extension 0-10V"
-      0xC5: "Fault variable speed pump heating circuit 1"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 3"
-      0xCD: "Communication error, Vitocom 100"
-      0xD1: "Burner fault boiler"
-      0xD4: "Fault high limit safety cut-out boiler"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 7 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 6*9; vcontrold getError6).
@@ -3978,42 +3803,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V200KW1.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x50: "Short circuit cylinder temperature sensor 1"
-      0x51: "Short circuit cylinder temperature sensor 2"
-      0x58: "Lead break cylinder temperature sensor 1"
-      0x59: "Lead break cylinder temperature sensor 2"
-      0xAE: "Internal fault mixer extension"
-      0xAF: "Internal fault mixer extension"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB6: "Hardware detection invalid"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xC1: "External safety device"
-      0xC4: "Communication fault function extension 0-10V"
-      0xC5: "Fault variable speed pump heating circuit 1"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 3"
-      0xCD: "Communication error, Vitocom 100"
-      0xD1: "Burner fault boiler"
-      0xD4: "Fault high limit safety cut-out boiler"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 8 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 7*9; vcontrold getError7).
@@ -4029,42 +3819,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V200KW1.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x50: "Short circuit cylinder temperature sensor 1"
-      0x51: "Short circuit cylinder temperature sensor 2"
-      0x58: "Lead break cylinder temperature sensor 1"
-      0x59: "Lead break cylinder temperature sensor 2"
-      0xAE: "Internal fault mixer extension"
-      0xAF: "Internal fault mixer extension"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB6: "Hardware detection invalid"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xC1: "External safety device"
-      0xC4: "Communication fault function extension 0-10V"
-      0xC5: "Fault variable speed pump heating circuit 1"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 3"
-      0xCD: "Communication error, Vitocom 100"
-      0xD1: "Burner fault boiler"
-      0xD4: "Fault high limit safety cut-out boiler"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 9 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 8*9; vcontrold getError8).
@@ -4080,42 +3835,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V200KW1.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x50: "Short circuit cylinder temperature sensor 1"
-      0x51: "Short circuit cylinder temperature sensor 2"
-      0x58: "Lead break cylinder temperature sensor 1"
-      0x59: "Lead break cylinder temperature sensor 2"
-      0xAE: "Internal fault mixer extension"
-      0xAF: "Internal fault mixer extension"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB6: "Hardware detection invalid"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xC1: "External safety device"
-      0xC4: "Communication fault function extension 0-10V"
-      0xC5: "Fault variable speed pump heating circuit 1"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 3"
-      0xCD: "Communication error, Vitocom 100"
-      0xD1: "Burner fault boiler"
-      0xD4: "Fault high limit safety cut-out boiler"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 10 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 9*9; vcontrold getError9).
@@ -4131,42 +3851,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V200KW1.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x50: "Short circuit cylinder temperature sensor 1"
-      0x51: "Short circuit cylinder temperature sensor 2"
-      0x58: "Lead break cylinder temperature sensor 1"
-      0x59: "Lead break cylinder temperature sensor 2"
-      0xAE: "Internal fault mixer extension"
-      0xAF: "Internal fault mixer extension"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB6: "Hardware detection invalid"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xC1: "External safety device"
-      0xC4: "Communication fault function extension 0-10V"
-      0xC5: "Fault variable speed pump heating circuit 1"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 3"
-      0xCD: "Communication error, Vitocom 100"
-      0xD1: "Burner fault boiler"
-      0xD4: "Fault high limit safety cut-out boiler"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # --- (ohne Gruppenzuordnung) ---
   - platform: vitohome

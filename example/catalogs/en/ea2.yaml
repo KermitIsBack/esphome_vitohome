@@ -1047,7 +1047,7 @@ text_sensor:
     entity_category: diagnostic
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.EA2.*)
-    codes:
+    codes: &letzter_fehler_codes
       0x00: "No error"
       0x30: "Lead break, sensor 1"
       0x31: "Lead break sensor 2"
@@ -1072,16 +1072,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.EA2.*)
-    codes:
-      0x00: "No error"
-      0x30: "Lead break, sensor 1"
-      0x31: "Lead break sensor 2"
-      0x38: "Short circuit, sensor 1"
-      0x39: "Short circuit sensor 2"
-      0xAE: "Error DIP switch EA2"
-      0xB2: "Internal error EA2"
-      0xB3: "Communication error EA2"
-      0xD1: "Digital input EA2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 3 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 2*9; vcontrold getError2).
@@ -1097,16 +1088,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.EA2.*)
-    codes:
-      0x00: "No error"
-      0x30: "Lead break, sensor 1"
-      0x31: "Lead break sensor 2"
-      0x38: "Short circuit, sensor 1"
-      0x39: "Short circuit sensor 2"
-      0xAE: "Error DIP switch EA2"
-      0xB2: "Internal error EA2"
-      0xB3: "Communication error EA2"
-      0xD1: "Digital input EA2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 4 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 3*9; vcontrold getError3).
@@ -1122,16 +1104,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.EA2.*)
-    codes:
-      0x00: "No error"
-      0x30: "Lead break, sensor 1"
-      0x31: "Lead break sensor 2"
-      0x38: "Short circuit, sensor 1"
-      0x39: "Short circuit sensor 2"
-      0xAE: "Error DIP switch EA2"
-      0xB2: "Internal error EA2"
-      0xB3: "Communication error EA2"
-      0xD1: "Digital input EA2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 5 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 4*9; vcontrold getError4).
@@ -1147,16 +1120,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.EA2.*)
-    codes:
-      0x00: "No error"
-      0x30: "Lead break, sensor 1"
-      0x31: "Lead break sensor 2"
-      0x38: "Short circuit, sensor 1"
-      0x39: "Short circuit sensor 2"
-      0xAE: "Error DIP switch EA2"
-      0xB2: "Internal error EA2"
-      0xB3: "Communication error EA2"
-      0xD1: "Digital input EA2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 6 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 5*9; vcontrold getError5).
@@ -1172,16 +1136,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.EA2.*)
-    codes:
-      0x00: "No error"
-      0x30: "Lead break, sensor 1"
-      0x31: "Lead break sensor 2"
-      0x38: "Short circuit, sensor 1"
-      0x39: "Short circuit sensor 2"
-      0xAE: "Error DIP switch EA2"
-      0xB2: "Internal error EA2"
-      0xB3: "Communication error EA2"
-      0xD1: "Digital input EA2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 7 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 6*9; vcontrold getError6).
@@ -1197,16 +1152,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.EA2.*)
-    codes:
-      0x00: "No error"
-      0x30: "Lead break, sensor 1"
-      0x31: "Lead break sensor 2"
-      0x38: "Short circuit, sensor 1"
-      0x39: "Short circuit sensor 2"
-      0xAE: "Error DIP switch EA2"
-      0xB2: "Internal error EA2"
-      0xB3: "Communication error EA2"
-      0xD1: "Digital input EA2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 8 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 7*9; vcontrold getError7).
@@ -1222,16 +1168,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.EA2.*)
-    codes:
-      0x00: "No error"
-      0x30: "Lead break, sensor 1"
-      0x31: "Lead break sensor 2"
-      0x38: "Short circuit, sensor 1"
-      0x39: "Short circuit sensor 2"
-      0xAE: "Error DIP switch EA2"
-      0xB2: "Internal error EA2"
-      0xB3: "Communication error EA2"
-      0xD1: "Digital input EA2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 9 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 8*9; vcontrold getError8).
@@ -1247,16 +1184,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.EA2.*)
-    codes:
-      0x00: "No error"
-      0x30: "Lead break, sensor 1"
-      0x31: "Lead break sensor 2"
-      0x38: "Short circuit, sensor 1"
-      0x39: "Short circuit sensor 2"
-      0xAE: "Error DIP switch EA2"
-      0xB2: "Internal error EA2"
-      0xB3: "Communication error EA2"
-      0xD1: "Digital input EA2"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 10 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 9*9; vcontrold getError9).
@@ -1272,16 +1200,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.EA2.*)
-    codes:
-      0x00: "No error"
-      0x30: "Lead break, sensor 1"
-      0x31: "Lead break sensor 2"
-      0x38: "Short circuit, sensor 1"
-      0x39: "Short circuit sensor 2"
-      0xAE: "Error DIP switch EA2"
-      0xB2: "Internal error EA2"
-      0xB3: "Communication error EA2"
-      0xD1: "Digital input EA2"
+    codes: *letzter_fehler_codes  # same map as above
 
 # --- datapoints needing custom decode (not auto-emitted) ---
 # ecnsysEventType~ErrorIndex @ 0x7561: NoConversion length 10 > 4 bytes -> custom decode

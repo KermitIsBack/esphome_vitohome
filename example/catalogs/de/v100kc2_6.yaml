@@ -1954,7 +1954,7 @@ text_sensor:
     entity_category: diagnostic
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V100KC2_6.*)
-    codes:
+    codes: &letzter_fehler_codes
       0x00: "Anlage ohne Fehler"
       0x0F: "Wartung durchführen"
       0x30: "Kurzschluss Kesseltemperatursensor"
@@ -1999,36 +1999,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V100KC2_6.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x50: "Kurzschluss Speichertemperatursensor 1"
-      0x51: "Kurzschluss Speichertemperatursensor 2"
-      0x58: "Unterbrechung Speichertemperatursensor 1"
-      0x59: "Unterbrechung Speichertemperatursensor 2"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC4: "Kommunikationsfehler Funktionserweiterung 0-10V"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xD1: "Brennerstörung Kessel"
-      0xD4: "Störung  Sicherheitstemperaturbegrenzer Kessel"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 3 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 2*9; vcontrold getError2).
@@ -2044,36 +2015,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V100KC2_6.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x50: "Kurzschluss Speichertemperatursensor 1"
-      0x51: "Kurzschluss Speichertemperatursensor 2"
-      0x58: "Unterbrechung Speichertemperatursensor 1"
-      0x59: "Unterbrechung Speichertemperatursensor 2"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC4: "Kommunikationsfehler Funktionserweiterung 0-10V"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xD1: "Brennerstörung Kessel"
-      0xD4: "Störung  Sicherheitstemperaturbegrenzer Kessel"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 4 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 3*9; vcontrold getError3).
@@ -2089,36 +2031,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V100KC2_6.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x50: "Kurzschluss Speichertemperatursensor 1"
-      0x51: "Kurzschluss Speichertemperatursensor 2"
-      0x58: "Unterbrechung Speichertemperatursensor 1"
-      0x59: "Unterbrechung Speichertemperatursensor 2"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC4: "Kommunikationsfehler Funktionserweiterung 0-10V"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xD1: "Brennerstörung Kessel"
-      0xD4: "Störung  Sicherheitstemperaturbegrenzer Kessel"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 5 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 4*9; vcontrold getError4).
@@ -2134,36 +2047,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V100KC2_6.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x50: "Kurzschluss Speichertemperatursensor 1"
-      0x51: "Kurzschluss Speichertemperatursensor 2"
-      0x58: "Unterbrechung Speichertemperatursensor 1"
-      0x59: "Unterbrechung Speichertemperatursensor 2"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC4: "Kommunikationsfehler Funktionserweiterung 0-10V"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xD1: "Brennerstörung Kessel"
-      0xD4: "Störung  Sicherheitstemperaturbegrenzer Kessel"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 6 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 5*9; vcontrold getError5).
@@ -2179,36 +2063,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V100KC2_6.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x50: "Kurzschluss Speichertemperatursensor 1"
-      0x51: "Kurzschluss Speichertemperatursensor 2"
-      0x58: "Unterbrechung Speichertemperatursensor 1"
-      0x59: "Unterbrechung Speichertemperatursensor 2"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC4: "Kommunikationsfehler Funktionserweiterung 0-10V"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xD1: "Brennerstörung Kessel"
-      0xD4: "Störung  Sicherheitstemperaturbegrenzer Kessel"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 7 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 6*9; vcontrold getError6).
@@ -2224,36 +2079,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V100KC2_6.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x50: "Kurzschluss Speichertemperatursensor 1"
-      0x51: "Kurzschluss Speichertemperatursensor 2"
-      0x58: "Unterbrechung Speichertemperatursensor 1"
-      0x59: "Unterbrechung Speichertemperatursensor 2"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC4: "Kommunikationsfehler Funktionserweiterung 0-10V"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xD1: "Brennerstörung Kessel"
-      0xD4: "Störung  Sicherheitstemperaturbegrenzer Kessel"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 8 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 7*9; vcontrold getError7).
@@ -2269,36 +2095,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V100KC2_6.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x50: "Kurzschluss Speichertemperatursensor 1"
-      0x51: "Kurzschluss Speichertemperatursensor 2"
-      0x58: "Unterbrechung Speichertemperatursensor 1"
-      0x59: "Unterbrechung Speichertemperatursensor 2"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC4: "Kommunikationsfehler Funktionserweiterung 0-10V"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xD1: "Brennerstörung Kessel"
-      0xD4: "Störung  Sicherheitstemperaturbegrenzer Kessel"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 9 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 8*9; vcontrold getError8).
@@ -2314,36 +2111,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V100KC2_6.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x50: "Kurzschluss Speichertemperatursensor 1"
-      0x51: "Kurzschluss Speichertemperatursensor 2"
-      0x58: "Unterbrechung Speichertemperatursensor 1"
-      0x59: "Unterbrechung Speichertemperatursensor 2"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC4: "Kommunikationsfehler Funktionserweiterung 0-10V"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xD1: "Brennerstörung Kessel"
-      0xD4: "Störung  Sicherheitstemperaturbegrenzer Kessel"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 10 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 9*9; vcontrold getError9).
@@ -2359,36 +2127,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V100KC2_6.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x50: "Kurzschluss Speichertemperatursensor 1"
-      0x51: "Kurzschluss Speichertemperatursensor 2"
-      0x58: "Unterbrechung Speichertemperatursensor 1"
-      0x59: "Unterbrechung Speichertemperatursensor 2"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC4: "Kommunikationsfehler Funktionserweiterung 0-10V"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xD1: "Brennerstörung Kessel"
-      0xD4: "Störung  Sicherheitstemperaturbegrenzer Kessel"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
+    codes: *letzter_fehler_codes  # same map as above
 
   # --- (ohne Gruppenzuordnung) ---
   - platform: vitohome

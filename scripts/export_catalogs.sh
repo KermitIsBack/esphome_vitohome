@@ -51,4 +51,5 @@ if ! "$PY" -c 'import sys; a, b = (open(f, "rb").read() for f in sys.argv[1:]); 
 fi
 mv "$OUT/de/resolve.json" "$OUT/resolve.json"
 rm "$OUT/en/resolve.json"
-echo "catalogs: $(ls "$OUT/de"/*.yaml | wc -l) per language in $OUT/{de,en}; lookup: $OUT/resolve.json"
+catalogs=("$OUT/de"/*.yaml)
+echo "catalogs: ${#catalogs[@]} per language in $OUT/{de,en}; lookup: $OUT/resolve.json"

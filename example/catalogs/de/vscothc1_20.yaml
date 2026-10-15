@@ -3394,7 +3394,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 2 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3414,7 +3414,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 3 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3434,7 +3434,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 4 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3454,7 +3454,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 5 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3474,7 +3474,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 6 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3494,7 +3494,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 7 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3514,7 +3514,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 8 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3534,7 +3534,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 9 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3554,7 +3554,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 10 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3574,7 +3574,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 11 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3594,7 +3594,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 12 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3614,7 +3614,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 13 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3634,7 +3634,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 14 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3654,7 +3654,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 15 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3674,7 +3674,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 16 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3694,7 +3694,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 17 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3714,7 +3714,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 18 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3734,7 +3734,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 19 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3754,7 +3754,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 20 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -3774,7 +3774,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # --- LON Objekte / Node Objekt ---
   - platform: vitohome
@@ -3822,7 +3822,7 @@ text_sensor:
     entity_category: diagnostic
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC1_20.*)
-    codes:
+    codes: &letzter_fehler_codes
       0x00: "Anlage ohne Fehler"
       0x0F: "Wartung durchführen"
       0x10: "Kurzschluss Außentemperatursensor"
@@ -3905,74 +3905,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC1_20.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor Anlage"
-      0x28: "Unterbrechung Vorlaufsensor Anlage"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x40: "Kurzschluss Vorlaufsensor HK2"
-      0x48: "Unterbrechung Vorlaufsensor HK2"
-      0x50: "Kurzschluss Speichertemperatursensor / Komfortsensor / Ladesensor"
-      0x51: "Kurzschluss Auslauftemperatursensor"
-      0x58: "Unterbrechung Speichertemperatursensor/ Komfortsensor/ Ladesensor"
-      0x59: "Unterbrechung Auslauftemperatursensor"
-      0x92: "Solarregelung: Kurzschluss Kollektortemp.Sensor"
-      0x93: "Solarregelung: Kurzschluss Kollektorrücklauf-Sensor"
-      0x94: "Solarregelung: Kurzschluss Speichertemp.Sensor"
-      0x9A: "Solar: Unterbrech. Kollektortemp.Sensor"
-      0x9B: "Vitosolic: Unterbrech. Kollektorrücklauf"
-      0x9C: "Solar: Unterbrech. Speichertemp.Sensor"
-      0x9F: "Solarregelung: allgemeiner Fehler"
-      0xA6: "Fehler Fremdstromanode nicht in Ordnung"
-      0xA7: "Fehler Uhrenbaustein Bedienteil"
-      0xA8: "Interne Pumpe meldet Luft"
-      0xA9: "Interne Pumpe blockiert"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBA: "Kommunikationsfehler Mischer HK2"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC2: "Kommunikationsfehler Solarregelung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe - Interne Pumpe"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Anschlußerweiterung extern"
-      0xCF: "Kommunikationsfehler LON-Modul"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE4: "Fehler in Spannungsversorgung 24V - Feuerungsautomat"
-      0xE5: "Fehler Flammenverstärker - Feuerungsautomat"
-      0xE6: "Min. Luft-/Wasserdruck nicht erreicht"
-      0xF0: "Kommunikationsfehler zum Feuerungsatomat"
-      0xF1: "Abgastemperaturbegrenzer ausgelöst"
-      0xF2: "TB ausgelöst - Übertemperatur"
-      0xF3: "Flammenvortäuschung"
-      0xF4: "Keine Flammenbildung"
-      0xF5: "Fehler Luftdruckwächter"
-      0xF6: "Fehler Gasdruckschalter"
-      0xF7: "Fehler Luftdruckschalter"
-      0xF8: "Fehler Gasventil"
-      0xF9: "Fehler Gebläse - Drehzahl nicht erreicht"
-      0xFA: "Fehler Gebläse - Stillstand nicht erreicht"
-      0xFB: "Flammenausfall im Betrieb"
-      0xFC: "Fehler in der elektrischen Ansteuerung der Gasarmatur"
-      0xFD: "Interner Fehler Feuerungsautomat"
-      0xFE: "Vorwarnung Wartung fällig (Warnung)"
-      0xFF: "Fehler Feuerungsautomat ohne eigenen Fehlercode"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 3 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 2*9; vcontrold getError2).
@@ -3988,74 +3921,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC1_20.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor Anlage"
-      0x28: "Unterbrechung Vorlaufsensor Anlage"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x40: "Kurzschluss Vorlaufsensor HK2"
-      0x48: "Unterbrechung Vorlaufsensor HK2"
-      0x50: "Kurzschluss Speichertemperatursensor / Komfortsensor / Ladesensor"
-      0x51: "Kurzschluss Auslauftemperatursensor"
-      0x58: "Unterbrechung Speichertemperatursensor/ Komfortsensor/ Ladesensor"
-      0x59: "Unterbrechung Auslauftemperatursensor"
-      0x92: "Solarregelung: Kurzschluss Kollektortemp.Sensor"
-      0x93: "Solarregelung: Kurzschluss Kollektorrücklauf-Sensor"
-      0x94: "Solarregelung: Kurzschluss Speichertemp.Sensor"
-      0x9A: "Solar: Unterbrech. Kollektortemp.Sensor"
-      0x9B: "Vitosolic: Unterbrech. Kollektorrücklauf"
-      0x9C: "Solar: Unterbrech. Speichertemp.Sensor"
-      0x9F: "Solarregelung: allgemeiner Fehler"
-      0xA6: "Fehler Fremdstromanode nicht in Ordnung"
-      0xA7: "Fehler Uhrenbaustein Bedienteil"
-      0xA8: "Interne Pumpe meldet Luft"
-      0xA9: "Interne Pumpe blockiert"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBA: "Kommunikationsfehler Mischer HK2"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC2: "Kommunikationsfehler Solarregelung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe - Interne Pumpe"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Anschlußerweiterung extern"
-      0xCF: "Kommunikationsfehler LON-Modul"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE4: "Fehler in Spannungsversorgung 24V - Feuerungsautomat"
-      0xE5: "Fehler Flammenverstärker - Feuerungsautomat"
-      0xE6: "Min. Luft-/Wasserdruck nicht erreicht"
-      0xF0: "Kommunikationsfehler zum Feuerungsatomat"
-      0xF1: "Abgastemperaturbegrenzer ausgelöst"
-      0xF2: "TB ausgelöst - Übertemperatur"
-      0xF3: "Flammenvortäuschung"
-      0xF4: "Keine Flammenbildung"
-      0xF5: "Fehler Luftdruckwächter"
-      0xF6: "Fehler Gasdruckschalter"
-      0xF7: "Fehler Luftdruckschalter"
-      0xF8: "Fehler Gasventil"
-      0xF9: "Fehler Gebläse - Drehzahl nicht erreicht"
-      0xFA: "Fehler Gebläse - Stillstand nicht erreicht"
-      0xFB: "Flammenausfall im Betrieb"
-      0xFC: "Fehler in der elektrischen Ansteuerung der Gasarmatur"
-      0xFD: "Interner Fehler Feuerungsautomat"
-      0xFE: "Vorwarnung Wartung fällig (Warnung)"
-      0xFF: "Fehler Feuerungsautomat ohne eigenen Fehlercode"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 4 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 3*9; vcontrold getError3).
@@ -4071,74 +3937,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC1_20.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor Anlage"
-      0x28: "Unterbrechung Vorlaufsensor Anlage"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x40: "Kurzschluss Vorlaufsensor HK2"
-      0x48: "Unterbrechung Vorlaufsensor HK2"
-      0x50: "Kurzschluss Speichertemperatursensor / Komfortsensor / Ladesensor"
-      0x51: "Kurzschluss Auslauftemperatursensor"
-      0x58: "Unterbrechung Speichertemperatursensor/ Komfortsensor/ Ladesensor"
-      0x59: "Unterbrechung Auslauftemperatursensor"
-      0x92: "Solarregelung: Kurzschluss Kollektortemp.Sensor"
-      0x93: "Solarregelung: Kurzschluss Kollektorrücklauf-Sensor"
-      0x94: "Solarregelung: Kurzschluss Speichertemp.Sensor"
-      0x9A: "Solar: Unterbrech. Kollektortemp.Sensor"
-      0x9B: "Vitosolic: Unterbrech. Kollektorrücklauf"
-      0x9C: "Solar: Unterbrech. Speichertemp.Sensor"
-      0x9F: "Solarregelung: allgemeiner Fehler"
-      0xA6: "Fehler Fremdstromanode nicht in Ordnung"
-      0xA7: "Fehler Uhrenbaustein Bedienteil"
-      0xA8: "Interne Pumpe meldet Luft"
-      0xA9: "Interne Pumpe blockiert"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBA: "Kommunikationsfehler Mischer HK2"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC2: "Kommunikationsfehler Solarregelung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe - Interne Pumpe"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Anschlußerweiterung extern"
-      0xCF: "Kommunikationsfehler LON-Modul"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE4: "Fehler in Spannungsversorgung 24V - Feuerungsautomat"
-      0xE5: "Fehler Flammenverstärker - Feuerungsautomat"
-      0xE6: "Min. Luft-/Wasserdruck nicht erreicht"
-      0xF0: "Kommunikationsfehler zum Feuerungsatomat"
-      0xF1: "Abgastemperaturbegrenzer ausgelöst"
-      0xF2: "TB ausgelöst - Übertemperatur"
-      0xF3: "Flammenvortäuschung"
-      0xF4: "Keine Flammenbildung"
-      0xF5: "Fehler Luftdruckwächter"
-      0xF6: "Fehler Gasdruckschalter"
-      0xF7: "Fehler Luftdruckschalter"
-      0xF8: "Fehler Gasventil"
-      0xF9: "Fehler Gebläse - Drehzahl nicht erreicht"
-      0xFA: "Fehler Gebläse - Stillstand nicht erreicht"
-      0xFB: "Flammenausfall im Betrieb"
-      0xFC: "Fehler in der elektrischen Ansteuerung der Gasarmatur"
-      0xFD: "Interner Fehler Feuerungsautomat"
-      0xFE: "Vorwarnung Wartung fällig (Warnung)"
-      0xFF: "Fehler Feuerungsautomat ohne eigenen Fehlercode"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 5 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 4*9; vcontrold getError4).
@@ -4154,74 +3953,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC1_20.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor Anlage"
-      0x28: "Unterbrechung Vorlaufsensor Anlage"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x40: "Kurzschluss Vorlaufsensor HK2"
-      0x48: "Unterbrechung Vorlaufsensor HK2"
-      0x50: "Kurzschluss Speichertemperatursensor / Komfortsensor / Ladesensor"
-      0x51: "Kurzschluss Auslauftemperatursensor"
-      0x58: "Unterbrechung Speichertemperatursensor/ Komfortsensor/ Ladesensor"
-      0x59: "Unterbrechung Auslauftemperatursensor"
-      0x92: "Solarregelung: Kurzschluss Kollektortemp.Sensor"
-      0x93: "Solarregelung: Kurzschluss Kollektorrücklauf-Sensor"
-      0x94: "Solarregelung: Kurzschluss Speichertemp.Sensor"
-      0x9A: "Solar: Unterbrech. Kollektortemp.Sensor"
-      0x9B: "Vitosolic: Unterbrech. Kollektorrücklauf"
-      0x9C: "Solar: Unterbrech. Speichertemp.Sensor"
-      0x9F: "Solarregelung: allgemeiner Fehler"
-      0xA6: "Fehler Fremdstromanode nicht in Ordnung"
-      0xA7: "Fehler Uhrenbaustein Bedienteil"
-      0xA8: "Interne Pumpe meldet Luft"
-      0xA9: "Interne Pumpe blockiert"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBA: "Kommunikationsfehler Mischer HK2"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC2: "Kommunikationsfehler Solarregelung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe - Interne Pumpe"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Anschlußerweiterung extern"
-      0xCF: "Kommunikationsfehler LON-Modul"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE4: "Fehler in Spannungsversorgung 24V - Feuerungsautomat"
-      0xE5: "Fehler Flammenverstärker - Feuerungsautomat"
-      0xE6: "Min. Luft-/Wasserdruck nicht erreicht"
-      0xF0: "Kommunikationsfehler zum Feuerungsatomat"
-      0xF1: "Abgastemperaturbegrenzer ausgelöst"
-      0xF2: "TB ausgelöst - Übertemperatur"
-      0xF3: "Flammenvortäuschung"
-      0xF4: "Keine Flammenbildung"
-      0xF5: "Fehler Luftdruckwächter"
-      0xF6: "Fehler Gasdruckschalter"
-      0xF7: "Fehler Luftdruckschalter"
-      0xF8: "Fehler Gasventil"
-      0xF9: "Fehler Gebläse - Drehzahl nicht erreicht"
-      0xFA: "Fehler Gebläse - Stillstand nicht erreicht"
-      0xFB: "Flammenausfall im Betrieb"
-      0xFC: "Fehler in der elektrischen Ansteuerung der Gasarmatur"
-      0xFD: "Interner Fehler Feuerungsautomat"
-      0xFE: "Vorwarnung Wartung fällig (Warnung)"
-      0xFF: "Fehler Feuerungsautomat ohne eigenen Fehlercode"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 6 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 5*9; vcontrold getError5).
@@ -4237,74 +3969,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC1_20.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor Anlage"
-      0x28: "Unterbrechung Vorlaufsensor Anlage"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x40: "Kurzschluss Vorlaufsensor HK2"
-      0x48: "Unterbrechung Vorlaufsensor HK2"
-      0x50: "Kurzschluss Speichertemperatursensor / Komfortsensor / Ladesensor"
-      0x51: "Kurzschluss Auslauftemperatursensor"
-      0x58: "Unterbrechung Speichertemperatursensor/ Komfortsensor/ Ladesensor"
-      0x59: "Unterbrechung Auslauftemperatursensor"
-      0x92: "Solarregelung: Kurzschluss Kollektortemp.Sensor"
-      0x93: "Solarregelung: Kurzschluss Kollektorrücklauf-Sensor"
-      0x94: "Solarregelung: Kurzschluss Speichertemp.Sensor"
-      0x9A: "Solar: Unterbrech. Kollektortemp.Sensor"
-      0x9B: "Vitosolic: Unterbrech. Kollektorrücklauf"
-      0x9C: "Solar: Unterbrech. Speichertemp.Sensor"
-      0x9F: "Solarregelung: allgemeiner Fehler"
-      0xA6: "Fehler Fremdstromanode nicht in Ordnung"
-      0xA7: "Fehler Uhrenbaustein Bedienteil"
-      0xA8: "Interne Pumpe meldet Luft"
-      0xA9: "Interne Pumpe blockiert"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBA: "Kommunikationsfehler Mischer HK2"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC2: "Kommunikationsfehler Solarregelung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe - Interne Pumpe"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Anschlußerweiterung extern"
-      0xCF: "Kommunikationsfehler LON-Modul"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE4: "Fehler in Spannungsversorgung 24V - Feuerungsautomat"
-      0xE5: "Fehler Flammenverstärker - Feuerungsautomat"
-      0xE6: "Min. Luft-/Wasserdruck nicht erreicht"
-      0xF0: "Kommunikationsfehler zum Feuerungsatomat"
-      0xF1: "Abgastemperaturbegrenzer ausgelöst"
-      0xF2: "TB ausgelöst - Übertemperatur"
-      0xF3: "Flammenvortäuschung"
-      0xF4: "Keine Flammenbildung"
-      0xF5: "Fehler Luftdruckwächter"
-      0xF6: "Fehler Gasdruckschalter"
-      0xF7: "Fehler Luftdruckschalter"
-      0xF8: "Fehler Gasventil"
-      0xF9: "Fehler Gebläse - Drehzahl nicht erreicht"
-      0xFA: "Fehler Gebläse - Stillstand nicht erreicht"
-      0xFB: "Flammenausfall im Betrieb"
-      0xFC: "Fehler in der elektrischen Ansteuerung der Gasarmatur"
-      0xFD: "Interner Fehler Feuerungsautomat"
-      0xFE: "Vorwarnung Wartung fällig (Warnung)"
-      0xFF: "Fehler Feuerungsautomat ohne eigenen Fehlercode"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 7 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 6*9; vcontrold getError6).
@@ -4320,74 +3985,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC1_20.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor Anlage"
-      0x28: "Unterbrechung Vorlaufsensor Anlage"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x40: "Kurzschluss Vorlaufsensor HK2"
-      0x48: "Unterbrechung Vorlaufsensor HK2"
-      0x50: "Kurzschluss Speichertemperatursensor / Komfortsensor / Ladesensor"
-      0x51: "Kurzschluss Auslauftemperatursensor"
-      0x58: "Unterbrechung Speichertemperatursensor/ Komfortsensor/ Ladesensor"
-      0x59: "Unterbrechung Auslauftemperatursensor"
-      0x92: "Solarregelung: Kurzschluss Kollektortemp.Sensor"
-      0x93: "Solarregelung: Kurzschluss Kollektorrücklauf-Sensor"
-      0x94: "Solarregelung: Kurzschluss Speichertemp.Sensor"
-      0x9A: "Solar: Unterbrech. Kollektortemp.Sensor"
-      0x9B: "Vitosolic: Unterbrech. Kollektorrücklauf"
-      0x9C: "Solar: Unterbrech. Speichertemp.Sensor"
-      0x9F: "Solarregelung: allgemeiner Fehler"
-      0xA6: "Fehler Fremdstromanode nicht in Ordnung"
-      0xA7: "Fehler Uhrenbaustein Bedienteil"
-      0xA8: "Interne Pumpe meldet Luft"
-      0xA9: "Interne Pumpe blockiert"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBA: "Kommunikationsfehler Mischer HK2"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC2: "Kommunikationsfehler Solarregelung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe - Interne Pumpe"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Anschlußerweiterung extern"
-      0xCF: "Kommunikationsfehler LON-Modul"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE4: "Fehler in Spannungsversorgung 24V - Feuerungsautomat"
-      0xE5: "Fehler Flammenverstärker - Feuerungsautomat"
-      0xE6: "Min. Luft-/Wasserdruck nicht erreicht"
-      0xF0: "Kommunikationsfehler zum Feuerungsatomat"
-      0xF1: "Abgastemperaturbegrenzer ausgelöst"
-      0xF2: "TB ausgelöst - Übertemperatur"
-      0xF3: "Flammenvortäuschung"
-      0xF4: "Keine Flammenbildung"
-      0xF5: "Fehler Luftdruckwächter"
-      0xF6: "Fehler Gasdruckschalter"
-      0xF7: "Fehler Luftdruckschalter"
-      0xF8: "Fehler Gasventil"
-      0xF9: "Fehler Gebläse - Drehzahl nicht erreicht"
-      0xFA: "Fehler Gebläse - Stillstand nicht erreicht"
-      0xFB: "Flammenausfall im Betrieb"
-      0xFC: "Fehler in der elektrischen Ansteuerung der Gasarmatur"
-      0xFD: "Interner Fehler Feuerungsautomat"
-      0xFE: "Vorwarnung Wartung fällig (Warnung)"
-      0xFF: "Fehler Feuerungsautomat ohne eigenen Fehlercode"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 8 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 7*9; vcontrold getError7).
@@ -4403,74 +4001,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC1_20.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor Anlage"
-      0x28: "Unterbrechung Vorlaufsensor Anlage"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x40: "Kurzschluss Vorlaufsensor HK2"
-      0x48: "Unterbrechung Vorlaufsensor HK2"
-      0x50: "Kurzschluss Speichertemperatursensor / Komfortsensor / Ladesensor"
-      0x51: "Kurzschluss Auslauftemperatursensor"
-      0x58: "Unterbrechung Speichertemperatursensor/ Komfortsensor/ Ladesensor"
-      0x59: "Unterbrechung Auslauftemperatursensor"
-      0x92: "Solarregelung: Kurzschluss Kollektortemp.Sensor"
-      0x93: "Solarregelung: Kurzschluss Kollektorrücklauf-Sensor"
-      0x94: "Solarregelung: Kurzschluss Speichertemp.Sensor"
-      0x9A: "Solar: Unterbrech. Kollektortemp.Sensor"
-      0x9B: "Vitosolic: Unterbrech. Kollektorrücklauf"
-      0x9C: "Solar: Unterbrech. Speichertemp.Sensor"
-      0x9F: "Solarregelung: allgemeiner Fehler"
-      0xA6: "Fehler Fremdstromanode nicht in Ordnung"
-      0xA7: "Fehler Uhrenbaustein Bedienteil"
-      0xA8: "Interne Pumpe meldet Luft"
-      0xA9: "Interne Pumpe blockiert"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBA: "Kommunikationsfehler Mischer HK2"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC2: "Kommunikationsfehler Solarregelung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe - Interne Pumpe"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Anschlußerweiterung extern"
-      0xCF: "Kommunikationsfehler LON-Modul"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE4: "Fehler in Spannungsversorgung 24V - Feuerungsautomat"
-      0xE5: "Fehler Flammenverstärker - Feuerungsautomat"
-      0xE6: "Min. Luft-/Wasserdruck nicht erreicht"
-      0xF0: "Kommunikationsfehler zum Feuerungsatomat"
-      0xF1: "Abgastemperaturbegrenzer ausgelöst"
-      0xF2: "TB ausgelöst - Übertemperatur"
-      0xF3: "Flammenvortäuschung"
-      0xF4: "Keine Flammenbildung"
-      0xF5: "Fehler Luftdruckwächter"
-      0xF6: "Fehler Gasdruckschalter"
-      0xF7: "Fehler Luftdruckschalter"
-      0xF8: "Fehler Gasventil"
-      0xF9: "Fehler Gebläse - Drehzahl nicht erreicht"
-      0xFA: "Fehler Gebläse - Stillstand nicht erreicht"
-      0xFB: "Flammenausfall im Betrieb"
-      0xFC: "Fehler in der elektrischen Ansteuerung der Gasarmatur"
-      0xFD: "Interner Fehler Feuerungsautomat"
-      0xFE: "Vorwarnung Wartung fällig (Warnung)"
-      0xFF: "Fehler Feuerungsautomat ohne eigenen Fehlercode"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 9 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 8*9; vcontrold getError8).
@@ -4486,74 +4017,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC1_20.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor Anlage"
-      0x28: "Unterbrechung Vorlaufsensor Anlage"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x40: "Kurzschluss Vorlaufsensor HK2"
-      0x48: "Unterbrechung Vorlaufsensor HK2"
-      0x50: "Kurzschluss Speichertemperatursensor / Komfortsensor / Ladesensor"
-      0x51: "Kurzschluss Auslauftemperatursensor"
-      0x58: "Unterbrechung Speichertemperatursensor/ Komfortsensor/ Ladesensor"
-      0x59: "Unterbrechung Auslauftemperatursensor"
-      0x92: "Solarregelung: Kurzschluss Kollektortemp.Sensor"
-      0x93: "Solarregelung: Kurzschluss Kollektorrücklauf-Sensor"
-      0x94: "Solarregelung: Kurzschluss Speichertemp.Sensor"
-      0x9A: "Solar: Unterbrech. Kollektortemp.Sensor"
-      0x9B: "Vitosolic: Unterbrech. Kollektorrücklauf"
-      0x9C: "Solar: Unterbrech. Speichertemp.Sensor"
-      0x9F: "Solarregelung: allgemeiner Fehler"
-      0xA6: "Fehler Fremdstromanode nicht in Ordnung"
-      0xA7: "Fehler Uhrenbaustein Bedienteil"
-      0xA8: "Interne Pumpe meldet Luft"
-      0xA9: "Interne Pumpe blockiert"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBA: "Kommunikationsfehler Mischer HK2"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC2: "Kommunikationsfehler Solarregelung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe - Interne Pumpe"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Anschlußerweiterung extern"
-      0xCF: "Kommunikationsfehler LON-Modul"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE4: "Fehler in Spannungsversorgung 24V - Feuerungsautomat"
-      0xE5: "Fehler Flammenverstärker - Feuerungsautomat"
-      0xE6: "Min. Luft-/Wasserdruck nicht erreicht"
-      0xF0: "Kommunikationsfehler zum Feuerungsatomat"
-      0xF1: "Abgastemperaturbegrenzer ausgelöst"
-      0xF2: "TB ausgelöst - Übertemperatur"
-      0xF3: "Flammenvortäuschung"
-      0xF4: "Keine Flammenbildung"
-      0xF5: "Fehler Luftdruckwächter"
-      0xF6: "Fehler Gasdruckschalter"
-      0xF7: "Fehler Luftdruckschalter"
-      0xF8: "Fehler Gasventil"
-      0xF9: "Fehler Gebläse - Drehzahl nicht erreicht"
-      0xFA: "Fehler Gebläse - Stillstand nicht erreicht"
-      0xFB: "Flammenausfall im Betrieb"
-      0xFC: "Fehler in der elektrischen Ansteuerung der Gasarmatur"
-      0xFD: "Interner Fehler Feuerungsautomat"
-      0xFE: "Vorwarnung Wartung fällig (Warnung)"
-      0xFF: "Fehler Feuerungsautomat ohne eigenen Fehlercode"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 10 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 9*9; vcontrold getError9).
@@ -4569,74 +4033,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC1_20.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x0F: "Wartung durchführen"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor Anlage"
-      0x28: "Unterbrechung Vorlaufsensor Anlage"
-      0x30: "Kurzschluss Kesseltemperatursensor"
-      0x38: "Unterbrechung Kesseltemperatursensor"
-      0x40: "Kurzschluss Vorlaufsensor HK2"
-      0x48: "Unterbrechung Vorlaufsensor HK2"
-      0x50: "Kurzschluss Speichertemperatursensor / Komfortsensor / Ladesensor"
-      0x51: "Kurzschluss Auslauftemperatursensor"
-      0x58: "Unterbrechung Speichertemperatursensor/ Komfortsensor/ Ladesensor"
-      0x59: "Unterbrechung Auslauftemperatursensor"
-      0x92: "Solarregelung: Kurzschluss Kollektortemp.Sensor"
-      0x93: "Solarregelung: Kurzschluss Kollektorrücklauf-Sensor"
-      0x94: "Solarregelung: Kurzschluss Speichertemp.Sensor"
-      0x9A: "Solar: Unterbrech. Kollektortemp.Sensor"
-      0x9B: "Vitosolic: Unterbrech. Kollektorrücklauf"
-      0x9C: "Solar: Unterbrech. Speichertemp.Sensor"
-      0x9F: "Solarregelung: allgemeiner Fehler"
-      0xA6: "Fehler Fremdstromanode nicht in Ordnung"
-      0xA7: "Fehler Uhrenbaustein Bedienteil"
-      0xA8: "Interne Pumpe meldet Luft"
-      0xA9: "Interne Pumpe blockiert"
-      0xB0: "Kurzschluss Abgastemperatursensor"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB7: "Kesselcodierkarte falsch/fehlerhaft"
-      0xB8: "Unterbrechung Abgastemperatursensor"
-      0xB9: "Fehlerhafte Übertragung Codiersteckerdaten"
-      0xBA: "Kommunikationsfehler Mischer HK2"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC2: "Kommunikationsfehler Solarregelung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe - Interne Pumpe"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Anschlußerweiterung extern"
-      0xCF: "Kommunikationsfehler LON-Modul"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE4: "Fehler in Spannungsversorgung 24V - Feuerungsautomat"
-      0xE5: "Fehler Flammenverstärker - Feuerungsautomat"
-      0xE6: "Min. Luft-/Wasserdruck nicht erreicht"
-      0xF0: "Kommunikationsfehler zum Feuerungsatomat"
-      0xF1: "Abgastemperaturbegrenzer ausgelöst"
-      0xF2: "TB ausgelöst - Übertemperatur"
-      0xF3: "Flammenvortäuschung"
-      0xF4: "Keine Flammenbildung"
-      0xF5: "Fehler Luftdruckwächter"
-      0xF6: "Fehler Gasdruckschalter"
-      0xF7: "Fehler Luftdruckschalter"
-      0xF8: "Fehler Gasventil"
-      0xF9: "Fehler Gebläse - Drehzahl nicht erreicht"
-      0xFA: "Fehler Gebläse - Stillstand nicht erreicht"
-      0xFB: "Flammenausfall im Betrieb"
-      0xFC: "Fehler in der elektrischen Ansteuerung der Gasarmatur"
-      0xFD: "Interner Fehler Feuerungsautomat"
-      0xFE: "Vorwarnung Wartung fällig (Warnung)"
-      0xFF: "Fehler Feuerungsautomat ohne eigenen Fehlercode"
+    codes: *letzter_fehler_codes  # same map as above
 
 # --- datapoints needing custom decode (not auto-emitted) ---
 # (24) Wartung zuruecksetzen @ 0x5724: WRITE-ONLY register (Vitosoft AccessMode 'Write'); a trigger with no read-back -> not auto-emitted.

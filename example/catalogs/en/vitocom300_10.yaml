@@ -703,7 +703,7 @@ text_sensor:
     entity_category: diagnostic
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.Vitocom300_10.*)
-    codes:
+    codes: &letzter_fehler_codes
       0x00: "No faults in the system"
       0x02: "Power failure"
       0x03: "Power restored"
@@ -738,26 +738,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.Vitocom300_10.*)
-    codes:
-      0x00: "No faults in the system"
-      0x02: "Power failure"
-      0x03: "Power restored"
-      0x04: "Fault, Flashdisk"
-      0x05: "INC file for cor.AD values not available"
-      0x10: "Service key enabled"
-      0x11: "Service key disabled"
-      0x12: "Service key timeout elapsed"
-      0x20: "Life sign"
-      0x30: "Fault communication AVR - H8"
-      0x40: "Extension unit 1 communication interrupted"
-      0x42: "Extension unit 2 communication interrupted"
-      0x50: "Fault communication H8 - Neuron"
-      0x51: "Test message VC300 at Vitodata"
-      0xA0: "Trend file (*.BAK) was created"
-      0xD0: "No life sign received from system"
-      0xE0: "Subscriber failed"
-      0xE1: "Subscriber failed"
-      0xFF: "Input reports fault"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 3 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 2*9; vcontrold getError2).
@@ -773,26 +754,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.Vitocom300_10.*)
-    codes:
-      0x00: "No faults in the system"
-      0x02: "Power failure"
-      0x03: "Power restored"
-      0x04: "Fault, Flashdisk"
-      0x05: "INC file for cor.AD values not available"
-      0x10: "Service key enabled"
-      0x11: "Service key disabled"
-      0x12: "Service key timeout elapsed"
-      0x20: "Life sign"
-      0x30: "Fault communication AVR - H8"
-      0x40: "Extension unit 1 communication interrupted"
-      0x42: "Extension unit 2 communication interrupted"
-      0x50: "Fault communication H8 - Neuron"
-      0x51: "Test message VC300 at Vitodata"
-      0xA0: "Trend file (*.BAK) was created"
-      0xD0: "No life sign received from system"
-      0xE0: "Subscriber failed"
-      0xE1: "Subscriber failed"
-      0xFF: "Input reports fault"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 4 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 3*9; vcontrold getError3).
@@ -808,26 +770,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.Vitocom300_10.*)
-    codes:
-      0x00: "No faults in the system"
-      0x02: "Power failure"
-      0x03: "Power restored"
-      0x04: "Fault, Flashdisk"
-      0x05: "INC file for cor.AD values not available"
-      0x10: "Service key enabled"
-      0x11: "Service key disabled"
-      0x12: "Service key timeout elapsed"
-      0x20: "Life sign"
-      0x30: "Fault communication AVR - H8"
-      0x40: "Extension unit 1 communication interrupted"
-      0x42: "Extension unit 2 communication interrupted"
-      0x50: "Fault communication H8 - Neuron"
-      0x51: "Test message VC300 at Vitodata"
-      0xA0: "Trend file (*.BAK) was created"
-      0xD0: "No life sign received from system"
-      0xE0: "Subscriber failed"
-      0xE1: "Subscriber failed"
-      0xFF: "Input reports fault"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 5 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 4*9; vcontrold getError4).
@@ -843,26 +786,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.Vitocom300_10.*)
-    codes:
-      0x00: "No faults in the system"
-      0x02: "Power failure"
-      0x03: "Power restored"
-      0x04: "Fault, Flashdisk"
-      0x05: "INC file for cor.AD values not available"
-      0x10: "Service key enabled"
-      0x11: "Service key disabled"
-      0x12: "Service key timeout elapsed"
-      0x20: "Life sign"
-      0x30: "Fault communication AVR - H8"
-      0x40: "Extension unit 1 communication interrupted"
-      0x42: "Extension unit 2 communication interrupted"
-      0x50: "Fault communication H8 - Neuron"
-      0x51: "Test message VC300 at Vitodata"
-      0xA0: "Trend file (*.BAK) was created"
-      0xD0: "No life sign received from system"
-      0xE0: "Subscriber failed"
-      0xE1: "Subscriber failed"
-      0xFF: "Input reports fault"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 6 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 5*9; vcontrold getError5).
@@ -878,26 +802,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.Vitocom300_10.*)
-    codes:
-      0x00: "No faults in the system"
-      0x02: "Power failure"
-      0x03: "Power restored"
-      0x04: "Fault, Flashdisk"
-      0x05: "INC file for cor.AD values not available"
-      0x10: "Service key enabled"
-      0x11: "Service key disabled"
-      0x12: "Service key timeout elapsed"
-      0x20: "Life sign"
-      0x30: "Fault communication AVR - H8"
-      0x40: "Extension unit 1 communication interrupted"
-      0x42: "Extension unit 2 communication interrupted"
-      0x50: "Fault communication H8 - Neuron"
-      0x51: "Test message VC300 at Vitodata"
-      0xA0: "Trend file (*.BAK) was created"
-      0xD0: "No life sign received from system"
-      0xE0: "Subscriber failed"
-      0xE1: "Subscriber failed"
-      0xFF: "Input reports fault"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 7 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 6*9; vcontrold getError6).
@@ -913,26 +818,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.Vitocom300_10.*)
-    codes:
-      0x00: "No faults in the system"
-      0x02: "Power failure"
-      0x03: "Power restored"
-      0x04: "Fault, Flashdisk"
-      0x05: "INC file for cor.AD values not available"
-      0x10: "Service key enabled"
-      0x11: "Service key disabled"
-      0x12: "Service key timeout elapsed"
-      0x20: "Life sign"
-      0x30: "Fault communication AVR - H8"
-      0x40: "Extension unit 1 communication interrupted"
-      0x42: "Extension unit 2 communication interrupted"
-      0x50: "Fault communication H8 - Neuron"
-      0x51: "Test message VC300 at Vitodata"
-      0xA0: "Trend file (*.BAK) was created"
-      0xD0: "No life sign received from system"
-      0xE0: "Subscriber failed"
-      0xE1: "Subscriber failed"
-      0xFF: "Input reports fault"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 8 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 7*9; vcontrold getError7).
@@ -948,26 +834,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.Vitocom300_10.*)
-    codes:
-      0x00: "No faults in the system"
-      0x02: "Power failure"
-      0x03: "Power restored"
-      0x04: "Fault, Flashdisk"
-      0x05: "INC file for cor.AD values not available"
-      0x10: "Service key enabled"
-      0x11: "Service key disabled"
-      0x12: "Service key timeout elapsed"
-      0x20: "Life sign"
-      0x30: "Fault communication AVR - H8"
-      0x40: "Extension unit 1 communication interrupted"
-      0x42: "Extension unit 2 communication interrupted"
-      0x50: "Fault communication H8 - Neuron"
-      0x51: "Test message VC300 at Vitodata"
-      0xA0: "Trend file (*.BAK) was created"
-      0xD0: "No life sign received from system"
-      0xE0: "Subscriber failed"
-      0xE1: "Subscriber failed"
-      0xFF: "Input reports fault"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 9 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 8*9; vcontrold getError8).
@@ -983,26 +850,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.Vitocom300_10.*)
-    codes:
-      0x00: "No faults in the system"
-      0x02: "Power failure"
-      0x03: "Power restored"
-      0x04: "Fault, Flashdisk"
-      0x05: "INC file for cor.AD values not available"
-      0x10: "Service key enabled"
-      0x11: "Service key disabled"
-      0x12: "Service key timeout elapsed"
-      0x20: "Life sign"
-      0x30: "Fault communication AVR - H8"
-      0x40: "Extension unit 1 communication interrupted"
-      0x42: "Extension unit 2 communication interrupted"
-      0x50: "Fault communication H8 - Neuron"
-      0x51: "Test message VC300 at Vitodata"
-      0xA0: "Trend file (*.BAK) was created"
-      0xD0: "No life sign received from system"
-      0xE0: "Subscriber failed"
-      0xE1: "Subscriber failed"
-      0xFF: "Input reports fault"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 10 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 9*9; vcontrold getError9).
@@ -1018,26 +866,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.Vitocom300_10.*)
-    codes:
-      0x00: "No faults in the system"
-      0x02: "Power failure"
-      0x03: "Power restored"
-      0x04: "Fault, Flashdisk"
-      0x05: "INC file for cor.AD values not available"
-      0x10: "Service key enabled"
-      0x11: "Service key disabled"
-      0x12: "Service key timeout elapsed"
-      0x20: "Life sign"
-      0x30: "Fault communication AVR - H8"
-      0x40: "Extension unit 1 communication interrupted"
-      0x42: "Extension unit 2 communication interrupted"
-      0x50: "Fault communication H8 - Neuron"
-      0x51: "Test message VC300 at Vitodata"
-      0xA0: "Trend file (*.BAK) was created"
-      0xD0: "No life sign received from system"
-      0xE0: "Subscriber failed"
-      0xE1: "Subscriber failed"
-      0xFF: "Input reports fault"
+    codes: *letzter_fehler_codes  # same map as above
 
 # --- datapoints needing custom decode (not auto-emitted) ---
 # ecnsysEventType~ErrorIndex @ 0x7561: NoConversion length 10 > 4 bytes -> custom decode

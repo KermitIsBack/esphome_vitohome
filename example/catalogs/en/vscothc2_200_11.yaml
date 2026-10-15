@@ -4565,7 +4565,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 2 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4585,7 +4585,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 3 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4605,7 +4605,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 4 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4625,7 +4625,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 5 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4645,7 +4645,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 6 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4665,7 +4665,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 7 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4685,7 +4685,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 8 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4705,7 +4705,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 9 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4725,7 +4725,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 10 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4745,7 +4745,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 11 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4765,7 +4765,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 12 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4785,7 +4785,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 13 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4805,7 +4805,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 14 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4825,7 +4825,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 15 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4845,7 +4845,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 16 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4865,7 +4865,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 17 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4885,7 +4885,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 18 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4905,7 +4905,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 19 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4925,7 +4925,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # GFA history slot 20 (a burner/subsystem fault archive
   # DISTINCT from the Vitotronic system history). Its lockout codes are
@@ -4945,7 +4945,7 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     update_interval: 300s
-    # GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>
+    # GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot (or regenerate with --gfa-chip <XX>)
 
   # --- LON Objekte / Node Objekt ---
   - platform: vitohome
@@ -5012,7 +5012,7 @@ text_sensor:
     entity_category: diagnostic
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC2_200_11.*)
-    codes:
+    codes: &letzter_fehler_codes
       0x00: "No faults in the system"
       0x0F: "Service required"
       0x10: "Short circuit outside temperature sensor"
@@ -5132,111 +5132,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC2_200_11.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x20: "Short circuit flow sensor system"
-      0x28: "Lead break flow sensor system"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x40: "Short circuit, flow sensor HC2"
-      0x41: "Return temperature HC2 short circuit"
-      0x44: "Short circuit, flow sensor HC3"
-      0x45: "Return temperature HC3 short circuit"
-      0x48: "Lead break, flow sensor HC2"
-      0x49: "Return temperature HC2 lead break"
-      0x4C: "Lead break, flow sensor HC3"
-      0x4D: "Return temperature HC3 lead break"
-      0x50: "Short circuit cylinder temperature sensor / comfort sensor / primary sensor"
-      0x51: "Short circuit outlet temperature sensor"
-      0x58: "Lead break cylinder temperature sensor/comfort sensor/primary sensor"
-      0x59: "Lead break outlet temperature sensor"
-      0x90: "Solar module: Short circuit, sensor 7"
-      0x91: "Solar module: Short circuit, sensor 10"
-      0x92: "Solar control unit: Short circuit, sensor S1"
-      0x93: "Solar control unit: Short circuit, sensor S3"
-      0x94: "Solar control unit: short circuit sensor S2"
-      0x98: "Solar module: open circuit sensor 3"
-      0x99: "Solar module: open circuit sensor 4"
-      0x9A: "Solar control unit: Lead break, sensor S1"
-      0x9B: "Solar control unit: Lead break, sensor S3"
-      0x9C: "Solar control unit: lead break sensor S2"
-      0x9E: "Solar module: Delta T monitoring"
-      0x9F: "Solar control unit: general fault"
-      0xA2: "Fault low water pressure control unit"
-      0xA4: "Maximum system pressure exceeded"
-      0xA6: "Fault impressed current anode not OK"
-      0xA7: "Fault clock module programming unit"
-      0xA8: "Internal pump reports air"
-      0xA9: "Internal pump blocked"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBA: "Communication fault mixer HC2"
-      0xBB: "Communication fault mixer HC3"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xBF: "LON module incorrect/faulty"
-      0xC1: "Communication fault connection extension EA1"
-      0xC2: "Communication fault solar control unit"
-      0xC3: "Communication fault connection extension AM1"
-      0xC4: "Communication fault connection extension OT"
-      0xC5: "Fault variable speed pump - internal pump"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 1"
-      0xC8: "Fault variable speed pump heating circuit 3"
-      0xC9: "Comm. fault KM BUS device DAP1"
-      0xCA: "Comm. fault KM BUS device DAP2"
-      0xCD: "Communication error, Vitocom 100"
-      0xCE: "Communication fault connection extension external"
-      0xCF: "Communication fault LON module"
-      0xD6: "Fault digital input 1"
-      0xD7: "Fault digital input 2"
-      0xD8: "Fault digital input 3"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDC: "Short circuit room temperature sensor HC3"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
-      0xDF: "Lead break room temperature sensor HC3"
-      0xE0: "Fault, external LON subscriber"
-      0xE1: "SCOT calibration value limit breach O"
-      0xE2: "No calibration due to inadequate flow"
-      0xE3: "Calibration fault thermal"
-      0xE4: "Fault in voltage supply 24V - burner control unit"
-      0xE5: "Fault flame amplifier - burner control unit"
-      0xE6: "The minimum air pressure for the ignition output is not achieved"
-      0xE7: "SCOT calibration value limit breach U"
-      0xE8: "SCOT ionisation signal differs"
-      0xEA: "SCOT calibration value differs from previous"
-      0xEB: "SCOT calibration not executed"
-      0xEC: "SCOT set ionisation value incorrect"
-      0xED: "SCOT system fault"
-      0xEE: "No flame built"
-      0xEF: "Flame failure in safety time"
-      0xF0: "Communication fault to burner control unit"
-      0xF1: "Flue gas temperature limiter responded"
-      0xF2: "Temperature limiter responded - excessive temperature"
-      0xF3: "Flame pretence"
-      0xF4: "no flame"
-      0xF5: "Fault air pressure switch"
-      0xF6: "Fault gas pressure switch"
-      0xF7: "Fault air pressure switch"
-      0xF8: "Fault gas valve"
-      0xF9: "Fault fan - speed not reached"
-      0xFA: "Fan: not at standstill"
-      0xFB: "Flame failure during operation"
-      0xFC: "Fault in electrical control of gas valve"
-      0xFD: "Internal fault burner control unit"
-      0xFE: "Incompatible coding card, Parameter setting coding card, Invalid data set coding card"
-      0xFF: "Fault burner control unit without own fault code"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 3 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 2*9; vcontrold getError2).
@@ -5252,111 +5148,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC2_200_11.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x20: "Short circuit flow sensor system"
-      0x28: "Lead break flow sensor system"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x40: "Short circuit, flow sensor HC2"
-      0x41: "Return temperature HC2 short circuit"
-      0x44: "Short circuit, flow sensor HC3"
-      0x45: "Return temperature HC3 short circuit"
-      0x48: "Lead break, flow sensor HC2"
-      0x49: "Return temperature HC2 lead break"
-      0x4C: "Lead break, flow sensor HC3"
-      0x4D: "Return temperature HC3 lead break"
-      0x50: "Short circuit cylinder temperature sensor / comfort sensor / primary sensor"
-      0x51: "Short circuit outlet temperature sensor"
-      0x58: "Lead break cylinder temperature sensor/comfort sensor/primary sensor"
-      0x59: "Lead break outlet temperature sensor"
-      0x90: "Solar module: Short circuit, sensor 7"
-      0x91: "Solar module: Short circuit, sensor 10"
-      0x92: "Solar control unit: Short circuit, sensor S1"
-      0x93: "Solar control unit: Short circuit, sensor S3"
-      0x94: "Solar control unit: short circuit sensor S2"
-      0x98: "Solar module: open circuit sensor 3"
-      0x99: "Solar module: open circuit sensor 4"
-      0x9A: "Solar control unit: Lead break, sensor S1"
-      0x9B: "Solar control unit: Lead break, sensor S3"
-      0x9C: "Solar control unit: lead break sensor S2"
-      0x9E: "Solar module: Delta T monitoring"
-      0x9F: "Solar control unit: general fault"
-      0xA2: "Fault low water pressure control unit"
-      0xA4: "Maximum system pressure exceeded"
-      0xA6: "Fault impressed current anode not OK"
-      0xA7: "Fault clock module programming unit"
-      0xA8: "Internal pump reports air"
-      0xA9: "Internal pump blocked"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBA: "Communication fault mixer HC2"
-      0xBB: "Communication fault mixer HC3"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xBF: "LON module incorrect/faulty"
-      0xC1: "Communication fault connection extension EA1"
-      0xC2: "Communication fault solar control unit"
-      0xC3: "Communication fault connection extension AM1"
-      0xC4: "Communication fault connection extension OT"
-      0xC5: "Fault variable speed pump - internal pump"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 1"
-      0xC8: "Fault variable speed pump heating circuit 3"
-      0xC9: "Comm. fault KM BUS device DAP1"
-      0xCA: "Comm. fault KM BUS device DAP2"
-      0xCD: "Communication error, Vitocom 100"
-      0xCE: "Communication fault connection extension external"
-      0xCF: "Communication fault LON module"
-      0xD6: "Fault digital input 1"
-      0xD7: "Fault digital input 2"
-      0xD8: "Fault digital input 3"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDC: "Short circuit room temperature sensor HC3"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
-      0xDF: "Lead break room temperature sensor HC3"
-      0xE0: "Fault, external LON subscriber"
-      0xE1: "SCOT calibration value limit breach O"
-      0xE2: "No calibration due to inadequate flow"
-      0xE3: "Calibration fault thermal"
-      0xE4: "Fault in voltage supply 24V - burner control unit"
-      0xE5: "Fault flame amplifier - burner control unit"
-      0xE6: "The minimum air pressure for the ignition output is not achieved"
-      0xE7: "SCOT calibration value limit breach U"
-      0xE8: "SCOT ionisation signal differs"
-      0xEA: "SCOT calibration value differs from previous"
-      0xEB: "SCOT calibration not executed"
-      0xEC: "SCOT set ionisation value incorrect"
-      0xED: "SCOT system fault"
-      0xEE: "No flame built"
-      0xEF: "Flame failure in safety time"
-      0xF0: "Communication fault to burner control unit"
-      0xF1: "Flue gas temperature limiter responded"
-      0xF2: "Temperature limiter responded - excessive temperature"
-      0xF3: "Flame pretence"
-      0xF4: "no flame"
-      0xF5: "Fault air pressure switch"
-      0xF6: "Fault gas pressure switch"
-      0xF7: "Fault air pressure switch"
-      0xF8: "Fault gas valve"
-      0xF9: "Fault fan - speed not reached"
-      0xFA: "Fan: not at standstill"
-      0xFB: "Flame failure during operation"
-      0xFC: "Fault in electrical control of gas valve"
-      0xFD: "Internal fault burner control unit"
-      0xFE: "Incompatible coding card, Parameter setting coding card, Invalid data set coding card"
-      0xFF: "Fault burner control unit without own fault code"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 4 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 3*9; vcontrold getError3).
@@ -5372,111 +5164,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC2_200_11.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x20: "Short circuit flow sensor system"
-      0x28: "Lead break flow sensor system"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x40: "Short circuit, flow sensor HC2"
-      0x41: "Return temperature HC2 short circuit"
-      0x44: "Short circuit, flow sensor HC3"
-      0x45: "Return temperature HC3 short circuit"
-      0x48: "Lead break, flow sensor HC2"
-      0x49: "Return temperature HC2 lead break"
-      0x4C: "Lead break, flow sensor HC3"
-      0x4D: "Return temperature HC3 lead break"
-      0x50: "Short circuit cylinder temperature sensor / comfort sensor / primary sensor"
-      0x51: "Short circuit outlet temperature sensor"
-      0x58: "Lead break cylinder temperature sensor/comfort sensor/primary sensor"
-      0x59: "Lead break outlet temperature sensor"
-      0x90: "Solar module: Short circuit, sensor 7"
-      0x91: "Solar module: Short circuit, sensor 10"
-      0x92: "Solar control unit: Short circuit, sensor S1"
-      0x93: "Solar control unit: Short circuit, sensor S3"
-      0x94: "Solar control unit: short circuit sensor S2"
-      0x98: "Solar module: open circuit sensor 3"
-      0x99: "Solar module: open circuit sensor 4"
-      0x9A: "Solar control unit: Lead break, sensor S1"
-      0x9B: "Solar control unit: Lead break, sensor S3"
-      0x9C: "Solar control unit: lead break sensor S2"
-      0x9E: "Solar module: Delta T monitoring"
-      0x9F: "Solar control unit: general fault"
-      0xA2: "Fault low water pressure control unit"
-      0xA4: "Maximum system pressure exceeded"
-      0xA6: "Fault impressed current anode not OK"
-      0xA7: "Fault clock module programming unit"
-      0xA8: "Internal pump reports air"
-      0xA9: "Internal pump blocked"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBA: "Communication fault mixer HC2"
-      0xBB: "Communication fault mixer HC3"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xBF: "LON module incorrect/faulty"
-      0xC1: "Communication fault connection extension EA1"
-      0xC2: "Communication fault solar control unit"
-      0xC3: "Communication fault connection extension AM1"
-      0xC4: "Communication fault connection extension OT"
-      0xC5: "Fault variable speed pump - internal pump"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 1"
-      0xC8: "Fault variable speed pump heating circuit 3"
-      0xC9: "Comm. fault KM BUS device DAP1"
-      0xCA: "Comm. fault KM BUS device DAP2"
-      0xCD: "Communication error, Vitocom 100"
-      0xCE: "Communication fault connection extension external"
-      0xCF: "Communication fault LON module"
-      0xD6: "Fault digital input 1"
-      0xD7: "Fault digital input 2"
-      0xD8: "Fault digital input 3"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDC: "Short circuit room temperature sensor HC3"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
-      0xDF: "Lead break room temperature sensor HC3"
-      0xE0: "Fault, external LON subscriber"
-      0xE1: "SCOT calibration value limit breach O"
-      0xE2: "No calibration due to inadequate flow"
-      0xE3: "Calibration fault thermal"
-      0xE4: "Fault in voltage supply 24V - burner control unit"
-      0xE5: "Fault flame amplifier - burner control unit"
-      0xE6: "The minimum air pressure for the ignition output is not achieved"
-      0xE7: "SCOT calibration value limit breach U"
-      0xE8: "SCOT ionisation signal differs"
-      0xEA: "SCOT calibration value differs from previous"
-      0xEB: "SCOT calibration not executed"
-      0xEC: "SCOT set ionisation value incorrect"
-      0xED: "SCOT system fault"
-      0xEE: "No flame built"
-      0xEF: "Flame failure in safety time"
-      0xF0: "Communication fault to burner control unit"
-      0xF1: "Flue gas temperature limiter responded"
-      0xF2: "Temperature limiter responded - excessive temperature"
-      0xF3: "Flame pretence"
-      0xF4: "no flame"
-      0xF5: "Fault air pressure switch"
-      0xF6: "Fault gas pressure switch"
-      0xF7: "Fault air pressure switch"
-      0xF8: "Fault gas valve"
-      0xF9: "Fault fan - speed not reached"
-      0xFA: "Fan: not at standstill"
-      0xFB: "Flame failure during operation"
-      0xFC: "Fault in electrical control of gas valve"
-      0xFD: "Internal fault burner control unit"
-      0xFE: "Incompatible coding card, Parameter setting coding card, Invalid data set coding card"
-      0xFF: "Fault burner control unit without own fault code"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 5 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 4*9; vcontrold getError4).
@@ -5492,111 +5180,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC2_200_11.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x20: "Short circuit flow sensor system"
-      0x28: "Lead break flow sensor system"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x40: "Short circuit, flow sensor HC2"
-      0x41: "Return temperature HC2 short circuit"
-      0x44: "Short circuit, flow sensor HC3"
-      0x45: "Return temperature HC3 short circuit"
-      0x48: "Lead break, flow sensor HC2"
-      0x49: "Return temperature HC2 lead break"
-      0x4C: "Lead break, flow sensor HC3"
-      0x4D: "Return temperature HC3 lead break"
-      0x50: "Short circuit cylinder temperature sensor / comfort sensor / primary sensor"
-      0x51: "Short circuit outlet temperature sensor"
-      0x58: "Lead break cylinder temperature sensor/comfort sensor/primary sensor"
-      0x59: "Lead break outlet temperature sensor"
-      0x90: "Solar module: Short circuit, sensor 7"
-      0x91: "Solar module: Short circuit, sensor 10"
-      0x92: "Solar control unit: Short circuit, sensor S1"
-      0x93: "Solar control unit: Short circuit, sensor S3"
-      0x94: "Solar control unit: short circuit sensor S2"
-      0x98: "Solar module: open circuit sensor 3"
-      0x99: "Solar module: open circuit sensor 4"
-      0x9A: "Solar control unit: Lead break, sensor S1"
-      0x9B: "Solar control unit: Lead break, sensor S3"
-      0x9C: "Solar control unit: lead break sensor S2"
-      0x9E: "Solar module: Delta T monitoring"
-      0x9F: "Solar control unit: general fault"
-      0xA2: "Fault low water pressure control unit"
-      0xA4: "Maximum system pressure exceeded"
-      0xA6: "Fault impressed current anode not OK"
-      0xA7: "Fault clock module programming unit"
-      0xA8: "Internal pump reports air"
-      0xA9: "Internal pump blocked"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBA: "Communication fault mixer HC2"
-      0xBB: "Communication fault mixer HC3"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xBF: "LON module incorrect/faulty"
-      0xC1: "Communication fault connection extension EA1"
-      0xC2: "Communication fault solar control unit"
-      0xC3: "Communication fault connection extension AM1"
-      0xC4: "Communication fault connection extension OT"
-      0xC5: "Fault variable speed pump - internal pump"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 1"
-      0xC8: "Fault variable speed pump heating circuit 3"
-      0xC9: "Comm. fault KM BUS device DAP1"
-      0xCA: "Comm. fault KM BUS device DAP2"
-      0xCD: "Communication error, Vitocom 100"
-      0xCE: "Communication fault connection extension external"
-      0xCF: "Communication fault LON module"
-      0xD6: "Fault digital input 1"
-      0xD7: "Fault digital input 2"
-      0xD8: "Fault digital input 3"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDC: "Short circuit room temperature sensor HC3"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
-      0xDF: "Lead break room temperature sensor HC3"
-      0xE0: "Fault, external LON subscriber"
-      0xE1: "SCOT calibration value limit breach O"
-      0xE2: "No calibration due to inadequate flow"
-      0xE3: "Calibration fault thermal"
-      0xE4: "Fault in voltage supply 24V - burner control unit"
-      0xE5: "Fault flame amplifier - burner control unit"
-      0xE6: "The minimum air pressure for the ignition output is not achieved"
-      0xE7: "SCOT calibration value limit breach U"
-      0xE8: "SCOT ionisation signal differs"
-      0xEA: "SCOT calibration value differs from previous"
-      0xEB: "SCOT calibration not executed"
-      0xEC: "SCOT set ionisation value incorrect"
-      0xED: "SCOT system fault"
-      0xEE: "No flame built"
-      0xEF: "Flame failure in safety time"
-      0xF0: "Communication fault to burner control unit"
-      0xF1: "Flue gas temperature limiter responded"
-      0xF2: "Temperature limiter responded - excessive temperature"
-      0xF3: "Flame pretence"
-      0xF4: "no flame"
-      0xF5: "Fault air pressure switch"
-      0xF6: "Fault gas pressure switch"
-      0xF7: "Fault air pressure switch"
-      0xF8: "Fault gas valve"
-      0xF9: "Fault fan - speed not reached"
-      0xFA: "Fan: not at standstill"
-      0xFB: "Flame failure during operation"
-      0xFC: "Fault in electrical control of gas valve"
-      0xFD: "Internal fault burner control unit"
-      0xFE: "Incompatible coding card, Parameter setting coding card, Invalid data set coding card"
-      0xFF: "Fault burner control unit without own fault code"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 6 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 5*9; vcontrold getError5).
@@ -5612,111 +5196,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC2_200_11.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x20: "Short circuit flow sensor system"
-      0x28: "Lead break flow sensor system"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x40: "Short circuit, flow sensor HC2"
-      0x41: "Return temperature HC2 short circuit"
-      0x44: "Short circuit, flow sensor HC3"
-      0x45: "Return temperature HC3 short circuit"
-      0x48: "Lead break, flow sensor HC2"
-      0x49: "Return temperature HC2 lead break"
-      0x4C: "Lead break, flow sensor HC3"
-      0x4D: "Return temperature HC3 lead break"
-      0x50: "Short circuit cylinder temperature sensor / comfort sensor / primary sensor"
-      0x51: "Short circuit outlet temperature sensor"
-      0x58: "Lead break cylinder temperature sensor/comfort sensor/primary sensor"
-      0x59: "Lead break outlet temperature sensor"
-      0x90: "Solar module: Short circuit, sensor 7"
-      0x91: "Solar module: Short circuit, sensor 10"
-      0x92: "Solar control unit: Short circuit, sensor S1"
-      0x93: "Solar control unit: Short circuit, sensor S3"
-      0x94: "Solar control unit: short circuit sensor S2"
-      0x98: "Solar module: open circuit sensor 3"
-      0x99: "Solar module: open circuit sensor 4"
-      0x9A: "Solar control unit: Lead break, sensor S1"
-      0x9B: "Solar control unit: Lead break, sensor S3"
-      0x9C: "Solar control unit: lead break sensor S2"
-      0x9E: "Solar module: Delta T monitoring"
-      0x9F: "Solar control unit: general fault"
-      0xA2: "Fault low water pressure control unit"
-      0xA4: "Maximum system pressure exceeded"
-      0xA6: "Fault impressed current anode not OK"
-      0xA7: "Fault clock module programming unit"
-      0xA8: "Internal pump reports air"
-      0xA9: "Internal pump blocked"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBA: "Communication fault mixer HC2"
-      0xBB: "Communication fault mixer HC3"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xBF: "LON module incorrect/faulty"
-      0xC1: "Communication fault connection extension EA1"
-      0xC2: "Communication fault solar control unit"
-      0xC3: "Communication fault connection extension AM1"
-      0xC4: "Communication fault connection extension OT"
-      0xC5: "Fault variable speed pump - internal pump"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 1"
-      0xC8: "Fault variable speed pump heating circuit 3"
-      0xC9: "Comm. fault KM BUS device DAP1"
-      0xCA: "Comm. fault KM BUS device DAP2"
-      0xCD: "Communication error, Vitocom 100"
-      0xCE: "Communication fault connection extension external"
-      0xCF: "Communication fault LON module"
-      0xD6: "Fault digital input 1"
-      0xD7: "Fault digital input 2"
-      0xD8: "Fault digital input 3"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDC: "Short circuit room temperature sensor HC3"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
-      0xDF: "Lead break room temperature sensor HC3"
-      0xE0: "Fault, external LON subscriber"
-      0xE1: "SCOT calibration value limit breach O"
-      0xE2: "No calibration due to inadequate flow"
-      0xE3: "Calibration fault thermal"
-      0xE4: "Fault in voltage supply 24V - burner control unit"
-      0xE5: "Fault flame amplifier - burner control unit"
-      0xE6: "The minimum air pressure for the ignition output is not achieved"
-      0xE7: "SCOT calibration value limit breach U"
-      0xE8: "SCOT ionisation signal differs"
-      0xEA: "SCOT calibration value differs from previous"
-      0xEB: "SCOT calibration not executed"
-      0xEC: "SCOT set ionisation value incorrect"
-      0xED: "SCOT system fault"
-      0xEE: "No flame built"
-      0xEF: "Flame failure in safety time"
-      0xF0: "Communication fault to burner control unit"
-      0xF1: "Flue gas temperature limiter responded"
-      0xF2: "Temperature limiter responded - excessive temperature"
-      0xF3: "Flame pretence"
-      0xF4: "no flame"
-      0xF5: "Fault air pressure switch"
-      0xF6: "Fault gas pressure switch"
-      0xF7: "Fault air pressure switch"
-      0xF8: "Fault gas valve"
-      0xF9: "Fault fan - speed not reached"
-      0xFA: "Fan: not at standstill"
-      0xFB: "Flame failure during operation"
-      0xFC: "Fault in electrical control of gas valve"
-      0xFD: "Internal fault burner control unit"
-      0xFE: "Incompatible coding card, Parameter setting coding card, Invalid data set coding card"
-      0xFF: "Fault burner control unit without own fault code"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 7 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 6*9; vcontrold getError6).
@@ -5732,111 +5212,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC2_200_11.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x20: "Short circuit flow sensor system"
-      0x28: "Lead break flow sensor system"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x40: "Short circuit, flow sensor HC2"
-      0x41: "Return temperature HC2 short circuit"
-      0x44: "Short circuit, flow sensor HC3"
-      0x45: "Return temperature HC3 short circuit"
-      0x48: "Lead break, flow sensor HC2"
-      0x49: "Return temperature HC2 lead break"
-      0x4C: "Lead break, flow sensor HC3"
-      0x4D: "Return temperature HC3 lead break"
-      0x50: "Short circuit cylinder temperature sensor / comfort sensor / primary sensor"
-      0x51: "Short circuit outlet temperature sensor"
-      0x58: "Lead break cylinder temperature sensor/comfort sensor/primary sensor"
-      0x59: "Lead break outlet temperature sensor"
-      0x90: "Solar module: Short circuit, sensor 7"
-      0x91: "Solar module: Short circuit, sensor 10"
-      0x92: "Solar control unit: Short circuit, sensor S1"
-      0x93: "Solar control unit: Short circuit, sensor S3"
-      0x94: "Solar control unit: short circuit sensor S2"
-      0x98: "Solar module: open circuit sensor 3"
-      0x99: "Solar module: open circuit sensor 4"
-      0x9A: "Solar control unit: Lead break, sensor S1"
-      0x9B: "Solar control unit: Lead break, sensor S3"
-      0x9C: "Solar control unit: lead break sensor S2"
-      0x9E: "Solar module: Delta T monitoring"
-      0x9F: "Solar control unit: general fault"
-      0xA2: "Fault low water pressure control unit"
-      0xA4: "Maximum system pressure exceeded"
-      0xA6: "Fault impressed current anode not OK"
-      0xA7: "Fault clock module programming unit"
-      0xA8: "Internal pump reports air"
-      0xA9: "Internal pump blocked"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBA: "Communication fault mixer HC2"
-      0xBB: "Communication fault mixer HC3"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xBF: "LON module incorrect/faulty"
-      0xC1: "Communication fault connection extension EA1"
-      0xC2: "Communication fault solar control unit"
-      0xC3: "Communication fault connection extension AM1"
-      0xC4: "Communication fault connection extension OT"
-      0xC5: "Fault variable speed pump - internal pump"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 1"
-      0xC8: "Fault variable speed pump heating circuit 3"
-      0xC9: "Comm. fault KM BUS device DAP1"
-      0xCA: "Comm. fault KM BUS device DAP2"
-      0xCD: "Communication error, Vitocom 100"
-      0xCE: "Communication fault connection extension external"
-      0xCF: "Communication fault LON module"
-      0xD6: "Fault digital input 1"
-      0xD7: "Fault digital input 2"
-      0xD8: "Fault digital input 3"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDC: "Short circuit room temperature sensor HC3"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
-      0xDF: "Lead break room temperature sensor HC3"
-      0xE0: "Fault, external LON subscriber"
-      0xE1: "SCOT calibration value limit breach O"
-      0xE2: "No calibration due to inadequate flow"
-      0xE3: "Calibration fault thermal"
-      0xE4: "Fault in voltage supply 24V - burner control unit"
-      0xE5: "Fault flame amplifier - burner control unit"
-      0xE6: "The minimum air pressure for the ignition output is not achieved"
-      0xE7: "SCOT calibration value limit breach U"
-      0xE8: "SCOT ionisation signal differs"
-      0xEA: "SCOT calibration value differs from previous"
-      0xEB: "SCOT calibration not executed"
-      0xEC: "SCOT set ionisation value incorrect"
-      0xED: "SCOT system fault"
-      0xEE: "No flame built"
-      0xEF: "Flame failure in safety time"
-      0xF0: "Communication fault to burner control unit"
-      0xF1: "Flue gas temperature limiter responded"
-      0xF2: "Temperature limiter responded - excessive temperature"
-      0xF3: "Flame pretence"
-      0xF4: "no flame"
-      0xF5: "Fault air pressure switch"
-      0xF6: "Fault gas pressure switch"
-      0xF7: "Fault air pressure switch"
-      0xF8: "Fault gas valve"
-      0xF9: "Fault fan - speed not reached"
-      0xFA: "Fan: not at standstill"
-      0xFB: "Flame failure during operation"
-      0xFC: "Fault in electrical control of gas valve"
-      0xFD: "Internal fault burner control unit"
-      0xFE: "Incompatible coding card, Parameter setting coding card, Invalid data set coding card"
-      0xFF: "Fault burner control unit without own fault code"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 8 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 7*9; vcontrold getError7).
@@ -5852,111 +5228,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC2_200_11.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x20: "Short circuit flow sensor system"
-      0x28: "Lead break flow sensor system"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x40: "Short circuit, flow sensor HC2"
-      0x41: "Return temperature HC2 short circuit"
-      0x44: "Short circuit, flow sensor HC3"
-      0x45: "Return temperature HC3 short circuit"
-      0x48: "Lead break, flow sensor HC2"
-      0x49: "Return temperature HC2 lead break"
-      0x4C: "Lead break, flow sensor HC3"
-      0x4D: "Return temperature HC3 lead break"
-      0x50: "Short circuit cylinder temperature sensor / comfort sensor / primary sensor"
-      0x51: "Short circuit outlet temperature sensor"
-      0x58: "Lead break cylinder temperature sensor/comfort sensor/primary sensor"
-      0x59: "Lead break outlet temperature sensor"
-      0x90: "Solar module: Short circuit, sensor 7"
-      0x91: "Solar module: Short circuit, sensor 10"
-      0x92: "Solar control unit: Short circuit, sensor S1"
-      0x93: "Solar control unit: Short circuit, sensor S3"
-      0x94: "Solar control unit: short circuit sensor S2"
-      0x98: "Solar module: open circuit sensor 3"
-      0x99: "Solar module: open circuit sensor 4"
-      0x9A: "Solar control unit: Lead break, sensor S1"
-      0x9B: "Solar control unit: Lead break, sensor S3"
-      0x9C: "Solar control unit: lead break sensor S2"
-      0x9E: "Solar module: Delta T monitoring"
-      0x9F: "Solar control unit: general fault"
-      0xA2: "Fault low water pressure control unit"
-      0xA4: "Maximum system pressure exceeded"
-      0xA6: "Fault impressed current anode not OK"
-      0xA7: "Fault clock module programming unit"
-      0xA8: "Internal pump reports air"
-      0xA9: "Internal pump blocked"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBA: "Communication fault mixer HC2"
-      0xBB: "Communication fault mixer HC3"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xBF: "LON module incorrect/faulty"
-      0xC1: "Communication fault connection extension EA1"
-      0xC2: "Communication fault solar control unit"
-      0xC3: "Communication fault connection extension AM1"
-      0xC4: "Communication fault connection extension OT"
-      0xC5: "Fault variable speed pump - internal pump"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 1"
-      0xC8: "Fault variable speed pump heating circuit 3"
-      0xC9: "Comm. fault KM BUS device DAP1"
-      0xCA: "Comm. fault KM BUS device DAP2"
-      0xCD: "Communication error, Vitocom 100"
-      0xCE: "Communication fault connection extension external"
-      0xCF: "Communication fault LON module"
-      0xD6: "Fault digital input 1"
-      0xD7: "Fault digital input 2"
-      0xD8: "Fault digital input 3"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDC: "Short circuit room temperature sensor HC3"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
-      0xDF: "Lead break room temperature sensor HC3"
-      0xE0: "Fault, external LON subscriber"
-      0xE1: "SCOT calibration value limit breach O"
-      0xE2: "No calibration due to inadequate flow"
-      0xE3: "Calibration fault thermal"
-      0xE4: "Fault in voltage supply 24V - burner control unit"
-      0xE5: "Fault flame amplifier - burner control unit"
-      0xE6: "The minimum air pressure for the ignition output is not achieved"
-      0xE7: "SCOT calibration value limit breach U"
-      0xE8: "SCOT ionisation signal differs"
-      0xEA: "SCOT calibration value differs from previous"
-      0xEB: "SCOT calibration not executed"
-      0xEC: "SCOT set ionisation value incorrect"
-      0xED: "SCOT system fault"
-      0xEE: "No flame built"
-      0xEF: "Flame failure in safety time"
-      0xF0: "Communication fault to burner control unit"
-      0xF1: "Flue gas temperature limiter responded"
-      0xF2: "Temperature limiter responded - excessive temperature"
-      0xF3: "Flame pretence"
-      0xF4: "no flame"
-      0xF5: "Fault air pressure switch"
-      0xF6: "Fault gas pressure switch"
-      0xF7: "Fault air pressure switch"
-      0xF8: "Fault gas valve"
-      0xF9: "Fault fan - speed not reached"
-      0xFA: "Fan: not at standstill"
-      0xFB: "Flame failure during operation"
-      0xFC: "Fault in electrical control of gas valve"
-      0xFD: "Internal fault burner control unit"
-      0xFE: "Incompatible coding card, Parameter setting coding card, Invalid data set coding card"
-      0xFF: "Fault burner control unit without own fault code"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 9 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 8*9; vcontrold getError8).
@@ -5972,111 +5244,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC2_200_11.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x20: "Short circuit flow sensor system"
-      0x28: "Lead break flow sensor system"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x40: "Short circuit, flow sensor HC2"
-      0x41: "Return temperature HC2 short circuit"
-      0x44: "Short circuit, flow sensor HC3"
-      0x45: "Return temperature HC3 short circuit"
-      0x48: "Lead break, flow sensor HC2"
-      0x49: "Return temperature HC2 lead break"
-      0x4C: "Lead break, flow sensor HC3"
-      0x4D: "Return temperature HC3 lead break"
-      0x50: "Short circuit cylinder temperature sensor / comfort sensor / primary sensor"
-      0x51: "Short circuit outlet temperature sensor"
-      0x58: "Lead break cylinder temperature sensor/comfort sensor/primary sensor"
-      0x59: "Lead break outlet temperature sensor"
-      0x90: "Solar module: Short circuit, sensor 7"
-      0x91: "Solar module: Short circuit, sensor 10"
-      0x92: "Solar control unit: Short circuit, sensor S1"
-      0x93: "Solar control unit: Short circuit, sensor S3"
-      0x94: "Solar control unit: short circuit sensor S2"
-      0x98: "Solar module: open circuit sensor 3"
-      0x99: "Solar module: open circuit sensor 4"
-      0x9A: "Solar control unit: Lead break, sensor S1"
-      0x9B: "Solar control unit: Lead break, sensor S3"
-      0x9C: "Solar control unit: lead break sensor S2"
-      0x9E: "Solar module: Delta T monitoring"
-      0x9F: "Solar control unit: general fault"
-      0xA2: "Fault low water pressure control unit"
-      0xA4: "Maximum system pressure exceeded"
-      0xA6: "Fault impressed current anode not OK"
-      0xA7: "Fault clock module programming unit"
-      0xA8: "Internal pump reports air"
-      0xA9: "Internal pump blocked"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBA: "Communication fault mixer HC2"
-      0xBB: "Communication fault mixer HC3"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xBF: "LON module incorrect/faulty"
-      0xC1: "Communication fault connection extension EA1"
-      0xC2: "Communication fault solar control unit"
-      0xC3: "Communication fault connection extension AM1"
-      0xC4: "Communication fault connection extension OT"
-      0xC5: "Fault variable speed pump - internal pump"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 1"
-      0xC8: "Fault variable speed pump heating circuit 3"
-      0xC9: "Comm. fault KM BUS device DAP1"
-      0xCA: "Comm. fault KM BUS device DAP2"
-      0xCD: "Communication error, Vitocom 100"
-      0xCE: "Communication fault connection extension external"
-      0xCF: "Communication fault LON module"
-      0xD6: "Fault digital input 1"
-      0xD7: "Fault digital input 2"
-      0xD8: "Fault digital input 3"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDC: "Short circuit room temperature sensor HC3"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
-      0xDF: "Lead break room temperature sensor HC3"
-      0xE0: "Fault, external LON subscriber"
-      0xE1: "SCOT calibration value limit breach O"
-      0xE2: "No calibration due to inadequate flow"
-      0xE3: "Calibration fault thermal"
-      0xE4: "Fault in voltage supply 24V - burner control unit"
-      0xE5: "Fault flame amplifier - burner control unit"
-      0xE6: "The minimum air pressure for the ignition output is not achieved"
-      0xE7: "SCOT calibration value limit breach U"
-      0xE8: "SCOT ionisation signal differs"
-      0xEA: "SCOT calibration value differs from previous"
-      0xEB: "SCOT calibration not executed"
-      0xEC: "SCOT set ionisation value incorrect"
-      0xED: "SCOT system fault"
-      0xEE: "No flame built"
-      0xEF: "Flame failure in safety time"
-      0xF0: "Communication fault to burner control unit"
-      0xF1: "Flue gas temperature limiter responded"
-      0xF2: "Temperature limiter responded - excessive temperature"
-      0xF3: "Flame pretence"
-      0xF4: "no flame"
-      0xF5: "Fault air pressure switch"
-      0xF6: "Fault gas pressure switch"
-      0xF7: "Fault air pressure switch"
-      0xF8: "Fault gas valve"
-      0xF9: "Fault fan - speed not reached"
-      0xFA: "Fan: not at standstill"
-      0xFB: "Flame failure during operation"
-      0xFC: "Fault in electrical control of gas valve"
-      0xFD: "Internal fault burner control unit"
-      0xFE: "Incompatible coding card, Parameter setting coding card, Invalid data set coding card"
-      0xFF: "Fault burner control unit without own fault code"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 10 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 9*9; vcontrold getError9).
@@ -6092,111 +5260,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VScotHC2_200_11.*)
-    codes:
-      0x00: "No faults in the system"
-      0x0F: "Service required"
-      0x10: "Short circuit outside temperature sensor"
-      0x18: "Lead break outside temperature sensor"
-      0x20: "Short circuit flow sensor system"
-      0x28: "Lead break flow sensor system"
-      0x30: "Short circuit boiler water temperature sensor"
-      0x38: "Lead break boiler water temperature sensor"
-      0x40: "Short circuit, flow sensor HC2"
-      0x41: "Return temperature HC2 short circuit"
-      0x44: "Short circuit, flow sensor HC3"
-      0x45: "Return temperature HC3 short circuit"
-      0x48: "Lead break, flow sensor HC2"
-      0x49: "Return temperature HC2 lead break"
-      0x4C: "Lead break, flow sensor HC3"
-      0x4D: "Return temperature HC3 lead break"
-      0x50: "Short circuit cylinder temperature sensor / comfort sensor / primary sensor"
-      0x51: "Short circuit outlet temperature sensor"
-      0x58: "Lead break cylinder temperature sensor/comfort sensor/primary sensor"
-      0x59: "Lead break outlet temperature sensor"
-      0x90: "Solar module: Short circuit, sensor 7"
-      0x91: "Solar module: Short circuit, sensor 10"
-      0x92: "Solar control unit: Short circuit, sensor S1"
-      0x93: "Solar control unit: Short circuit, sensor S3"
-      0x94: "Solar control unit: short circuit sensor S2"
-      0x98: "Solar module: open circuit sensor 3"
-      0x99: "Solar module: open circuit sensor 4"
-      0x9A: "Solar control unit: Lead break, sensor S1"
-      0x9B: "Solar control unit: Lead break, sensor S3"
-      0x9C: "Solar control unit: lead break sensor S2"
-      0x9E: "Solar module: Delta T monitoring"
-      0x9F: "Solar control unit: general fault"
-      0xA2: "Fault low water pressure control unit"
-      0xA4: "Maximum system pressure exceeded"
-      0xA6: "Fault impressed current anode not OK"
-      0xA7: "Fault clock module programming unit"
-      0xA8: "Internal pump reports air"
-      0xA9: "Internal pump blocked"
-      0xB0: "Short circuit flue gas temperature sensor"
-      0xB1: "Fault programming unit"
-      0xB4: "Internal fault temperature capture"
-      0xB5: "Internal fault, EEPROM"
-      0xB7: "Boiler coding card incorrect/faulty"
-      0xB8: "Lead break flue gas temperature sensor"
-      0xB9: "Faulty transfer of coding card data"
-      0xBA: "Communication fault mixer HC2"
-      0xBB: "Communication fault mixer HC3"
-      0xBC: "Fault remote control HC1"
-      0xBD: "Fault remote control HC2"
-      0xBE: "Fault remote control HC3"
-      0xBF: "LON module incorrect/faulty"
-      0xC1: "Communication fault connection extension EA1"
-      0xC2: "Communication fault solar control unit"
-      0xC3: "Communication fault connection extension AM1"
-      0xC4: "Communication fault connection extension OT"
-      0xC5: "Fault variable speed pump - internal pump"
-      0xC6: "Fault variable speed pump heating circuit 2"
-      0xC7: "Fault variable speed pump heating circuit 1"
-      0xC8: "Fault variable speed pump heating circuit 3"
-      0xC9: "Comm. fault KM BUS device DAP1"
-      0xCA: "Comm. fault KM BUS device DAP2"
-      0xCD: "Communication error, Vitocom 100"
-      0xCE: "Communication fault connection extension external"
-      0xCF: "Communication fault LON module"
-      0xD6: "Fault digital input 1"
-      0xD7: "Fault digital input 2"
-      0xD8: "Fault digital input 3"
-      0xDA: "Short circuit room temperature sensor HC1"
-      0xDB: "Short circuit room temperature sensor HC2"
-      0xDC: "Short circuit room temperature sensor HC3"
-      0xDD: "Lead break room temperature sensor HC1"
-      0xDE: "Lead break room temperature sensor HC2"
-      0xDF: "Lead break room temperature sensor HC3"
-      0xE0: "Fault, external LON subscriber"
-      0xE1: "SCOT calibration value limit breach O"
-      0xE2: "No calibration due to inadequate flow"
-      0xE3: "Calibration fault thermal"
-      0xE4: "Fault in voltage supply 24V - burner control unit"
-      0xE5: "Fault flame amplifier - burner control unit"
-      0xE6: "The minimum air pressure for the ignition output is not achieved"
-      0xE7: "SCOT calibration value limit breach U"
-      0xE8: "SCOT ionisation signal differs"
-      0xEA: "SCOT calibration value differs from previous"
-      0xEB: "SCOT calibration not executed"
-      0xEC: "SCOT set ionisation value incorrect"
-      0xED: "SCOT system fault"
-      0xEE: "No flame built"
-      0xEF: "Flame failure in safety time"
-      0xF0: "Communication fault to burner control unit"
-      0xF1: "Flue gas temperature limiter responded"
-      0xF2: "Temperature limiter responded - excessive temperature"
-      0xF3: "Flame pretence"
-      0xF4: "no flame"
-      0xF5: "Fault air pressure switch"
-      0xF6: "Fault gas pressure switch"
-      0xF7: "Fault air pressure switch"
-      0xF8: "Fault gas valve"
-      0xF9: "Fault fan - speed not reached"
-      0xFA: "Fan: not at standstill"
-      0xFB: "Flame failure during operation"
-      0xFC: "Fault in electrical control of gas valve"
-      0xFD: "Internal fault burner control unit"
-      0xFE: "Incompatible coding card, Parameter setting coding card, Invalid data set coding card"
-      0xFF: "Fault burner control unit without own fault code"
+    codes: *letzter_fehler_codes  # same map as above
 
   # --- (ohne Gruppenzuordnung) ---
   - platform: vitohome

@@ -3012,7 +3012,7 @@ text_sensor:
     entity_category: diagnostic
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V050HK1M.*)
-    codes:
+    codes: &letzter_fehler_codes
       0x00: "Anlage ohne Fehler"
       0x10: "Kurzschluss Außentemperatursensor"
       0x18: "Unterbrechung Außentemperatursensor"
@@ -3060,39 +3060,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V050HK1M.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor HK1 o. Anlage"
-      0x28: "Unterbrechung Vorlaufsensor HK1 o. Anlage"
-      0x70: "Kurzschluss Temperatursensor 17B"
-      0x78: "Unterbrechung Temperatursensor 17B"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Störmeldemodul"
-      0xCF: "Kommunikationsfehler LON-Modul/HV-Modul"
-      0xD6: "Steckadapter: Externe Störung 1"
-      0xD7: "Steckadapter: Externe Störung 2"
-      0xD8: "Steckadapter: Externe Störung 3"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDC: "Kurzschluss Raumtemperatursensor HK3"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE5: "Fehler externer Teilnehmer HV"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 3 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 2*9; vcontrold getError2).
@@ -3108,39 +3076,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V050HK1M.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor HK1 o. Anlage"
-      0x28: "Unterbrechung Vorlaufsensor HK1 o. Anlage"
-      0x70: "Kurzschluss Temperatursensor 17B"
-      0x78: "Unterbrechung Temperatursensor 17B"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Störmeldemodul"
-      0xCF: "Kommunikationsfehler LON-Modul/HV-Modul"
-      0xD6: "Steckadapter: Externe Störung 1"
-      0xD7: "Steckadapter: Externe Störung 2"
-      0xD8: "Steckadapter: Externe Störung 3"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDC: "Kurzschluss Raumtemperatursensor HK3"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE5: "Fehler externer Teilnehmer HV"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 4 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 3*9; vcontrold getError3).
@@ -3156,39 +3092,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V050HK1M.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor HK1 o. Anlage"
-      0x28: "Unterbrechung Vorlaufsensor HK1 o. Anlage"
-      0x70: "Kurzschluss Temperatursensor 17B"
-      0x78: "Unterbrechung Temperatursensor 17B"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Störmeldemodul"
-      0xCF: "Kommunikationsfehler LON-Modul/HV-Modul"
-      0xD6: "Steckadapter: Externe Störung 1"
-      0xD7: "Steckadapter: Externe Störung 2"
-      0xD8: "Steckadapter: Externe Störung 3"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDC: "Kurzschluss Raumtemperatursensor HK3"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE5: "Fehler externer Teilnehmer HV"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 5 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 4*9; vcontrold getError4).
@@ -3204,39 +3108,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V050HK1M.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor HK1 o. Anlage"
-      0x28: "Unterbrechung Vorlaufsensor HK1 o. Anlage"
-      0x70: "Kurzschluss Temperatursensor 17B"
-      0x78: "Unterbrechung Temperatursensor 17B"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Störmeldemodul"
-      0xCF: "Kommunikationsfehler LON-Modul/HV-Modul"
-      0xD6: "Steckadapter: Externe Störung 1"
-      0xD7: "Steckadapter: Externe Störung 2"
-      0xD8: "Steckadapter: Externe Störung 3"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDC: "Kurzschluss Raumtemperatursensor HK3"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE5: "Fehler externer Teilnehmer HV"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 6 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 5*9; vcontrold getError5).
@@ -3252,39 +3124,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V050HK1M.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor HK1 o. Anlage"
-      0x28: "Unterbrechung Vorlaufsensor HK1 o. Anlage"
-      0x70: "Kurzschluss Temperatursensor 17B"
-      0x78: "Unterbrechung Temperatursensor 17B"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Störmeldemodul"
-      0xCF: "Kommunikationsfehler LON-Modul/HV-Modul"
-      0xD6: "Steckadapter: Externe Störung 1"
-      0xD7: "Steckadapter: Externe Störung 2"
-      0xD8: "Steckadapter: Externe Störung 3"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDC: "Kurzschluss Raumtemperatursensor HK3"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE5: "Fehler externer Teilnehmer HV"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 7 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 6*9; vcontrold getError6).
@@ -3300,39 +3140,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V050HK1M.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor HK1 o. Anlage"
-      0x28: "Unterbrechung Vorlaufsensor HK1 o. Anlage"
-      0x70: "Kurzschluss Temperatursensor 17B"
-      0x78: "Unterbrechung Temperatursensor 17B"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Störmeldemodul"
-      0xCF: "Kommunikationsfehler LON-Modul/HV-Modul"
-      0xD6: "Steckadapter: Externe Störung 1"
-      0xD7: "Steckadapter: Externe Störung 2"
-      0xD8: "Steckadapter: Externe Störung 3"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDC: "Kurzschluss Raumtemperatursensor HK3"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE5: "Fehler externer Teilnehmer HV"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 8 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 7*9; vcontrold getError7).
@@ -3348,39 +3156,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V050HK1M.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor HK1 o. Anlage"
-      0x28: "Unterbrechung Vorlaufsensor HK1 o. Anlage"
-      0x70: "Kurzschluss Temperatursensor 17B"
-      0x78: "Unterbrechung Temperatursensor 17B"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Störmeldemodul"
-      0xCF: "Kommunikationsfehler LON-Modul/HV-Modul"
-      0xD6: "Steckadapter: Externe Störung 1"
-      0xD7: "Steckadapter: Externe Störung 2"
-      0xD8: "Steckadapter: Externe Störung 3"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDC: "Kurzschluss Raumtemperatursensor HK3"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE5: "Fehler externer Teilnehmer HV"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 9 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 8*9; vcontrold getError8).
@@ -3396,39 +3172,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V050HK1M.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor HK1 o. Anlage"
-      0x28: "Unterbrechung Vorlaufsensor HK1 o. Anlage"
-      0x70: "Kurzschluss Temperatursensor 17B"
-      0x78: "Unterbrechung Temperatursensor 17B"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Störmeldemodul"
-      0xCF: "Kommunikationsfehler LON-Modul/HV-Modul"
-      0xD6: "Steckadapter: Externe Störung 1"
-      0xD7: "Steckadapter: Externe Störung 2"
-      0xD8: "Steckadapter: Externe Störung 3"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDC: "Kurzschluss Raumtemperatursensor HK3"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE5: "Fehler externer Teilnehmer HV"
+    codes: *letzter_fehler_codes  # same map as above
 
   # System fault history slot 10 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 9*9; vcontrold getError9).
@@ -3444,39 +3188,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.V050HK1M.*)
-    codes:
-      0x00: "Anlage ohne Fehler"
-      0x10: "Kurzschluss Außentemperatursensor"
-      0x18: "Unterbrechung Außentemperatursensor"
-      0x20: "Kurzschluss Vorlaufsensor HK1 o. Anlage"
-      0x28: "Unterbrechung Vorlaufsensor HK1 o. Anlage"
-      0x70: "Kurzschluss Temperatursensor 17B"
-      0x78: "Unterbrechung Temperatursensor 17B"
-      0xB1: "Fehler Bedienteil"
-      0xB4: "interner Fehler Temperaturmessung"
-      0xB5: "interner Fehler EEPROM"
-      0xB6: "Hardwarekennung ungültig"
-      0xBC: "Fehler Fernbedienung HK1"
-      0xBD: "Fehler Fernbedienung HK2"
-      0xBE: "Fehler Fernbedienung HK3"
-      0xBF: "LON-Modul falsch/fehlerhaft"
-      0xC1: "Externe Sicherheitseinrichtung"
-      0xC5: "Fehler Drehzahlgeregelte Pumpe Heizkreis 1"
-      0xC6: "Fehler Drehzahlgeregelte Pumpe Heizkreis 2"
-      0xC7: "Fehler Drehzahlgeregelte Pumpe Heizkreis 3"
-      0xCD: "Kommunikationsfehler Vitocom 100"
-      0xCE: "Kommunikationsfehler Störmeldemodul"
-      0xCF: "Kommunikationsfehler LON-Modul/HV-Modul"
-      0xD6: "Steckadapter: Externe Störung 1"
-      0xD7: "Steckadapter: Externe Störung 2"
-      0xD8: "Steckadapter: Externe Störung 3"
-      0xDA: "Kurzschluss Raumtemperatursensor HK1"
-      0xDB: "Kurzschluss Raumtemperatursensor HK2"
-      0xDC: "Kurzschluss Raumtemperatursensor HK3"
-      0xDD: "Unterbrechung Raumtemperatursensor HK1"
-      0xDE: "Unterbrechung Raumtemperatursensor HK2"
-      0xE0: "Fehler externer Teilnehmer LON"
-      0xE5: "Fehler externer Teilnehmer HV"
+    codes: *letzter_fehler_codes  # same map as above
 
   # --- (ohne Gruppenzuordnung) ---
   - platform: vitohome

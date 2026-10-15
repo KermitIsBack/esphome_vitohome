@@ -2162,7 +2162,7 @@ text_sensor:
     entity_category: diagnostic
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
+    codes: &letzter_fehler_vitotwin_codes
       0x0A: "10: Aussenfühler"
       0x14: "20: Kesselfühler 1"
       0x1E: "30: Vorlauffühler 1"
@@ -2212,41 +2212,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 3 of 10 (ecnsysEventType~VitotwinErrorHistory,
   # 120-byte block at 0x7000 + 2*12; vcontrold getError2).
@@ -2262,41 +2228,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 4 of 10 (ecnsysEventType~VitotwinErrorHistory,
   # 120-byte block at 0x7000 + 3*12; vcontrold getError3).
@@ -2312,41 +2244,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 5 of 10 (ecnsysEventType~VitotwinErrorHistory,
   # 120-byte block at 0x7000 + 4*12; vcontrold getError4).
@@ -2362,41 +2260,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 6 of 10 (ecnsysEventType~VitotwinErrorHistory,
   # 120-byte block at 0x7000 + 5*12; vcontrold getError5).
@@ -2412,41 +2276,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 7 of 10 (ecnsysEventType~VitotwinErrorHistory,
   # 120-byte block at 0x7000 + 6*12; vcontrold getError6).
@@ -2462,41 +2292,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 8 of 10 (ecnsysEventType~VitotwinErrorHistory,
   # 120-byte block at 0x7000 + 7*12; vcontrold getError7).
@@ -2512,41 +2308,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 9 of 10 (ecnsysEventType~VitotwinErrorHistory,
   # 120-byte block at 0x7000 + 8*12; vcontrold getError8).
@@ -2562,41 +2324,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 10 of 10 (ecnsysEventType~VitotwinErrorHistory,
   # 120-byte block at 0x7000 + 9*12; vcontrold getError9).
@@ -2612,41 +2340,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # --- (ohne Gruppenzuordnung) ---
   - platform: vitohome
@@ -2708,41 +2402,7 @@ text_sensor:
     entity_category: diagnostic
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 2 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 1*9; vcontrold getError1).
@@ -2758,41 +2418,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 3 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 2*9; vcontrold getError2).
@@ -2808,41 +2434,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 4 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 3*9; vcontrold getError3).
@@ -2858,41 +2450,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 5 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 4*9; vcontrold getError4).
@@ -2908,41 +2466,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 6 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 5*9; vcontrold getError5).
@@ -2958,41 +2482,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 7 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 6*9; vcontrold getError6).
@@ -3008,41 +2498,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 8 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 7*9; vcontrold getError7).
@@ -3058,41 +2514,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 9 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 8*9; vcontrold getError8).
@@ -3108,41 +2530,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
   # System fault history slot 10 of 10 (ecnsysEventType~Error,
   # 90-byte block at 0x7507 + 9*9; vcontrold getError9).
@@ -3158,41 +2546,7 @@ text_sensor:
     disabled_by_default: true
     update_interval: 300s
     # Fault-code texts: Vitosoft, for this device (viessmann.errorcode.VitotwinGW_BATI.*)
-    codes:
-      0x0A: "10: Aussenfühler"
-      0x14: "20: Kesselfühler 1"
-      0x1E: "30: Vorlauffühler 1"
-      0x20: "32: Vorlauffühler 2"
-      0x28: "40: Rücklauffühler 1"
-      0x32: "50: Trinkwasserfühler 1"
-      0x3C: "60: Raumfühler 1"
-      0x41: "65: Raumfühler 2"
-      0x44: "68: Raumfühler 3"
-      0x46: "70: Pufferspeicherfühler 1"
-      0x47: "71: Pufferspeicherfühler 2"
-      0x48: "72: Pufferspeicherfühler 3"
-      0x53: "83: BSB Kurzschluss"
-      0x54: "84: BSB Adresskollision"
-      0x55: "85: BSB Funkkommunikation"
-      0x5B: "91: Datenverlust im EEPROM"
-      0x5C: "92: Elektronikfehler im Gerät"
-      0x5F: "95: Uhrzeit ungültig"
-      0x60: "96: Kleiner SW Fehler"
-      0x61: "97: SW oder HW Fehler"
-      0x62: "98: Erweiterungsmodul 1"
-      0x63: "99: Erweiterungsmodul 2"
-      0x66: "102: Uhr Gangreserve fehlt"
-      0x69: "105: Wartungsmeldung"
-      0x79: "121: Vorlauftemperatur HK1"
-      0x7A: "122: Vorlauftemperatur HK2"
-      0x7F: "127: Legionellentemperatur"
-      0x9D: "157: Kesselvorl. Thermost."
-      0x9E: "158: Kondensat"
-      0xA4: "164: Strömungsdruckwächter Heizkreis"
-      0xBB: "187: Konfiguration Ausgang"
-      0xD9: "217: Fühler Fehler"
-      0xFD: "253: Fehlerursache nicht eindeutig"
-      0xFE: "254: Unbek Fehlercode"
+    codes: *letzter_fehler_vitotwin_codes  # same map as above
 
 # --- datapoints needing custom decode (not auto-emitted) ---
 # Zeitprogramm Heizkreis 1 @ 0x2100: NoConversion length 56 > 4 bytes -> custom decode
