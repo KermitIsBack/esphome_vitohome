@@ -191,13 +191,16 @@ def test_single_system_slot_stays_letzter_fehler():
 # length -- the wrong bytes. select/switch now emit the two-address block
 # form (state_address = block base + byte_offset; address = the field's own
 # write register); number and the read-only enum revert to the interior
-# address with the P300-may-NAK caveat.
+# address with the P300-may-NAK caveat. Since the device was shown to write its
+# whole datapoint, a writable interior field is emitted in BLOCK MODE: address =
+# block base, length = block, byte_offset = field, no state_address -- the
+# component writes a whole-block read-modify-write. Never the interior address.
 
 
-def test_interior_writable_enum_is_demoted_to_read_only():
+def test_interior_writable_enum_is_a_block_mode_select():
     # 0x7661 is exactly the address the design notes record as NAKing on P300.
-    # A writable field at BytePosition > 0 has no declared write address, so it
-    # is emitted read-only rather than pointed at an invented register.
+    # A writable field at BytePosition > 0 has no declared write address: it is
+    # written as the whole block at the base, never at an invented register.
     ev = _event(
         address=0x7660,
         block_length=2,
@@ -207,16 +210,31 @@ def test_interior_writable_enum_is_demoted_to_read_only():
     )
     platform, lines = gc.emit_entity(ev, "full")
     body = "\n".join(lines)
-    assert platform == "text_sensor"  # read-only enum
+    assert platform == "select"
     assert "address: 0x7660" in body  # the block base
     assert "0x7661" not in body  # never the fabricated interior address
     assert "length: 2" in body
     assert "byte_offset: 1" in body
     assert "state_address" not in body
+    assert "read-modify-write of the whole 2-byte block" in body
+
+
+def test_interior_writable_enum_with_a_read_only_sibling_is_demoted():
+    ev = _event(
+        address=0x7660,
+        block_length=2,
+        byte_length=1,
+        byte_position=1,
+        values=[_enum_value(0x00, "Aus"), _enum_value(0x02, "Heizen")],
+    )
+    platform, lines = gc.emit_entity(ev, "full", ro_blocks=frozenset({(0x7660, "")}))
+    body = "\n".join(lines)
+    assert platform == "text_sensor"
+    assert "0x7661" not in body
     assert "demoted to read-only" in body
 
 
-def test_interior_boolean_pair_is_demoted_to_binary_sensor():
+def test_interior_boolean_pair_is_a_block_mode_switch():
     ev = _event(
         address=0x7660,
         block_length=4,
@@ -226,9 +244,10 @@ def test_interior_boolean_pair_is_demoted_to_binary_sensor():
     )
     platform, lines = gc.emit_entity(ev, "full")
     body = "\n".join(lines)
-    assert platform == "text_sensor"  # read-only enum, not a writable switch
+    assert platform == "switch"
     assert "address: 0x7660" in body
     assert "0x7662" not in body
+    assert "state_address" not in body
     assert "length: 4" in body
     assert "byte_offset: 2" in body
 
@@ -243,7 +262,7 @@ def test_interior_multibyte_enum_field_emits_byte_length():
     )
     platform, lines = gc.emit_entity(ev, "full")
     body = "\n".join(lines)
-    assert platform == "text_sensor"  # demoted: no declared write address
+    assert platform == "select"  # block mode
     assert "address: 0x7660" in body
     assert "0x7664" not in body
     assert "length: 6" in body
@@ -289,11 +308,10 @@ def test_command_state_mapping_at_nonzero_offset_is_still_demoted():
     assert f"0x{addr + 1:04X}" not in body
 
 
-def test_interior_writable_number_is_demoted_to_sensor():
+def test_interior_writable_number_is_a_block_mode_number():
     # The pump-speed shape (Neptun * Drehzahl): a writable 1-byte numeric at
-    # byte 1 of a 2-byte block. The read is an aligned block at the base; the
-    # write target 0x7952 is not a declared address for this datapoint, so the
-    # entity is emitted read-only.
+    # byte 1 of a 2-byte block. 0x7952 is not a declared address for this
+    # datapoint, so the field is written as the whole block at 0x7951.
     ev = _event(
         address=0x7951,
         block_length=2,
@@ -304,7 +322,7 @@ def test_interior_writable_number_is_demoted_to_sensor():
     )
     platform, lines = gc.emit_entity(ev, "full")
     body = "\n".join(lines)
-    assert platform == "sensor"
+    assert platform == "number"
     assert "address: 0x7951" in body
     assert "0x7952" not in body
     assert "length: 2" in body
@@ -324,7 +342,7 @@ def test_interior_multibyte_number_field_emits_byte_length():
     )
     platform, lines = gc.emit_entity(ev, "full")
     body = "\n".join(lines)
-    assert platform == "sensor"  # demoted: no declared write address
+    assert platform == "number"  # block mode
     assert "address: 0x1189" in body
     assert "0x118D" not in body
     assert "length: 6" in body

@@ -751,12 +751,11 @@ time, so the newest value goes out; the queued item then runs one redundant
 RMW. The `write_queued_` / `write_in_flight_` split (§5) is untouched.
 
 **Which shapes may be written.** The read and the write must be the same
-one-byte register: no `state_address`, no `byte_offset` (validated). The
-generator emits a writable bit field only when the field is byte 0 of a 1-byte
-datapoint -- every GWG bit field. A field in byte 0 of a wider block (the seven
-`Neptun_*` outputs on VScotHO1_72, 2-byte blocks) would need a 1-byte write at
-a block base, a partial-block write with no hardware evidence, so it stays
-read-only; interior fields have no declared write address at all (§8g).
+register: no `state_address` (validated). In a 1-byte datapoint -- every GWG
+bit field -- that register is the byte. A bit field in a byte of a wider block
+(the seven `Neptun_*` outputs on VScotHO1_72, bit `0x01` of 2-byte blocks) is
+written in block mode, a read-modify-write of the whole block (below), because a
+write narrower than the block corrupts the rest of it.
 
 **Evidence for the bit order on multi-bit fields.** §8 proved MSB-first on
 single bits. For 4-bit fields the export's factory defaults (`ALZ`) give an
@@ -801,9 +800,8 @@ takes whatever follows the payload on the wire. The ACK was normal and the
 field's own byte) could not see it -- the block length lives only in the export.
 A full 2-byte write (`>>> 41:07:00:02:79:53:02:00:00:D7`) restored `00 00`, and
 the byte then stayed `00`, which also rules out the device deriving byte 1 from
-byte 0. Consequence: the generator writes only datapoints that are their whole
-block (§8g, *narrow writes*). The bit-field rule that already kept `Neptun_*`
-read-only was right for this reason.
+byte 0. Consequence: every write sends the whole datapoint. A field smaller
+than its block is written as a whole-block read-modify-write (below).
 
 **A side effect seen on the same run.** Writing `Sparbetrieb` (`0x2331`) ON
 while party mode was on cleared `0x2330`: the next read-modify-write on it read
@@ -811,7 +809,66 @@ while party mode was on cleared `0x2330`: the next read-modify-write on it read
 economy are mutually exclusive), not a merge problem -- the read-modify-write
 read the device's real state, which is exactly its job -- but HA showed the
 party switch ON for those seconds, because nothing re-reads an entity whose
-register another entity's write changed.
+register another entity's write changed. (Re-reading every entity on the
+*written block* is now done -- *Sibling refresh* below; a device-side link
+between two different registers like this one stays out of reach.)
+
+#### Whole-block read-modify-write (block mode)
+
+The bit-field mechanism, generalised from one byte to one block. A writable
+`number` / `select` / `switch` with `byte_offset` and no `state_address` is in
+block mode: `address` is the block base, `length` the block, the field
+`byte_length` bytes at `byte_offset` (optionally with a `bit_mask` inside a
+1-byte field). The entity stages only the field
+(`VitoEntityBase::staged_width()`); the hub reads `length` bytes at the base
+(`RMW_READ`), replaces the field (`decode.h::merge_block_field`, which defers
+to `merge_bit_field` for a mask), and writes the whole block back. Everything
+above carries over unchanged: nothing is dispatched between the read and the
+write, every failed or short read ends in `rmw_abort_()` with nothing written,
+the GWG `FF FF` refusal, coalescing. The read-back compares the **whole block**
+with what was written -- field bytes for the value, every other byte for "did
+not change" -- so a sibling change inside the window is visible in the log.
+
+`byte_offset: 0` is load-bearing: it is what selects block mode for a field at
+the start of a wider block (the `Neptun_*` outputs). Without it, `length: 2`
+would mean a 2-byte field.
+
+**Cap.** `MAX_RMW_BLOCK` = 16 bytes (`vitohome.h`, mirrored in `__init__.py`
+and `gen_catalog.py`): the hub's merge buffer is fixed-size, sized at compile
+time. 16 covers every writable block in the 2026 export apart from the 42-byte
+label strings (which have no write path); 155 writable sub-block fields, all
+P300.
+
+**Live data.** Writing back a block that also holds a value the *device*
+maintains (a status byte, a counter) would restore that value from the read --
+stale by the length of one write telegram, but stale. The generator therefore
+uses block mode only where **every** datapoint in the block is writable
+(`gen_catalog.py::_read_only_blocks`, `_block_write_blocker`); a block with any
+read-only datapoint (12 of the 155 fields) stays read-only with a `NOTE`. The
+component itself does not know what else lives in a block and accepts any block
+mode config.
+
+**Sibling refresh.** After the write is ACKed, the hub queues a priority read
+for every other polled entity whose read address is the same block base (and,
+under GWG, the same `access:`), so the `*_Drehzahl` byte and the `Neptun_*`
+switch on one block both show the post-write state without waiting for their
+next poll (`VitoHomeComponent::refresh_siblings_`). The writing entity gets its
+usual read-back.
+
+**Interior shape, deprecated.** `byte_offset` with `state_address` (block read
+at the base, field written to its own interior address) still validates, but
+warns at `esphome config`: the interior address is not a declared write
+address (§8g), and the write is narrower than the datapoint. Kept so existing
+configs keep building; the generator no longer emits it.
+
+**Status: host-proven, not yet on hardware.** `test_decode.cpp::test_block_field`
+is exhaustive over blocks of 1..6 bytes, every in-bounds offset and width, and
+all 36 contiguous masks (916k checks), plus the Neptun `00 05` cases; the fuzz
+target has a block-merge oracle, negative-controlled (a merge that copies the
+field to the block start instead of `offset` trips the `kDSeed_block_*`
+seeds). On hardware still to do: the Neptun output toggled with a non-zero
+Drehzahl byte (byte 1 must survive), an interior Drehzahl write (byte 0 must
+survive), and the sibling refresh.
 
 ### 5c. No state before the device has answered
 
@@ -1348,9 +1405,24 @@ whole datapoint and fills the bytes after our payload from the telegram -- the
 checksum, at least. 60 writable entities across P300 catalogs had that shape
 (Vitotwin setpoints, 2 bytes of a 3-byte block; `UhrzeitJH`, 1 byte of the
 8-byte clock block; selects on byte 0 of 2-byte blocks). Every writable field
-with `ByteLength < BlockLength` is now demoted to read-only with a `NOTE`. The
+with `ByteLength < BlockLength` was demoted to read-only with a `NOTE`. The
 weekday Schaltzeiten are the documented exception: vcontrold writes 8 bytes per
 day into the 56-byte program, and that path never reaches this rule.
+
+#### Both cases now: block mode
+
+The demotions of the two write-side cases above -- a field at
+`BytePosition > 0`, and a field narrower than its block at the base -- are
+replaced by block mode (§5b): address = the block base, `length` = the block,
+`byte_offset` = the field, written as a whole-block read-modify-write. The
+invariant holds unchanged: no address is ever computed from `BytePosition`, and
+a write always covers the whole datapoint. A field stays read-only, with the
+reason in its `NOTE`, where block mode is not safe or not possible: the block
+also holds a read-only datapoint (live data), the block exceeds
+`MAX_RMW_BLOCK`, the field is wider than 4 bytes, or it is a
+`COMMAND_STATE_ADDR` command register. `--no-partial-writes` (older spelling
+`--no-bitfield-writes`) restores the read-only behaviour for every field
+smaller than its datapoint.
 
 #### The padding is byte-oriented
 
@@ -1543,10 +1615,13 @@ elsewhere in this file as obligations rather than as tested facts:
    the invariant holding: it clears both lane flags, so a violation costs one
    skipped poll instead of stranding the entity until reboot.
 
-3. **Bit-field read-modify-write atomicity** (§5b) -- between an `RMW_READ`
-   response and the dispatch of its merged write, `dispatch_next_()` dispatches
-   nothing else (`rmw_pending_` is checked first), and every `RMW_READ`
-   completion path either arms `rmw_pending_` or ends in `rmw_abort_()`.
+3. **Read-modify-write atomicity** (§5b, bit fields and whole blocks) --
+   between an `RMW_READ` response and the dispatch of its merged write,
+   `dispatch_next_()` dispatches nothing else (`rmw_pending_` is checked
+   first), and every `RMW_READ` completion path either arms `rmw_pending_` or
+   ends in `rmw_abort_()`. The merged block (`rmw_buf_`) is written whole,
+   never a prefix of it. The merge itself is host-tested (`merge_bit_field`,
+   `merge_block_field`); its use by the hub is not.
    Guaranteed by the structure of `dispatch_next_()` and stated as an editing
    contract next to `rmw_pending_` in `vitohome.h`.
 
@@ -1706,7 +1781,13 @@ happen in production.
   Still to do: a multi-bit mask, and on a GWG unit -- after its plain EEPROM
   write is confirmed -- two flags of `0x0005` toggled back-to-back, and an
   `FF FF` address being refused. A 1-byte write into a 2-byte block was shown to
-  overwrite byte 1 (§5b, §8g); such fields stay read-only.
+  overwrite byte 1 (§5b, §8g).
+- **Whole-block read-modify-write on hardware (§5b, block mode).** Host-proven
+  only. On VScotHO1_72: toggle `Neptun_ZP` (bit `0x01` of `0x7953`) with byte 1
+  set to a known non-zero value first (a full 2-byte raw write) -- byte 1 must
+  survive both ways; write `Neptun_ZP_Drehzahl` (byte 1) -- byte 0 must
+  survive; and the sibling entity must update right after the write. Then
+  restore `00 00`.
 - **GWG hardware verification.** GWG is implemented and host-proven, and as of
   2026-08-23 has one capture from a live GWG unit. That capture confirmed the
   request framing (`01 CB <addr> <len> 04`) and the `RECV $len` completion rule

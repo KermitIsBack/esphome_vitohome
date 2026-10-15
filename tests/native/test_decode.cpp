@@ -330,6 +330,100 @@ static void test_bit_field() {
   CHECK(!merge_bit_field(0x87, 0x0F, 16, &out));  // 16 does not fit a nibble
 }
 
+// --- whole-block read-modify-write (merge_block_field) ----------------------------
+// Exhaustive over block 1..6 x every in-bounds (offset, width 1..4) x mask 0 and
+// all 36 contiguous masks (width 1), on a fixed non-trivial old block. Oracles:
+// every byte outside the field is copied unchanged; the field reads back; every
+// invalid input is refused and writes nothing.
+static void test_block_field() {
+  uint8_t old[16];
+  for (int i = 0; i < 16; ++i)
+    old[i] = static_cast<uint8_t>(0xA5 ^ (i * 0x3B));
+  const uint8_t patterns[][4] = {{0x00, 0x00, 0x00, 0x00}, {0xFF, 0xFF, 0xFF, 0xFF}, {0x12, 0x34, 0x56, 0x78}};
+  for (uint8_t len = 1; len <= 6; ++len) {
+    for (uint8_t off = 0; off < len; ++off) {
+      for (uint8_t width = 1; width <= 4; ++width) {
+        uint8_t out[16];
+        if (off + width > len) {
+          std::memset(out, 0xEE, sizeof(out));
+          CHECK(!merge_block_field(old, len, off, width, 0, patterns[2], out) && out[0] == 0xEE);
+          continue;
+        }
+        for (const auto &pat : patterns) {
+          CHECK(merge_block_field(old, len, off, width, 0, pat, out));
+          for (uint8_t i = 0; i < len; ++i) {
+            if (i >= off && i < off + width)
+              CHECK(out[i] == pat[i - off]);
+            else
+              CHECK(out[i] == old[i]);
+          }
+        }
+        if (width != 1) {
+          // A mask names bits of ONE byte: refused with any wider field.
+          std::memset(out, 0xEE, sizeof(out));
+          CHECK(!merge_block_field(old, len, off, width, 0x0F, patterns[0], out) && out[0] == 0xEE);
+          continue;
+        }
+        for (unsigned m = 1; m < 256; ++m) {
+          const uint8_t mask = static_cast<uint8_t>(m);
+          if (!bit_mask_contiguous(mask))
+            continue;
+          for (unsigned v = 0; v <= static_cast<unsigned>(bit_field_max(mask)) + 1U; ++v) {
+            // The staged field is one byte: for mask 0xFF "one past the
+            // maximum" (256) is not representable, so there is no over-wide
+            // case to test.
+            if (v > 0xFF)
+              continue;
+            const uint8_t field = static_cast<uint8_t>(v);
+            std::memset(out, 0xEE, sizeof(out));
+            const bool ok = merge_block_field(old, len, off, 1, mask, &field, out);
+            if (v > bit_field_max(mask)) {
+              CHECK(!ok && out[0] == 0xEE);
+              continue;
+            }
+            CHECK(ok);
+            for (uint8_t i = 0; i < len; ++i) {
+              if (i != off) {
+                CHECK(out[i] == old[i]);
+              } else {
+                uint8_t back = 0;
+                CHECK((out[i] & static_cast<uint8_t>(~mask)) == (old[i] & static_cast<uint8_t>(~mask)));
+                CHECK(extract_bit_field(out[i], mask, &back) && back == v);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  // Refusals: width 0 and 5, empty block, null pointers, a gapped mask.
+  uint8_t out[16];
+  std::memset(out, 0xEE, sizeof(out));
+  CHECK(!merge_block_field(old, 4, 0, 0, 0, patterns[1], out) && out[0] == 0xEE);
+  CHECK(!merge_block_field(old, 8, 0, 5, 0, patterns[1], out) && out[0] == 0xEE);
+  CHECK(!merge_block_field(old, 0, 0, 1, 0, patterns[1], out) && out[0] == 0xEE);
+  CHECK(!merge_block_field(nullptr, 2, 0, 1, 0, patterns[1], out));
+  CHECK(!merge_block_field(old, 2, 0, 1, 0, nullptr, out));
+  CHECK(!merge_block_field(old, 2, 0, 1, 0, patterns[1], nullptr));
+  CHECK(!merge_block_field(old, 2, 0, 1, 0x0A, patterns[0], out) && out[0] == 0xEE);
+  // In place: out may alias old.
+  uint8_t inplace[3] = {0x11, 0x22, 0x33};
+  const uint8_t f = 0x99;
+  CHECK(merge_block_field(inplace, 3, 1, 1, 0, &f, inplace));
+  CHECK(inplace[0] == 0x11 && inplace[1] == 0x99 && inplace[2] == 0x33);
+
+  // The VScotHO1_72 Neptun block (0x7951: byte 0 = test output bit 0x01,
+  // byte 1 = Drehzahl). Switching the output must keep byte 1; writing the
+  // Drehzahl must keep byte 0. With a 1-byte write the device put our checksum
+  // into byte 1 instead (design_notes SS5b).
+  const uint8_t neptun[2] = {0x00, 0x05};
+  uint8_t nb[2];
+  const uint8_t on = 1;
+  CHECK(merge_block_field(neptun, 2, 0, 1, 0x01, &on, nb) && nb[0] == 0x01 && nb[1] == 0x05);
+  const uint8_t seven = 7;
+  CHECK(merge_block_field(neptun, 2, 1, 1, 0, &seven, nb) && nb[0] == 0x00 && nb[1] == 0x07);
+}
+
 static void test_ascii() {
   char buf[24];
   // "7426" as ASCII codes 0x37 0x34 0x32 0x36.
@@ -648,6 +742,7 @@ int main() {
   test_datetime();
   test_masked_bit();
   test_bit_field();
+  test_block_field();
   test_ascii();
   test_rotate_bytes();
   test_utf16();

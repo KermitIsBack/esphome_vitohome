@@ -159,8 +159,34 @@ number:
     unit_of_measurement: "C"
     mode: box
     update_interval: 3600s
-  # interior numeric field (the pump-speed shape): aligned block read at the
-  # base (state_address + byte_offset), write to the field's own register
+  # block mode (the pump-speed shape, Neptun_ZP_Drehzahl): byte 1 of the 2-byte
+  # block at 0x7953, without state_address. A write reads the whole block,
+  # replaces byte 1 and writes both bytes back (whole-block read-modify-write).
+  - platform: vitohome
+    name: "Test Block Number"
+    address: 0x7953
+    length: 2
+    byte_offset: 1
+    converter: noconv
+    min_value: 0
+    max_value: 100
+    step: 1
+    mode: box
+  # block mode, 2-byte field at an interior offset of a 6-byte block
+  - platform: vitohome
+    name: "Test Block Number Wide"
+    address: 0x1189
+    length: 6
+    byte_offset: 4
+    byte_length: 2
+    converter: div10
+    min_value: 0
+    max_value: 100
+    step: 0.5
+    mode: box
+  # interior shape (the original form, still accepted but WARNS at config
+  # time): block read at state_address, the field written to its own interior
+  # register. Kept as the codegen gate for the old shape.
   - platform: vitohome
     name: "Test Interior Number"
     address: 0x7952
@@ -214,8 +240,16 @@ select:
       0x01: "Reduced"
       0x02: "Normal"
       0x03: "Heating + DHW"
-  # interior enum field: aligned block read at the base (state_address +
-  # byte_offset), write to the field's own register
+  # block mode select: byte 1 of the 2-byte block at 0x7660
+  - platform: vitohome
+    name: "Test Block Select"
+    address: 0x7660
+    length: 2
+    byte_offset: 1
+    options:
+      0x00: "Aus"
+      0x02: "Heizen"
+  # interior shape (warns, see the numbers above)
   - platform: vitohome
     name: "Test Interior Select"
     address: 0x7661
@@ -241,7 +275,16 @@ switch:
     on_value: 0xAF
     off_value: 0xB0
     entity_category: config
-  # interior boolean field: same block-extract form as the select above
+  # block mode bit field (Neptun_ZP): bit 0x01 of byte 0 of the 2-byte block at
+  # 0x7953. byte_offset 0 is what selects block mode -- the switch writes both
+  # bytes, byte 1 (the pump speed) exactly as read.
+  - platform: vitohome
+    name: "Test Block Bit Switch"
+    address: 0x7953
+    length: 2
+    byte_offset: 0
+    bit_mask: 0x01
+  # interior shape (warns, see the numbers above)
   - platform: vitohome
     name: "Test Interior Switch"
     address: 0x7662

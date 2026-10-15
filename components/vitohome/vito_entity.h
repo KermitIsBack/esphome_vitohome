@@ -130,6 +130,29 @@ class VitoEntityBase {
   void set_field_mask(uint8_t mask) { this->field_mask_ = mask; }
   uint8_t field_mask() const { return this->field_mask_; }
 
+  // --- whole-block read-modify-write ------------------------------------------
+  // Block mode (`byte_offset` without `state_address` on number/select/switch):
+  // this entity's field is `width` bytes at `offset` inside its write datapoint,
+  // which is the WHOLE block. The device writes its whole datapoint -- a 1-byte
+  // write into a 2-byte block stored the telegram's checksum in byte 1
+  // (docs/design_notes.md SS5b) -- so the hub reads the block, replaces the field
+  // (decode.h::merge_block_field) and writes all of it back. The entity stages
+  // the FIELD (`width` bytes, or one masked byte); width 0 = not block mode.
+  void set_block_field(uint8_t offset, uint8_t width) {
+    this->block_field_offset_ = offset;
+    this->block_field_width_ = width;
+  }
+  uint8_t block_field_offset() const { return this->block_field_offset_; }
+  uint8_t block_field_width() const { return this->block_field_width_; }
+  // Whether a write must be a read-modify-write: a bit field, or a field smaller
+  // than the block it is written in.
+  bool needs_rmw() const { return this->field_mask_ != 0 || this->block_field_width_ != 0; }
+  // The number of bytes control() / write_state() stage: the field in block
+  // mode, else the whole write datapoint (the pre-existing behaviour).
+  uint8_t staged_width() const {
+    return this->block_field_width_ != 0 ? this->block_field_width_ : this->get_write_datapoint().length();
+  }
+
   // --- write path -----------------------------------------------------------
   const uint8_t *write_data() const { return this->write_buf_; }
   uint8_t write_length() const { return this->write_len_; }
@@ -176,6 +199,8 @@ class VitoEntityBase {
   uint8_t write_buf_[8]{0, 0, 0, 0, 0, 0, 0, 0};
   uint8_t write_len_{0};
   uint8_t field_mask_{0};
+  uint8_t block_field_offset_{0};
+  uint8_t block_field_width_{0};
   bool read_back_{true};
   uint32_t poll_interval_ms_{0};
   optolink::GWGAccessMode access_{optolink::GWGAccessMode::PHYSICAL};

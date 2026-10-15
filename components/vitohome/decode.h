@@ -98,6 +98,38 @@ inline bool merge_bit_field(uint8_t old, uint8_t mask, uint32_t field, uint8_t *
   return true;
 }
 
+// The whole-block read-modify-write merge. The device writes its WHOLE datapoint
+// (hardware-confirmed: a 1-byte write into a 2-byte block stored the telegram's
+// checksum in byte 1, docs/design_notes.md SS5b), so a field smaller than its block
+// is written by sending the whole block back with only the field replaced.
+//
+// out[0..block_len) = old with `width` bytes of `field` (little-endian, as the
+// entity staged them) at `offset`. With a non-zero `mask` the field is one byte
+// (width 1) and only its masked bits change -- merge_bit_field() on that byte,
+// with field[0] as the FIELD value. Every other byte is copied from `old`
+// unchanged. Returns false -- and the caller must NOT transmit -- for a field
+// outside the block, width 0 or > 4, a mask with width != 1, a bad mask, or a
+// masked field value that does not fit. `out` may alias `old`.
+inline bool merge_block_field(const uint8_t *old, uint8_t block_len, uint8_t offset, uint8_t width, uint8_t mask,
+                              const uint8_t *field, uint8_t *out) {
+  if (old == nullptr || field == nullptr || out == nullptr || block_len == 0 || width == 0 || width > 4 ||
+      static_cast<unsigned>(offset) + width > block_len)
+    return false;
+  if (mask != 0 && width != 1)
+    return false;
+  uint8_t merged_field = 0;
+  if (mask != 0 && !merge_bit_field(old[offset], mask, field[0], &merged_field))
+    return false;
+  if (out != old)
+    std::memcpy(out, old, block_len);
+  if (mask != 0) {
+    out[offset] = merged_field;
+  } else {
+    std::memcpy(out + offset, field, width);
+  }
+  return true;
+}
+
 // ---------------------------------------------------------------------------
 // numeric decode/encode
 // ---------------------------------------------------------------------------

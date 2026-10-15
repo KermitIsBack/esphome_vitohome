@@ -42,7 +42,7 @@ void VitoSelect::control(size_t index) {
   // the effective width, so an over-long write-datapoint length can't make
   // set_write_payload_() copy past buf. Shared with VitoSwitch::write_state().
   uint8_t buf[4];
-  const uint8_t len = encode_raw_le(raw, this->get_write_datapoint().length(), buf, sizeof(buf));
+  const uint8_t len = encode_raw_le(raw, this->staged_width(), buf, sizeof(buf));
   if (len == 0) {
     ESP_LOGE(TAG, "%s: zero-length write datapoint", this->datapoint_.name());
     return;

@@ -227,6 +227,50 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *input, std::size_t size) {
     }
   }
 
+  // --- whole-block read-modify-write merge --------------------------------------
+  // payload [0] block_len-1 (1..16), [1] offset, [2] width, [3] mask, [4..7] field,
+  // [8..] the old block. Exact-size buffers so ASan frames an overrun. Oracles:
+  // bytes outside the field unchanged; the field (or its masked bits) reads back;
+  // a refusal is for a reason. Negative-controlled with the field copied to the
+  // block START instead of `offset` (trips on the kDSeed_block_* seeds).
+  {
+    const uint8_t blen = static_cast<uint8_t>(1u + ((data_len > 0 ? data[0] : 0) % 16u));
+    const uint8_t off = data_len > 1 ? data[1] : 0;
+    const uint8_t width = data_len > 2 ? data[2] : 1;
+    const uint8_t mask = data_len > 3 ? data[3] : 0;
+    uint8_t field[4] = {0, 0, 0, 0};
+    for (std::size_t i = 0; i < 4 && 4 + i < data_len; ++i)
+      field[i] = data[4 + i];
+    uint8_t *oldb = new uint8_t[blen];
+    for (uint8_t i = 0; i < blen; ++i)
+      oldb[i] = (8u + i < data_len) ? data[8 + i] : static_cast<uint8_t>(0x5A ^ i);
+    uint8_t *outb = new uint8_t[blen];
+    if (merge_block_field(oldb, blen, off, width, mask, field, outb)) {
+      oracle(width >= 1 && width <= 4 && off + width <= blen, "merge_block_field accepted a field outside the block");
+      for (uint8_t i = 0; i < blen; ++i) {
+        if (i >= off && i < off + width) {
+          if (mask != 0) {
+            uint8_t back = 0;
+            oracle((outb[i] & static_cast<uint8_t>(~mask)) == (oldb[i] & static_cast<uint8_t>(~mask)),
+                   "masked block merge changed a bit outside the mask");
+            oracle(extract_bit_field(outb[i], mask, &back) && back == field[0],
+                   "masked block field does not read back");
+          } else {
+            oracle(outb[i] == field[i - off], "block field does not read back");
+          }
+        } else {
+          oracle(outb[i] == oldb[i], "merge_block_field changed a byte outside the field");
+        }
+      }
+    } else {
+      oracle(width == 0 || width > 4 || off + width > blen || (mask != 0 && width != 1) ||
+                 (mask != 0 && (!bit_mask_contiguous(mask) || field[0] > bit_field_max(mask))),
+             "merge_block_field refused a valid field");
+    }
+    delete[] outb;
+    delete[] oldb;
+  }
+
   // --- encode_scaled / encode_raw_le: exact-size staging buffers ------------
   // Both take a width and a caller buffer, which is the shape that overflows.
   // The buffers are sized exactly so ASan frames them.

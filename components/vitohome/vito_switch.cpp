@@ -35,7 +35,7 @@ void VitoSwitch::write_state(bool state) {
   // See VitoSelect::control(): encode_raw_le() clamps to the staging buffer and
   // returns the effective width.
   uint8_t buf[4];
-  const uint8_t len = encode_raw_le(raw, this->get_write_datapoint().length(), buf, sizeof(buf));
+  const uint8_t len = encode_raw_le(raw, this->staged_width(), buf, sizeof(buf));
   if (len == 0) {
     ESP_LOGE(TAG, "%s: zero-length write datapoint", this->datapoint_.name());
     return;

@@ -30,6 +30,7 @@ from esphome.components import esp32, time as time_, uart
 from esphome.components.const import CONF_STOP_BITS
 import esphome.config_validation as cv
 from esphome.const import (
+    CONF_ADDRESS,
     CONF_ID,
     CONF_INTERVAL,
     CONF_LENGTH,
@@ -344,6 +345,14 @@ def converter_default_signed(name: str) -> bool:
 # Bytes 43..48 are unverified. Raise it with evidence, not lore.
 MAX_P300_READ_LENGTH = 48
 
+# Largest block a whole-block read-modify-write sends (mirror of
+# VitoHomeComponent::MAX_RMW_BLOCK in vitohome.h). The device writes its whole
+# datapoint, so a field smaller than its block is written by reading the block,
+# replacing the field and writing all of it back (docs/design_notes.md SS5b).
+# Hardware-proven P300 write sizes are 1, 2 and 8 bytes; 16 covers every writable
+# block in the Vitosoft export apart from the 42-byte label strings.
+MAX_RMW_BLOCK = 16
+
 
 def validate_length_in(min_len: int, max_len: int):
     """Return a validator accepting an integer byte-length in [min_len, max_len]."""
@@ -371,16 +380,24 @@ def field_width(config) -> int:
 def validate_block_extraction(plain_lengths: tuple):
     """Return the shared ``length`` / ``byte_offset`` / ``byte_length`` validator.
 
-    number.py, select.py and switch.py all support aligned block extraction on
-    the STATE read with byte-identical rules; only the set of widths allowed
-    WITHOUT extraction differs (number accepts 1..4, select/switch 1..2), which
-    is what ``plain_lengths`` parameterises.
+    number.py, select.py and switch.py all support a field inside a block with
+    byte-identical rules; only the set of widths allowed WITHOUT ``byte_offset``
+    differs (number accepts 1..4, select/switch 1..2), which is what
+    ``plain_lengths`` parameterises. With ``byte_offset`` the field is
+    ``byte_length`` (default 1) bytes at ``byte_offset`` of a ``length``-byte
+    block, in one of two shapes:
 
-    With ``byte_offset``, ``length`` is the block read at the state address and
-    the field is ``byte_length`` (default 1) bytes at ``byte_offset``. The write
-    still targets ``address`` -- the field's own register -- which is why
-    ``byte_offset`` requires an explicit ``state_address``: writing field-width
-    bytes at the block base would hit the wrong register.
+    * **Block mode** (no ``state_address``): ``address`` is the block base, read
+      AND written there. A write reads the block, replaces the field and writes
+      the whole block back -- the device writes its whole datapoint, so anything
+      narrower overwrites the rest of the block with telegram bytes
+      (hardware-confirmed, docs/design_notes.md SS5b). ``length`` is capped at
+      MAX_RMW_BLOCK.
+    * **Interior shape** (with ``state_address``, the original form): the block
+      is read at ``state_address`` and the field written to its own interior
+      register at ``address``. Kept so existing configs validate, but it WARNS:
+      an interior address need not exist (0x7362, SS8g), and where one is
+      declared it is generally another datapoint.
     """
 
     def validate(config):
@@ -391,11 +408,21 @@ def validate_block_extraction(plain_lengths: tuple):
                     f"with byte_offset, length is a block read and must be 1..{MAX_P300_READ_LENGTH} (got {length})",
                     path=[CONF_LENGTH],
                 )
-            if CONF_STATE_ADDRESS not in config:
+            if CONF_STATE_ADDRESS not in config and length > MAX_RMW_BLOCK:
                 raise cv.Invalid(
-                    "byte_offset requires state_address: the aligned block is read at "
-                    "state_address while address stays the field's own write register",
-                    path=[CONF_BYTE_OFFSET],
+                    f"block mode (byte_offset without state_address) writes the whole block, which must be "
+                    f"1..{MAX_RMW_BLOCK} bytes (got {length})",
+                    path=[CONF_LENGTH],
+                )
+            if CONF_STATE_ADDRESS in config:
+                _LOGGER.warning(
+                    "'%s': byte_offset with state_address writes the field to its own interior address 0x%04X. "
+                    "That address need not exist, and where one is declared it is generally another datapoint; "
+                    "the device also writes its whole datapoint, so a narrower write corrupts the rest of it. "
+                    "Prefer block mode: drop state_address and set address to the block base -- the whole block "
+                    "is then read, the field replaced and the block written back (docs/converters.md).",
+                    config.get(CONF_NAME, "?"),
+                    config[CONF_ADDRESS],
                 )
             width = config.get(CONF_BYTE_LENGTH, 1)
             if config[CONF_BYTE_OFFSET] + width > length:
@@ -480,19 +507,15 @@ def validate_bit_field(*, writable: bool):
                 "signed cannot be combined with bit_mask: bit fields are decoded unsigned",
                 path=[CONF_SIGNED],
             )
-        if writable:
-            if CONF_STATE_ADDRESS in config:
-                raise cv.Invalid(
-                    "a bit_mask write is a read-modify-write of one register (the byte is read at "
-                    "address and written back there), so state_address cannot be used with bit_mask",
-                    path=[CONF_STATE_ADDRESS],
-                )
-            if CONF_BYTE_OFFSET in config:
-                raise cv.Invalid(
-                    "a writable bit_mask field must be the whole datapoint (length: 1, no byte_offset): "
-                    "a field inside a block has no declared write address",
-                    path=[CONF_BYTE_OFFSET],
-                )
+        if writable and CONF_STATE_ADDRESS in config:
+            # A read-modify-write reads and writes ONE register: the byte (or,
+            # with byte_offset, the whole block) at `address`.
+            raise cv.Invalid(
+                "a bit_mask write is a read-modify-write of one register (read at address and written back "
+                "there), so state_address cannot be used with bit_mask; for a field inside a block use "
+                "byte_offset with address = the block base",
+                path=[CONF_STATE_ADDRESS],
+            )
         return config
 
     return validate
@@ -688,13 +711,21 @@ def emit_write_target(var, config, read_addr, write_addr):
     Shared by number/select/switch, whose to_code() bodies carried three
     byte-identical copies of this block.
 
-    Under extraction the state read is ``length`` bytes at the state address
-    while the WRITE datapoint carries only the FIELD width, so control() /
-    write_state() writes exactly the field's bytes to the field's own register.
-    Without extraction a write datapoint is emitted only when the read and write
-    addresses actually differ.
+    Block mode (``byte_offset`` without ``state_address``): the read datapoint IS
+    the write datapoint (the whole block at the base), so none is emitted; the
+    field geometry goes to set_block_field(), which makes the hub write a
+    whole-block read-modify-write. Interior shape (with ``state_address``): the
+    state read is ``length`` bytes at the state address while the WRITE datapoint
+    carries only the FIELD width at the field's own register. Without extraction
+    a write datapoint is emitted only when the read and write addresses differ.
     """
-    if CONF_BYTE_OFFSET in config:
+    if CONF_BYTE_OFFSET in config and CONF_STATE_ADDRESS not in config:
+        width = config.get(CONF_BYTE_LENGTH, 1)
+        cg.add(var.set_extract_byte(config[CONF_BYTE_OFFSET]))
+        if CONF_BYTE_LENGTH in config:
+            cg.add(var.set_extract_len(config[CONF_BYTE_LENGTH]))
+        cg.add(var.set_block_field(config[CONF_BYTE_OFFSET], width))
+    elif CONF_BYTE_OFFSET in config:
         width = config.get(CONF_BYTE_LENGTH, 1)
         cg.add(var.set_write_datapoint(datapoint_expression(config[CONF_NAME], write_addr, width)))
         cg.add(var.set_extract_byte(config[CONF_BYTE_OFFSET]))
