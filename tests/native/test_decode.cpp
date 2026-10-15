@@ -502,8 +502,7 @@ static void test_schaltzeiten_day() {
   CHECK(std::strcmp(out, "06:00-22:00 -- 08:30-12:00") == 0);
 
   // Full-day interval: 24:00 is a valid end time.
-  const uint8_t full_day[] = {
-      0x00, 0xC0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+  const uint8_t full_day[] = {0x00, 0xC0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   CHECK(encode_schaltzeiten_day("00:00-24:00", buf));
   CHECK(std::memcmp(buf, full_day, 8) == 0);
   decode_schaltzeiten_day(buf, 8, out, sizeof(out));
@@ -516,8 +515,7 @@ static void test_schaltzeiten_day() {
   CHECK(std::strcmp(out, "05:30-24:00") == 0);
 
   // Equal times are accepted; 00:00-00:00 means always off.
-  const uint8_t equal_times[] = {
-      0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+  const uint8_t equal_times[] = {0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   CHECK(encode_schaltzeiten_day("00:00-00:00", buf));
   CHECK(std::memcmp(buf, equal_times, 8) == 0);
 
