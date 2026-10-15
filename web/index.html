@@ -84,7 +84,7 @@
       <div><label for="f0">F0 (optional)</label><input id="f0" autocomplete="off" placeholder=""></div>
       <div><label for="gfa">GFA chip (optional)</label><input id="gfa" autocomplete="off" placeholder="24"></div>
     </div>
-    <p class="hint">All values are hexadecimal, exactly as logged. The line appears as <code>Device identification: …</code> at start-up and as <code>Device: …</code> in the configuration dump. The GFA chip is the byte your unit reports at <code>0x7650</code> (scan console, raw read, 1 byte); it selects the burner-control fault texts.</p>
+    <p class="hint">All values are hexadecimal, exactly as logged. The line appears as <code>Device identification: …</code> at start-up and as <code>Device: …</code> in the configuration dump. The GFA chip selects the burner-control fault texts; the hub logs it in the same line as <code>GFA=0x24</code> (read from <code>0x7650</code> on P300/KW units that have a burner control).</p>
     <fieldset class="lang">
       <legend>Catalog language</legend>
       <label><input type="radio" name="lang" value="de"> Deutsch</label>
@@ -182,8 +182,8 @@ function gfaNote(choice) {
   const known = Object.keys(chips).sort().map((k) => k + (chips[k] ? " " + chips[k] : "")).join(", ");
   if (choice.chip === null) {
     return note("", el("p", {},
-      "This unit has a burner-control (GFA) fault history. Its texts depend on the burner-control chip, not on the device type: read ",
-      el("code", {}, "0x7650"), " (1 byte) with the scan console and enter it as GFA chip to add the matching companion. Known chips: ", known, "."));
+      "This unit has a burner-control (GFA) fault history. Its texts depend on the burner-control chip, not on the device type. The hub logs it at boot as ",
+      el("code", {}, "GFA=0x…"), " in the identification line and adds it to the finder link; paste that line, or enter the chip, to add the matching companion. Known chips: ", known, "."));
   }
   if (choice.unknown) {
     return note("warn-note", el("p", {}, "Vitosoft has no fault texts for GFA chip ", el("code", {}, choice.chip),

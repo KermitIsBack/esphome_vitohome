@@ -61,12 +61,44 @@ static const char *ident_family_name(uint16_t ident, int hw = -1) {
   }
 }
 
+// Burner-control chip names, as Vitosoft's own chip table gives them
+// (eventvaluetype Kennung_FA_Chip~<n>: "24h - NEC"). The byte read at 0x7650
+// (GFA_Kennung) selects the GFA fault texts
+// (example/catalogs/<lang>/gfa/chip_<XX>.yaml); the name is only for the log.
+// Hardware: VScotHO1_72 reads 0x24.
+static const char *gfa_chip_name(int chip) {
+  switch (chip) {
+    case 0x20:
+      return "GFA";
+    case 0x21:
+      return "SCOT";
+    case 0x22:
+      return "Dover";
+    case 0x23:
+      return "CES";
+    case 0x24:
+      return "NEC";
+    case 0x25:
+      return "ET";
+    case 0x26:
+      return "Scot eSTB";
+    case 0x27:
+      return "Vi";
+    case 0x41:
+      return "\u00d6FA";  // oil burner control
+    case 0x42:
+      return "\u00d6FA (Vi)";
+    default:
+      return nullptr;
+  }
+}
+
 // Catalog finder (web/ in this repository, published with GitHub Pages). The
 // hub appends the identification bytes as a query string so the page opens on
 // the matching catalog. The page does the matching from the generated
 // example/catalogs/resolve.json; the device itself never fetches it.
 static const char *const CATALOG_FINDER_URL = "https://soulsolistice.github.io/esphome_vitohome/";
-// URL (49) + "?id=XXXX&hw=XX&sw=XX" (20) + NUL.
+// URL (49) + "?id=XXXX&hw=XX&sw=XX" (20) + "&gfa=XX" (7) + NUL = 77.
 static const size_t CATALOG_FINDER_URL_SIZE = 80;
 
 void VitoHomeComponent::reserve_entities(std::size_t capacity) { this->entities_.init(capacity); }
@@ -514,8 +546,9 @@ void VitoHomeComponent::dispatch_next_() {
       ESP_LOGV(TAG, "Dispatched identification read 0x%04X len %u", this->ident_dp_.address(),
                this->ident_dp_.length());
     } else if (!this->vito_->isBusy()) {
-      // Permanent createPacket() rejection (unreachable: every ident address is
-      // <= 0x00FB). Without this, a permanent refusal would spin here forever
+      // Permanent createPacket() rejection (unreachable: the ident addresses
+      // are 0x00F8..0x00FB, plus 0x7650 on P300/KW only). Without this, a
+      // permanent refusal would spin here forever
       // before the raw/read/write lanes are reached, with nothing in flight for
       // the watchdog. Advance the ident state machine exactly as the watchdog
       // does on a lost callback, so identification degrades field-by-field.
@@ -1548,6 +1581,10 @@ void VitoHomeComponent::ident_dispatch_(IdentState state) {
       this->ident_dp_ = optolink::Datapoint("ident", 0x00FB, 1, optolink::noconv);
       break;
 
+    case IdentState::READ_GFA:
+      this->ident_dp_ = optolink::Datapoint("ident", 0x7650, 1, optolink::noconv);
+      break;
+
     default:
       break;
   }
@@ -1585,7 +1622,7 @@ void VitoHomeComponent::ident_handle_response_(const ResponseView &response) {
         this->ident_controller_ = data[1];
         this->ident_hw_ = data[2];
         this->ident_sw_ = data[3];
-        this->ident_finish_();
+        this->ident_after_sw_();
         return;
       }
 
@@ -1618,6 +1655,17 @@ void VitoHomeComponent::ident_handle_response_(const ResponseView &response) {
       if (length >= 1)
         this->ident_sw_ = data[0];
 
+      this->ident_after_sw_();
+      return;
+
+    case IdentState::READ_GFA:
+      // 0x00 and 0xFF are not chips: KW answers an address the unit does not
+      // have with 0xFF fill, and 0x00 is an unprogrammed cell. P300 answers
+      // with an error frame instead (ident_handle_error_).
+      if (length >= 1 && data[0] != 0x00 && data[0] != 0xFF)
+        this->ident_gfa_ = data[0];
+      else
+        ESP_LOGD(TAG, "No burner-control chip at 0x7650");
       this->ident_finish_();
       return;
 
@@ -1648,12 +1696,26 @@ void VitoHomeComponent::ident_handle_error_() {
       return;
 
     case IdentState::READ_FB:
+      this->ident_after_sw_();
+      return;
+
+    case IdentState::READ_GFA:
+      // A unit without a burner control (heat pump, ...) has no 0x7650.
       this->ident_finish_();
       return;
 
     default:
       return;
   }
+}
+
+void VitoHomeComponent::ident_after_sw_() {
+#ifdef VITOHOME_PROTOCOL_GWG
+  // GWG addresses a single byte: 0x7650 does not exist there.
+  this->ident_finish_();
+#else
+  this->ident_dispatch_(IdentState::READ_GFA);
+#endif
 }
 
 std::string VitoHomeComponent::ident_string_() const {
@@ -1672,7 +1734,12 @@ std::string VitoHomeComponent::ident_string_() const {
     if (this->ident_hw_ >= 0 && offset > 0 && offset < static_cast<int>(sizeof(buffer)))
       offset += snprintf(buffer + offset, sizeof(buffer) - offset, " HW=0x%02X", this->ident_hw_);
     if (this->ident_sw_ >= 0 && offset > 0 && offset < static_cast<int>(sizeof(buffer)))
-      snprintf(buffer + offset, sizeof(buffer) - offset, " SW=0x%02X", this->ident_sw_);
+      offset += snprintf(buffer + offset, sizeof(buffer) - offset, " SW=0x%02X", this->ident_sw_);
+    if (this->ident_gfa_ >= 0 && offset > 0 && offset < static_cast<int>(sizeof(buffer))) {
+      const char *chip = gfa_chip_name(this->ident_gfa_);
+      snprintf(buffer + offset, sizeof(buffer) - offset, " GFA=0x%02X%s%s%s", this->ident_gfa_,
+               chip != nullptr ? " (" : "", chip != nullptr ? chip : "", chip != nullptr ? ")" : "");
+    }
 
     return std::string(buffer);
   }
@@ -1689,7 +1756,9 @@ bool VitoHomeComponent::ident_finder_url_(char *buffer, size_t size) const {
   if (this->ident_hw_ >= 0 && offset > 0 && offset < static_cast<int>(size))
     offset += snprintf(buffer + offset, size - offset, "&hw=%02X", this->ident_hw_);
   if (this->ident_sw_ >= 0 && offset > 0 && offset < static_cast<int>(size))
-    snprintf(buffer + offset, size - offset, "&sw=%02X", this->ident_sw_);
+    offset += snprintf(buffer + offset, size - offset, "&sw=%02X", this->ident_sw_);
+  if (this->ident_gfa_ >= 0 && offset > 0 && offset < static_cast<int>(size))
+    snprintf(buffer + offset, size - offset, "&gfa=%02X", this->ident_gfa_);
 
   return true;
 }

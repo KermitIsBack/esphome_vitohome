@@ -2,8 +2,8 @@
 # but UNTESTED on hardware -- this job is a compile gate (codegen + the
 # OptolinkEngine<GWG>/GWGEngine instantiation + the GWG branch of
 # ProtocolAdapter through the real ESPHome+PlatformIO build), not a wire test.
-# identify_device is set false (the natural default for GWG): the 0xF8..0xFB
-# identification is a P300-era scheme.
+# identify_device is on (the default for every protocol): GWG reads 0xF8..0xFB
+# in the virtual access mode, hardware-confirmed on issue #21's unit.
 #
 # Uses common-gwg.yaml, not common.yaml: GWG addresses a single byte, so the
 # 16-bit addresses in common.yaml would be silently truncated. See that file.
@@ -11,7 +11,7 @@ substitutions:
   name: vitohome-test-idf-gwg
   protocol: GWG
   log_frames: "false"
-  identify_device: "false"
+  identify_device: "true"
 
 esp32:
   board: esp32dev

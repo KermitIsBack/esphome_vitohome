@@ -124,9 +124,9 @@ the other language creates new entities. Other languages are one
 > **Fault texts.** Every catalog carries Vitosoft's own fault texts for its
 > device (or the generic Vitotronic set where the device has none and is a
 > Vitotronic); units without either show the raw code. For the burner-control
-> (GFA) history, read `0x7650` once with the scan console and include the
-> matching companion next to the catalog; the catalog finder shows the line
-> when you enter the chip. See [`scripts/README.md`](../scripts/README.md).
+> (GFA) history, include the companion for the `GFA=0x..` the hub logs at boot
+> next to the catalog; the catalog finder link already carries the chip and
+> shows the line. See [`scripts/README.md`](../scripts/README.md).
 
 ## Using a catalog
 

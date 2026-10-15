@@ -106,9 +106,9 @@ back to the hand-curated `vd300` map, as before. `--error-code-set vitosoft` is
 `auto` without that fallback.
 
 The burner-control (GFA) history is a different code space, keyed by the GFA
-chip, which is a property of the installed unit, not of the device type. Read
-it once (raw read of `0x7650`, one byte; VScotHO1_72 reads `0x24`, "NEC" in
-Vitosoft's chip table). The sets differ by chip, not by device type, and 7
+chip, which is a property of the installed unit, not of the device type. The
+hub reads it at boot (`0x7650`, `GFA_Kennung`) and logs it with the
+identification, `GFA=0x24 (NEC)` on VScotHO1_72. The sets differ by chip, not by device type, and 7
 codes mean different things on different chips, so there is no safe default.
 Two ways to attach them:
 

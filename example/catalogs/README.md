@@ -30,9 +30,9 @@ manifest by hand. Rows with `status: skipped` have no file — every datapoint o
 that unit needs a non-Optolink access method.
 
 > **Fault texts.** Every catalog carries Vitosoft's fault texts for its own
-> device. The burner-control (GFA) history slots need the chip your unit reports
-> at `0x7650`: include `gfa/chip_<XX>.yaml` next to the catalog (the finder
-> shows the line), see [`../../scripts/README.md`](../../scripts/README.md).
+> device. The burner-control (GFA) history slots need the chip the hub logs at
+> boot (`GFA=0x..`): include `gfa/chip_<XX>.yaml` next to the catalog (the
+> finder shows the line), see [`../../scripts/README.md`](../../scripts/README.md).
 
 This stub is hand-written and survives regeneration: `export_catalogs.sh`
 clears only the generated `*.yaml` (including `gfa/`), `index.csv` and

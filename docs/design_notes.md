@@ -934,22 +934,33 @@ reads the traits and ignores both.
 
 ## 6. Device identification — `0x20CB` is only the *family*
 
-With `identify_device: true` the hub runs a small **fail-soft** state machine
-after `begin()` and before regular polling: one length-4 read at `0x00F8`,
-falling back to four length-1 reads at `0xF8/F9/FA/FB` if the block read comes
-up short. The default is **on for P300 and KW**, off for GWG — the fallback
-path makes identification work on KW's byte-oriented protocol
-(hardware-confirmed on `0x20CB` over both P300 and KW: `HW=0x03 SW=0x51`),
-whereas GWG's scheme is untested, so it must be enabled explicitly there.
+The hub runs a small **fail-soft** state machine after `begin()` and before
+regular polling: one length-4 read at `0x00F8`, falling back to four length-1
+reads at `0xF8/F9/FA/FB` if the block read comes up short. It is **on by
+default for every protocol** (`identify_device: false` opts out), and
+hardware-confirmed on each: `0x20CB` over P300 and KW (`HW=0x03 SW=0x51`; the
+fallback path is what makes it work on KW's byte-oriented protocol), and GWG
+(issue #21, `0x2053 HW=0x01 SW=0x7A`, read in the virtual access mode).
+
+On P300 and KW a last step reads **`0x7650`, one byte: the burner-control
+chip** (Vitosoft's `GFA_Kennung`), which selects the GFA fault-text companion
+(§8i). It is read on every unit, because the hub cannot know beforehand which
+ones have a burner control; a unit without one answers with an error frame
+(P300) or `0xFF` fill (KW), and those, like `0x00`, leave the chip unknown and
+are logged at DEBUG only. In the whole 2026 export `0x7650` is `GFA_Kennung`
+and nothing else. GWG addresses one byte, so the step does not exist there.
+Hardware, VScotHO1_72 (P300): `0x7650` = `0x24` (NEC).
+
 Each field that can't be read is left unknown; the result (`group`,
-`controller`, `hw`, `sw`) is logged at INFO and pushed to any `device_id`
-text sensors. A small built-in table names the families seen on the
+`controller`, `hw`, `sw`, and the chip) is logged at INFO --
+`Device identification: 0x20CB (VScotHO1) HW=0x03 SW=0x51 GFA=0x24 (NEC)` --
+and pushed to any `device_id` text sensors. A small built-in table names the families seen on the
 wire (`0x20CB` → VScotHO1, plus `0x2098`/`0x2094`/`0x2053`); everything else is
 reported as raw hex.
 
 Mapping the tuple to a catalog file is done off-device. The hub logs a link to
 the catalog finder (https://soulsolistice.github.io/esphome_vitohome/) with the bytes it
-read as a query string (`?id=20CB&hw=03&sw=51`); the page looks them up in
+read as a query string (`?id=20CB&hw=03&sw=51&gfa=24`); the page looks them up in
 `example/catalogs/resolve.json`, which `gen_catalog.py --export-all` writes by
 enumerating `Catalog.resolve_pool()` (language-independent: one table serves
 `example/catalogs/de/` and `…/en/`, and the finder picks the folder). The firmware carries the URL and nothing
@@ -1622,7 +1633,8 @@ text_sensor:
 All 63 GFA catalogs of the 2026 export carry exactly `gfa_fehler_01..20`, so
 one companion per chip fits every one of them (9 files, 45 KB per language; a
 whole per-chip copy of each catalog would have been ~500 files and ~110 MB per
-language). `esphome config` resolves every companion against VScotHO1_72 in
+language). The hub logs the chip at boot (`GFA=0x24`, §6) and puts it into
+the finder link. `esphome config` resolves every companion against VScotHO1_72 in
 both languages and against five catalogs of other families (Vitoplus,
 Vitovalor, VSorp, Vitodens, and a `V300…` unit that has the GFA slots but no
 `GFA_Kennung`): twenty entities, codes merged, no warning. The finder offers
@@ -1645,6 +1657,15 @@ tables are now emitted once and shared, keyed by their rows in `CORE.data`
 surfaced a C++ trap in the texts: GFA code `0xFF` reads "Fehlermeldung
 vorhanden (unbekannt/neu??)", and `??)` is a trigraph -- GCC warned once per
 table. `cpp_string_literal` now escapes every `?`.
+
+The YAML had the same repetition: ten 110-line copies of the device's map per
+catalog. The generator now writes a repeated `codes:` block as an alias of its
+first occurrence (`codes: &letzter_fehler_codes` ... `codes:
+*letzter_fehler_codes`), decided in output order after sorting so an alias
+never precedes its anchor (`_share_codes_blocks`). VScotHO1_72 with
+`--gfa-chip 24`: 379 KB -> 263 KB, the committed set 33 MB -> 28 MB per
+language; `esphome config` resolves all 30 slots to their full maps (110
+system codes, 72 GFA).
 
 ---
 
@@ -1941,12 +1962,11 @@ happen in production.
   write is confirmed -- two flags of `0x0005` toggled back-to-back, and an
   `FF FF` address being refused. A 1-byte write into a 2-byte block was shown to
   overwrite byte 1 (§5b, §8g).
-- **The GFA chip in the identification line (§8i).** The companions and the
-  finder are in place; today the user reads `0x7650` with the scan console and
-  enters it. The hub could read `GFA_Kennung` in the identify block -- only
-  when GFA history entities are configured, so devices without a burner
-  control never see the read -- and log it as `GFA=0x24` in the identification
-  line and the finder link (`&gfa=24`); `web/lookup.js` already parses both.
+- **The burner-control chip read at boot (§6).** Confirmed by a raw read on
+  VScotHO1_72 (P300, `0x24`); the boot-time read itself and its log line still
+  want a hardware run. Open: what a KW unit answers at `0x7650`, and whether
+  the 10 devices with a GFA history but no declared `GFA_Kennung` (`V100KC4B`,
+  `V200…`, `V300…`) answer there at all.
 - **RF level sign (§8i).** `ecnUnit.dBm` values are emitted negated, on the
   strength of the German "-dBm" label and the unsigned `Byte` type. Unverified:
   the reference unit has no RF participant.

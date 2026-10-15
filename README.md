@@ -153,9 +153,13 @@ catalogs come in German and English (`example/catalogs/de/`, `…/en/`) — see
 identification and a link to the [catalog finder](https://soulsolistice.github.io/esphome_vitohome/), for example:
 
 ```
-Device identification: 0x20CB (VScotHO1) HW=0x03 SW=0x51
-Find the matching datapoint catalog: https://soulsolistice.github.io/esphome_vitohome/?id=20CB&hw=03&sw=51
+Device identification: 0x20CB (VScotHO1) HW=0x03 SW=0x51 GFA=0x24 (NEC)
+Find the matching datapoint catalog: https://soulsolistice.github.io/esphome_vitohome/?id=20CB&hw=03&sw=51&gfa=24
 ```
+
+`GFA=` is the burner-control chip (read from `0x7650` on P300/KW units that have
+one). It selects the burner-control fault texts, which the finder adds as a
+small companion file next to the catalog.
 
 Open the link, or paste the `Device` line into the finder, to get the catalog
 file for that controller. The device id alone is not enough: most ids cover
@@ -203,7 +207,8 @@ vitohome:
   uart_id: uart_optolink
   protocol: P300            # also KW (VS1), confirmed; GWG has one hardware capture
   update_interval: 60s      # base poll tick
-  identify_device: true     # read 0xF8..0xFB once at boot and log the device
+  # identify_device: false  # default true: log the device id (0xF8..0xFB) and
+  #                         # burner-control chip (0x7650) once at boot
   # time_id: my_time       # optional: sync the device clock from a time source
   # time_sync:
   #   clock_address: 0x088E # device clock datapoint. NOT constant across
@@ -264,8 +269,9 @@ from.
   [`docs/converters.md`](docs/converters.md).
 - Per-device datapoint definitions come from Viessmann's Vitosoft data, turned
   into an ESPHome package by `scripts/gen_catalog.py`.
-- With `identify_device` on, the hub reads the device identification at boot and
-  logs the device tuple, so you can confirm which unit you are talking to.
+- The hub reads the device identification at boot and logs the device tuple
+  and the catalog-finder link, on every protocol, so you can confirm which unit
+  you are talking to (`identify_device: false` turns it off).
 
 ## Reading and writing
 

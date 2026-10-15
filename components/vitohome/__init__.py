@@ -1345,17 +1345,14 @@ async def to_code(config):
     # the capacity (a safe upper bound); see _entity_capacity_upper_bound.
     cg.add(var.reserve_entities(config[_CONF_ENTITY_CAPACITY]))
 
-    # Identification reads 0xF8..0xFB once at boot. Default ON for P300 and
-    # KW: on KW the block read at 0x00F8 falls back to four length-1 reads,
-    # and this is HARDWARE-CONFIRMED on VScotHO1_72 (0x20CB) over BOTH
-    # protocols -- P300 log 2026-07-04 and KW log 2026-07-03 both dump
-    # "Device: 0x20CB (VScotHO1) HW=0x03 SW=0x51". GWG stays default-off
-    # (its single-byte scheme is untested on hardware); users can still opt
-    # in explicitly there.
-    identify = config.get(CONF_IDENTIFY_DEVICE)
-    if identify is None:
-        identify = protocol in ("P300", "KW")
-    cg.add(var.set_identify_device(identify))
+    # Identification reads 0xF8..0xFB once at boot (plus the burner-control
+    # chip at 0x7650 on P300/KW). Default ON for every protocol, all
+    # HARDWARE-CONFIRMED: VScotHO1_72 (0x20CB) dumps "HW=0x03 SW=0x51" over
+    # P300 (log 2026-07-04) and KW (2026-07-03; the block read at 0x00F8 falls
+    # back to four length-1 reads there), and GWG reads 0xF8..0xFB in the
+    # virtual access mode (issue #21: 0x2053 HW=0x01 SW=0x7A).
+    # `identify_device: false` is the opt-out.
+    cg.add(var.set_identify_device(config.get(CONF_IDENTIFY_DEVICE, True)))
 
     # Raw-lane capacity is applied before setup() reserves the lane. Emitted
     # unconditionally so the generated main.cpp states the size it runs with.

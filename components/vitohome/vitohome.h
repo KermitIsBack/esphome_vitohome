@@ -289,6 +289,11 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
   //             F8/F9 are wire-confirmed on the reference unit. Every fallback
   //             step is fail-soft.
   //
+  //   then (P300/KW only): read 0x7650 length 1, the burner-control chip
+  //             (Vitosoft's GFA_Kennung). It selects the GFA fault-text companion
+  //             (example/catalogs/<lang>/gfa/). GWG addresses one byte, so the
+  //             read does not exist there.
+  //
   // The result is logged, shown in dump_config(), and published to registered
   // device_id text sensors.
   enum class IdentState : uint8_t {
@@ -298,6 +303,7 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
     READ_F9,
     READ_FA,
     READ_FB,
+    READ_GFA,
     DONE,
   };
 
@@ -336,6 +342,7 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
   void ident_dispatch_(IdentState state);
   void ident_handle_response_(const ResponseView &response);
   void ident_handle_error_();
+  void ident_after_sw_();
   void ident_finish_();
   std::string ident_string_() const;
   // Writes the catalog finder URL for the identification read so far. Returns
@@ -529,6 +536,9 @@ class VitoHomeComponent final : public PollingComponent, public uart::UARTDevice
   int ident_controller_{-1};
   int ident_hw_{-1};
   int ident_sw_{-1};
+  // Burner-control chip at 0x7650 (READ_GFA); -1 = not read, absent, or a
+  // unit without one (error frame on P300, 0x00/0xFF on KW).
+  int ident_gfa_{-1};
   bool gwg_burst_disabled_{false};  // see gwg_burst_disabled()
 
   // --- raw scan console lane -------------------------------------------------

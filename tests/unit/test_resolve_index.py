@@ -203,6 +203,8 @@ _LOG_LINES = [
     "read 0x5525 ok\nRaw: 0x00F8: 20",
     # The burner-control chip, which selects the GFA companion.
     "Device: 0x20CB (VScotHO1) HW=0x03 SW=0x51 GFA=0x24",
+    # Exactly as the hub logs it at boot (ident_string_), chip name included.
+    "[I][vitohome:1771]: Device identification: 0x20CB (VScotHO1) HW=0x03 SW=0x51 GFA=0x41 (ÖFA)",
 ]
 
 
@@ -235,6 +237,7 @@ def test_javascript_lookup_matches_resolve(catalog):
         {"id": None, "hw": None, "sw": None, "f0": None, "gfa": None},
         {"id": None, "hw": None, "sw": None, "f0": None, "gfa": None},
         {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": None, "gfa": 0x24},
+        {"id": 0x20CB, "hw": 0x03, "sw": 0x51, "f0": None, "gfa": 0x41},
     ]
     assert out["unknown_without_id"] == {"kind": "unknown", "ident": None}
 

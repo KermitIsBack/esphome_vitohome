@@ -2962,7 +2962,8 @@ def _error_history_lines(
     error_history type. ``codes_map`` is attached only to SYSTEM slots;
     ``gfa_map`` only to the GFA burner-control slots (a different code space,
     keyed by the GFA chip -- see _resolve_fault_codes). ``*_note`` is the
-    comment stating where the texts come from."""
+    comment stating where the texts come from. Repeated maps become YAML
+    aliases later, in output order (_share_codes_blocks)."""
     lines = list(entry["comment"])
     lines += [
         "# If the device NAKs the 9-byte block read, drop length to 1 (code only).",
@@ -2979,20 +2980,46 @@ def _error_history_lines(
         lines.append("  disabled_by_default: true")
     lines.append(f"  update_interval: {POLL_ERROR}s")
     if entry["system"] and codes_map:
-        lines.append(f"  # {codes_note}" if codes_note else "  # Fault-code map:")
-        lines.append("  codes:")
-        for code, text in sorted(codes_map.items()):
-            lines.append(f"    0x{code:02X}: {_yaml_str(text)}")
+        lines += _codes_lines(codes_map, codes_note or "Fault-code map:")
     elif entry["system"]:
         lines.append('  # codes: { 0x00: "kein Fehler", ... }  # add a code->text map')
     elif entry.get("gfa") and gfa_map:
-        lines.append(f"  # {gfa_note}")
-        lines.append("  codes:")
-        for code, text in sorted(gfa_map.items()):
-            lines.append(f"    0x{code:02X}: {_yaml_str(text)}")
+        lines += _codes_lines(gfa_map, gfa_note)
     elif entry.get("gfa") and gfa_note:
         lines.append(f"  # {gfa_note}")
     return lines
+
+
+def _codes_lines(codes: dict, note: str) -> list[str]:
+    """The ``codes:`` block of one error-history slot; see _error_history_lines."""
+    return [f"  # {note}", "  codes:"] + [f"    0x{code:02X}: {_yaml_str(text)}" for code, text in sorted(codes.items())]
+
+
+def _share_codes_blocks(chunk: list[str], anchors: dict) -> list[str]:
+    """Write a ``codes:`` map that already appeared in this catalog as a YAML
+    alias of its first occurrence.
+
+    A catalog repeats one map on many slots -- the ten system fault-history
+    slots carry the device's 110 codes each, and with --gfa-chip the twenty GFA
+    slots share the chip's map -- which made ~1,000 duplicate lines per
+    catalog. Done on the chunks in OUTPUT order, after sorting: the first
+    occurrence gets ``&<id>_codes`` and every later identical block becomes
+    ``*<id>_codes``, so an alias can never precede its anchor (a YAML error).
+    Flash was never duplicated: the component emits identical tables once
+    (emit_option_table). ``anchors`` is kept by the caller per catalog."""
+    head = next((i for i, ln in enumerate(chunk) if ln.strip() == "codes:"), None)
+    if head is None:
+        return chunk
+    end = head + 1
+    while end < len(chunk) and chunk[end].startswith(chunk[head][: len(chunk[head]) - len("codes:")] + "  0x"):
+        end += 1
+    body = tuple(chunk[head + 1 : end])
+    indent = chunk[head][: len(chunk[head]) - len("codes:")]
+    if body in anchors:
+        return [*chunk[:head], f"{indent}codes: *{anchors[body]}  # same map as above", *chunk[end:]]
+    oid = next((ln.split("id:", 1)[1].strip() for ln in chunk if ln.strip().startswith("id:")), "map")
+    anchors[body] = f"{oid}_codes"
+    return [*chunk[:head], f"{indent}codes: &{anchors[body]}", *chunk[head + 1 :]]
 
 
 def _resolve_fault_codes(catalog, device: str, error_codes: bool, error_code_set: str):
@@ -3044,7 +3071,10 @@ def _resolve_gfa_codes(catalog, gfa_chip: str | None):
     if not gfa:
         return None, ""
     if not gfa_chip:
-        return None, "GFA texts: raw-read 0x7650 (GFA_Kennung) and regenerate with --gfa-chip <byte>"
+        return None, (
+            "GFA texts: include gfa/chip_<XX>.yaml for the GFA=0x<XX> the hub logs at boot "
+            "(or regenerate with --gfa-chip <XX>)"
+        )
     chip = gfa_chip.upper().removeprefix("0X").zfill(2)
     if chip not in gfa:
         known = ", ".join(sorted(gfa))
@@ -3577,6 +3607,7 @@ def generate(
     out.append("# ============================================================")
     out.append("")
 
+    code_anchors: dict = {}  # codes block -> its YAML anchor (_share_codes_blocks)
     for platform in ("sensor", "binary_sensor", "number", "select", "switch", "text", "text_sensor"):
         if buckets[platform]:
             out.append(f"{platform}:")
@@ -3594,7 +3625,7 @@ def generate(
                 if order == "group" and label and label != last_label:
                     out.append(f"  # --- {label} ---")
                 last_label = label
-                out.extend(chunk)
+                out.extend(_share_codes_blocks(chunk, code_anchors))
             out.append("")
 
     if comments:
@@ -3659,9 +3690,10 @@ def gfa_companion(catalog, chip: str, slot_ids: list[str]) -> str:
         "#     heater: !include catalogs/<your-unit>.yaml",
         f"#     gfa: !include catalogs/{GFA_DIRNAME}/{gfa_companion_name(chip)}",
         "#",
-        "# The chip is the byte your unit reports at 0x7650 (GFA_Kennung): read it",
-        "# once with the scan console. The texts differ by chip, and 7 codes mean",
-        "# different things on different chips, so use the one your unit reports.",
+        "# The hub logs the chip at boot, in its identification line and the",
+        '# catalog-finder link ("GFA=0x24 (NEC)", "&gfa=24"; read from 0x7650,',
+        "# GFA_Kennung). The texts differ by chip, and 7 codes mean different things",
+        "# on different chips, so use the one your unit reports.",
         "#",
         f"# Generated by scripts/gen_catalog.py from Vitosoft (viessmann.errorcode.fa.{chip}.*).",
         "# ============================================================",

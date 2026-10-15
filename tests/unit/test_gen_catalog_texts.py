@@ -188,7 +188,7 @@ def test_gfa_chip_selects_its_set(chip):
 
 def test_gfa_without_chip_says_how_and_unknown_chip_fails():
     codes, note = gc._resolve_gfa_codes(_Cat(_TEXTS), None)
-    assert codes is None and "0x7650" in note
+    assert codes is None and "GFA=0x<XX> the hub logs at boot" in note
     with pytest.raises(SystemExit, match="known: 24, 41"):
         gc._resolve_gfa_codes(_Cat(_TEXTS), "99")
 
@@ -317,3 +317,28 @@ def test_switch_decision_does_not_depend_on_the_language():
     shown = gc._dedup_option_labels(gc._enum_options(ev))
     assert gc._boolean_pair(shown) is None
     assert gc._enum_bool_pair(ev, shown) == (1, 0, "Marche", "Arrêt")
+
+
+# --- shared codes blocks ---------------------------------------------------------------------
+
+
+def _slot(oid, codes):
+    lines = ["  - platform: vitohome", "    type: error_history", f"    id: {oid}", "    # note", "    codes:"]
+    return lines + [f'      0x{c:02X}: "{t}"' for c, t in codes] + ["    update_interval: 300s"]
+
+
+def test_repeated_codes_maps_become_aliases_in_output_order():
+    anchors: dict = {}
+    first = gc._share_codes_blocks(_slot("letzter_fehler", [(0, "a"), (1, "b")]), anchors)
+    second = gc._share_codes_blocks(_slot("fehler_02", [(0, "a"), (1, "b")]), anchors)
+    other = gc._share_codes_blocks(_slot("gfa_fehler_01", [(0, "x")]), anchors)
+    assert "    codes: &letzter_fehler_codes" in first and '      0x01: "b"' in first
+    assert "    codes: *letzter_fehler_codes  # same map as above" in second
+    assert not any(ln.startswith("      0x") for ln in second)  # the rows are gone
+    assert second[-1] == "    update_interval: 300s"  # what follows the map stays
+    assert "    codes: &gfa_fehler_01_codes" in other  # a different map anchors itself
+
+
+def test_chunk_without_codes_is_untouched():
+    chunk = ["  - platform: vitohome", "    id: plain"]
+    assert gc._share_codes_blocks(chunk, {}) == chunk

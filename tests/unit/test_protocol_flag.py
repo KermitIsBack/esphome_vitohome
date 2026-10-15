@@ -65,21 +65,19 @@ def test_cv_enum_returns_the_key_not_the_value():
     assert validated.enum_value == "KW"
 
 
-# --- identify_device default per protocol ------------------------------------
-# The default mirrors components/vitohome/__init__.py::to_code: on for P300 and
-# KW (identification is hardware-confirmed on both -- VScotHO1_72 0x20CB dumps
-# "HW=0x03 SW=0x51" over each), off for GWG (untested single-byte scheme).
+# --- identify_device default ----------------------------------------------------
+# On for every protocol: the identification read is hardware-confirmed on P300
+# and KW (VScotHO1_72 0x20CB, "HW=0x03 SW=0x51" over each) and on GWG (issue #21,
+# 0x2053 HW=0x01 SW=0x7A, read in the virtual access mode). `identify_device:
+# false` is the opt-out. Checked against to_code's own source rather than a copy
+# of its expression, so a protocol-conditional default cannot creep back in.
 
 
-def _identify_default(protocol: str) -> bool:
-    # The exact expression to_code uses when identify_device is unset.
-    return protocol in ("P300", "KW")
+def test_identify_default_is_on_for_every_protocol():
+    import inspect
 
+    from components import vitohome
 
-def test_identify_default_on_for_p300_and_kw():
-    assert _identify_default("P300") is True
-    assert _identify_default("KW") is True
-
-
-def test_identify_default_off_for_gwg():
-    assert _identify_default("GWG") is False
+    src = inspect.getsource(vitohome.to_code)
+    assert "set_identify_device(config.get(CONF_IDENTIFY_DEVICE, True))" in src
+    assert 'protocol in ("P300", "KW")' not in src
