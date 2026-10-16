@@ -320,24 +320,32 @@ written at the same register so the hub's read-back re-reads exactly what was
 sent. The wire bytes encode/decode to a canonical
 `"HH:MM-HH:MM HH:MM-HH:MM ..."` string (up to four pairs, space-separated,
 `"--"` or a blank pair leaves that slot disabled); an empty string clears the
-whole day (all bytes `0xFF`). A malformed input string is rejected in full --
-partial writes never reach the device. Minutes are truncated to the device's
-10-minute grid on write, not rounded to the nearest step. `read_back` (default
-`true`, optional `update_interval`) re-reads immediately after the write ACK,
-so the Home Assistant state snaps to the accepted grid value instead of
-sitting on the raw input for one poll cycle. There is currently no
+whole day (all bytes `0xFF`). `24:00` is accepted as an OFF time only
+(`"00:00-24:00"` = on all day, `"06:00-24:00"` = on until midnight; wire byte
+`0xC0`), and equal ON/OFF times are kept (`"00:00-00:00"` = off all day). A
+malformed input string is rejected in full and logged -- partial writes never
+reach the device. Minutes are truncated to the device's 10-minute grid on
+write, not rounded to the nearest step. `read_back` (default `true`, optional
+`update_interval`) re-reads immediately after the write ACK, so the Home
+Assistant state snaps to the accepted grid value instead of sitting on the raw
+input for one poll cycle. There is currently no
 `state_address`/`address` split for `text` -- read and write always share the
 one configured `address`.
 
-**Validation scope: a pure binary packer.** The encoder validates only what
-the wire format can represent -- hour 0..23, minute 0..59, at most four pairs,
-per-token grammar -- and deliberately does **not** validate scheduling
-semantics: ascending pair order, non-overlap, and ON-before-OFF within a pair
-are unchecked. This matches the independent reference: vcontrold's
-`setCycleTime` (`src/unit.c`) performs no ordering validation either (it does
-not even range-check the hour). Whether the device itself requires ordered or
-contiguous pairs is unverified on hardware; scheduling logic and sanity checks
-belong in Home Assistant or with the user, not in this codec.
+**Validation scope.** The encoder validates what the wire format can
+represent -- hour 0..23 (plus exactly `24:00` as an OFF time), minute 0..59, at
+most four pairs, per-token grammar -- and one rule *within* a pair: OFF must
+not precede ON, compared after truncation to the 10-minute grid (so
+`"06:09-06:01"` is accepted as `06:00-06:00`). A reversed pair such as
+`"22:00-06:00"` rejects the whole string rather than being written; the
+controller's own UI clears such an interval (observed on a Vitotronic 200
+KO1B), so writing it would only produce a different program than the one
+typed. Relations *between* pairs -- ascending order and non-overlap -- remain
+unchecked, as in the independent reference: vcontrold's `setCycleTime`
+(`src/unit.c`) performs no ordering validation at all (it does not even
+range-check the hour). Whether the device requires ordered or non-overlapping
+pairs is unverified on hardware; that scheduling logic belongs in Home
+Assistant or with the user, not in this codec.
 
 **Switch** (`switch`): a two-state specialisation of `select` for semantic
 on/off registers (Partybetrieb `0x2330`, the K-coding booleans), so Home

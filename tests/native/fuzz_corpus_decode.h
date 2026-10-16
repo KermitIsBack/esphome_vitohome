@@ -144,6 +144,17 @@ inline constexpr uint8_t kDSeed_text_program_out_of_range[] = {
     0x3C, 0x08, 0x39, 0x39, 0x3A, 0x39, 0x39, 0x2D, 0x30, 0x30, 0x3A, 0x30, 0x30,
 };
 
+// 24:00 as the OFF time: encodes to the 0xC0 end-of-day byte and must round-trip as "00:00-24:00"
+inline constexpr uint8_t kDSeed_text_program_end_of_day[] = {
+    0x3C, 0x08, 0x30, 0x30, 0x3A, 0x30, 0x30, 0x2D, 0x32, 0x34, 0x3A, 0x30, 0x30,
+};
+
+// a reversed pair after a valid one: rejected in full, the caller's buffer untouched
+inline constexpr uint8_t kDSeed_text_program_reversed[] = {
+    0x3C, 0x08, 0x30, 0x36, 0x3A, 0x30, 0x30, 0x2D, 0x32, 0x32, 0x3A, 0x30, 0x30,
+    0x20, 0x32, 0x32, 0x3A, 0x30, 0x30, 0x2D, 0x30, 0x36, 0x3A, 0x30, 0x30,
+};
+
 // trailing garbage inside a token
 inline constexpr uint8_t kDSeed_text_program_trailing_junk[] = {
     0x3C, 0x08, 0x30, 0x36, 0x3A, 0x30, 0x30, 0x2D, 0x32, 0x32, 0x3A, 0x30, 0x30, 0x78,
@@ -238,6 +249,8 @@ inline constexpr DecodeSeed kDecodeSeeds[] = {
     {"text_program_dashes", kDSeed_text_program_dashes, sizeof(kDSeed_text_program_dashes)},
     {"text_program_five_pairs", kDSeed_text_program_five_pairs, sizeof(kDSeed_text_program_five_pairs)},
     {"text_program_out_of_range", kDSeed_text_program_out_of_range, sizeof(kDSeed_text_program_out_of_range)},
+    {"text_program_end_of_day", kDSeed_text_program_end_of_day, sizeof(kDSeed_text_program_end_of_day)},
+    {"text_program_reversed", kDSeed_text_program_reversed, sizeof(kDSeed_text_program_reversed)},
     {"text_program_trailing_junk", kDSeed_text_program_trailing_junk, sizeof(kDSeed_text_program_trailing_junk)},
     {"text_program_no_colon", kDSeed_text_program_no_colon, sizeof(kDSeed_text_program_no_colon)},
     {"tiny_cap_real_payload", kDSeed_tiny_cap_real_payload, sizeof(kDSeed_tiny_cap_real_payload)},

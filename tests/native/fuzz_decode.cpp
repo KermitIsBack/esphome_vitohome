@@ -182,7 +182,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *input, std::size_t size) {
       // Only this direction is asserted. Device bytes -> string -> bytes is
       // NOT a contract: a malformed OFF byte (disabled while its ON is active)
       // renders through the same formula so the raw state stays visible, and
-      // that rendering is deliberately not re-encodable.
+      // that rendering is deliberately not re-encodable. Likewise a reversed
+      // pair read from a device decodes, but the encoder rejects it.
       char canon[64];
       const int dr = decode_schaltzeiten_day(prog, 8, canon, sizeof(canon));
       oracle(dr >= 0, "encoded program failed to decode");

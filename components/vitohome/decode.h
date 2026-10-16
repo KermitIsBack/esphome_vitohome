@@ -386,9 +386,13 @@ inline bool encode_datetime_bcd(uint16_t year, uint8_t month, uint8_t day, uint8
 //   hour   = byte >> 3            (5 bits, 0..31)
 //   minute = (byte & 0x07) * 10   (3 bits -> 0,10,20,30,40,50)
 // An ON byte with hour >= 24 (0xC0..0xFF; the device fills 0xFF) marks the
-// pair disabled. The three-bit minute field is the reason the device only
-// stores 10-minute steps -- there is physically no room for a finer value, so
-// the encode path truncates to the next-lower 10 minutes (06:07 -> 06:00).
+// pair disabled. An OFF byte of exactly 0xC0 is not a sentinel but the
+// end-of-day switch point 24:00 ("00:00-24:00" = on all day); a Vitotronic
+// 200 KO1B accepts it and reads it back unchanged (PR #25), so 24:00 is valid
+// as an OFF time and only there. The three-bit minute field is the reason the
+// device only stores 10-minute steps -- there is physically no room for a
+// finer value, so the encode path truncates to the next-lower 10 minutes
+// (06:07 -> 06:00).
 //
 // Format cross-checked against two independent references: vcontrold
 // getCycleTime/setCycleTime (src/unit.c) and InsideViessmannVitosoft
@@ -401,14 +405,23 @@ inline bool encode_datetime_bcd(uint16_t year, uint8_t month, uint8_t day, uint8
 //   "06:00-22:00 08:30-12:00"  -- up to four space-separated ON-OFF pairs.
 // A disabled pair is "--"; trailing disabled pairs are omitted; an interior
 // disabled pair keeps its slot as "--" so positions are preserved. An
-// all-disabled day is the empty string.
+// all-disabled day is the empty string. Within a pair, OFF must not precede
+// ON (equal times are allowed: "00:00-00:00" is off all day); the encoder
+// rejects a reversed pair rather than writing it.
 
-// True if a switch-point byte encodes a real time (hour 0..23), false if it
-// is the disabled sentinel (hour >= 24, which includes the 0xFF fill).
+// The OFF byte for 24:00 (hour 24, minute 0): end of day. Never valid as ON,
+// where any hour >= 24 is the disabled sentinel.
+inline constexpr uint8_t TIMEBYTE_END_OF_DAY = 0xC0;
+
+// True if an ON switch-point byte encodes a real time (hour 0..23), false if
+// it is the disabled sentinel (hour >= 24, which includes the 0xFF fill). Not
+// meaningful for OFF bytes, where TIMEBYTE_END_OF_DAY is a real time.
 inline bool timebyte_active(uint8_t b) { return static_cast<uint8_t>(b >> 3) < 24; }
 
-// Decode one switch-point byte to hour/minute. Returns false for a disabled
-// byte (hour >= 24); *h/*m are left untouched in that case.
+// Decode one ON switch-point byte to hour/minute. Returns false for a
+// disabled byte (hour >= 24, including 24:00); *h/*m are left untouched in
+// that case. decode_schaltzeiten_day renders OFF bytes directly, so 24:00
+// still decodes there.
 inline bool timebyte_to_hhmm(uint8_t b, uint8_t *h, uint8_t *m) {
   if (h == nullptr || m == nullptr)
     return false;
@@ -421,9 +434,10 @@ inline bool timebyte_to_hhmm(uint8_t b, uint8_t *h, uint8_t *m) {
 }
 
 // Encode hour/minute to one switch-point byte, truncating minutes to the
-// next-lower 10-minute step. Accepts 00:00..23:59 and exactly 24:00.
-// The day-program parser permits 24:00 only as an end time.
-// Returns false for invalid arguments.
+// next-lower 10-minute step. Accepts 00:00..23:59 and exactly 24:00
+// (TIMEBYTE_END_OF_DAY); the day-program parser permits 24:00 only as an OFF
+// time. Returns false (leaving *b untouched) for any other hour >= 24, a
+// minute outside 0..59, or a null b.
 inline bool hhmm_to_timebyte(uint8_t h, uint8_t m, uint8_t *b) {
   if (b == nullptr || h > 24 || m > 59 || (h == 24 && m != 0))
     return false;
@@ -506,10 +520,11 @@ inline bool parse_hhmm_(const char **pp, const char *end, uint8_t *b) {
 
 // Encode the canonical string into an 8-byte per-day program (caller provides
 // buf8). Empty / blank input clears the day (all 0xFF). Returns false on any
-// malformed token or more than four pairs; on failure buf8 is left unchanged
-// (the parse builds into a local and only commits on success, so a rejected
-// string never leaves a torn write) and the caller must not transmit -- same
-// contract as encode_scaled.
+// malformed token, more than four pairs, 24:00 as an ON time, or a reversed
+// pair (OFF before ON, compared after truncation to the 10-minute grid). On
+// failure buf8 is left unchanged (the parse builds into a local and only
+// commits on success, so a rejected string never leaves a torn write) and the
+// caller must not transmit -- same contract as encode_scaled.
 inline bool encode_schaltzeiten_day(const char *str, uint8_t *buf8) {
   if (buf8 == nullptr)
     return false;
@@ -554,11 +569,11 @@ inline bool encode_schaltzeiten_day(const char *str, uint8_t *buf8) {
         if (cur != tok_end)
           return false;  // trailing garbage in the token
         // 24:00 is only valid as an end time.
-        if (onb == 0xC0)
+        if (onb == TIMEBYTE_END_OF_DAY)
           return false;
-
         // Reject reversed intervals without changing the existing program.
-        // Equal start and end times remain valid.
+        // Equal start and end times remain valid. The byte layout is
+        // monotonic in time, so comparing bytes compares times.
         if (offb < onb)
           return false;
 
