@@ -11,7 +11,11 @@
 # access method (GFA_READ/RPC/PROZESS/KBUS/OT) were omitted as unreachable
 # via VitoWiFi's read. Re-run with --no-reachable-only to include them.
 #
-# 236 entity name(s) repeat within their platform in Vitosoft (e.g. one
+# LON inputs omitted: 13 network-variable input(s) (nvi*). A LON
+# master writes them; without a LON module they hold no data (0xFF
+# 'invalid'). --profile full includes them.
+#
+# 238 entity name(s) repeat within their platform in Vitosoft (e.g. one
 # 'Pegel' per RF participant); each such name carries its id in parentheses,
 # since ESPHome requires a unique name per platform.
 #
@@ -1537,6 +1541,18 @@ sensor:
     name: "Flow temp, coolant buffer"
     id: WPR3_Vorlauftemperatur_Kuehlpuffer
     address: 0x01F3
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "Common flow temperature"
+    id: VCaldens_Gemeinsame_Vorlauftemperatur
+    address: 0x01F7
     length: 2
     converter: div10
     unit_of_measurement: "°C"
@@ -3923,7 +3939,7 @@ sensor:
     update_interval: 60s
 
   - platform: vitohome
-    name: "Hot gas temperature EEV1"
+    name: "Hot gas temperature EEV1 (WPR3_EEV1_Heissgastemperatur)"
     id: WPR3_EEV1_Heissgastemperatur
     address: 0x01E0
     length: 2
@@ -5076,9 +5092,105 @@ sensor:
     update_interval: 60s
 
   - platform: vitohome
+    name: "OAT outside temperature sensor"
+    id: WPR3_Split_OAT_ATS
+    address: 0x01E6
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "OMT evaporator temperature"
+    id: WPR3_Split_OMT_Verdampfertemperatur
+    address: 0x01E7
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "OCT evaporator flow temperature"
+    id: WPR3_Split_OCT_Verdampfervorlauftemp
+    address: 0x01E8
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "CCT compressor temperature"
+    id: WPR3_Split_CCT_Verdichtertemperatur
+    address: 0x01E9
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "ICT condenser temperature flow"
+    id: WPR3_Split_ICT_Kondensator_VL
+    address: 0x01EA
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "IRT condenser temperature return"
+    id: WPR3_Split_IRT_Kondensator_RL
+    address: 0x01EB
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "HST inverter temperature"
+    id: WPR3_Split_HST_Invertertemperatur
+    address: 0x01EC
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
     name: "LWT condenser water temperature flow"
     id: WPR3_Split_LWT_Kondensator_Wassertemp_VL
     address: 0x01ED
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "Hot gas temperature EEV1 (WPR_Heissgastemperatur_EEV1)"
+    id: WPR_Heissgastemperatur_EEV1
+    address: 0x0120
     length: 2
     converter: div10
     unit_of_measurement: "°C"
@@ -12823,6 +12935,22 @@ number:
     update_interval: 3600s
 
   - platform: vitohome
+    name: "(538F) Speed reduction"
+    id: WPR3_EEV2_538F
+    address: 0x538F
+    length: 2
+    converter: noconv
+    # Borders absent, or out of range for this byte width, in
+    # the export. These placeholders pass `esphome config` but
+    # pin the value to 0 - set real min/max/step before use.
+    min_value: 0
+    max_value: 0
+    step: 1
+    mode: box
+    disabled_by_default: true
+    update_interval: 3600s
+
+  - platform: vitohome
     name: "(5390) Prop. superheating controller"
     id: WPR3_EEV2_5390
     address: 0x5390
@@ -16849,6 +16977,23 @@ number:
     update_interval: 3600s
 
   - platform: vitohome
+    name: "Electricity price, on-site consumption"
+    id: VCaldens_Strompreis_Eigen
+    address: 0x7BED
+    length: 2
+    converter: div100
+    unit_of_measurement: "ct/kWh"
+    # Borders absent, or out of range for this byte width, in
+    # the export. These placeholders pass `esphome config` but
+    # pin the value to 0 - set real min/max/step before use.
+    min_value: 0
+    max_value: 0
+    step: 1
+    mode: box
+    disabled_by_default: true
+    update_interval: 3600s
+
+  - platform: vitohome
     name: "FeatureBits, operating mode defaulted by external device"
     id: WPR3_B00F_BAVFeatureBits
     address: 0xB00F
@@ -17138,123 +17283,6 @@ number:
     min_value: 0
     max_value: 3.5
     step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  # --- DiagnosisDiagnosis2 / LONObjekte ---
-  - platform: vitohome
-    name: "External set flow temperature HC1"
-    id: nviHCC1_FlowSetpt
-    address: 0xA403
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    min_value: 0
-    max_value: 127
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  - platform: vitohome
-    name: "External set flow temperature HC2"
-    id: nviHCC2_FlowSetpt
-    address: 0xA443
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    min_value: 0
-    max_value: 127
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  - platform: vitohome
-    name: "External set flow temperature HC3"
-    id: nviHCC3_FlowSetpt
-    address: 0xA483
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    min_value: 0
-    max_value: 127
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-    # NOTE: writes are a read-modify-write of the whole 2-byte block
-  - platform: vitohome
-    name: "Set system⁄boiler output - value"
-    id: nviProdCmd_CFDM_value
-    address: 0xA380
-    length: 2
-    byte_offset: 0
-    converter: div2
-    signed: false  # Vitosoft ParameterType Byte, borders 0..100
-    unit_of_measurement: "%"
-    min_value: 0
-    max_value: 100
-    step: 0.5
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  - platform: vitohome
-    name: "Set flow temperature systems⁄boilers"
-    id: nviSetpoint_CFDM
-    address: 0xA383
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    # Borders absent, or out of range for this byte width, in
-    # the export. These placeholders pass `esphome config` but
-    # pin the value to 0 - set real min/max/step before use.
-    min_value: 0
-    max_value: 0
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-    # NOTE: writes are a read-modify-write of the whole 10-byte block
-  - platform: vitohome
-    name: "Set flow temperature of heating circuit controllers"
-    id: nviConsumerDmd_Temp_CFDM
-    address: 0xA385
-    length: 10
-    byte_offset: 0
-    byte_length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    # Borders absent, or out of range for this byte width, in
-    # the export. These placeholders pass `esphome config` but
-    # pin the value to 0 - set real min/max/step before use.
-    min_value: 0
-    max_value: 0
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  - platform: vitohome
-    name: "Set boiler water temperature"
-    id: nviSetpoint_BLR
-    address: 0xA303
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    min_value: 0
-    max_value: 127
-    step: 0.1
     mode: box
     disabled_by_default: true
     update_interval: 3600s
@@ -19289,6 +19317,19 @@ select:
       0x02: "2: Starting according to set cylinder integral"
       0x03: "3: Starting according to return or flow integral and set cylinder integral"
 
+  # --- Codierung 2 / AnlagendefinitionextAnschlusserw ---
+  - platform: vitohome
+    name: "(701A) External blocking effect prim. pump⁄fan"
+    id: WPR_Anlagenkonfig_ExternSperrenWirkung_PrimPumpeVentilator
+    address: 0x701A
+    length: 1
+    bit_mask: 0x20  # Vitosoft BitPosition 2, BitLength 1 (MSB-first)
+    disabled_by_default: true
+    update_interval: 3600s
+    options:
+      0: "Control mode"
+      1: "OFF"
+
   # --- Codierung 2 / Elektroheizung ---
   - platform: vitohome
     name: "(7909) Elec. heating stage block power failure"
@@ -20207,59 +20248,6 @@ select:
       0x01: "1: Contractor"
       0x02: "2: Expert"
       0x03: "3: Debug"
-
-  # --- DiagnosisDiagnosis2 / LONObjekte ---
-  - platform: vitohome
-    name: "Operating mode - boiler"
-    id: nviApplicMode_BLR
-    address: 0xA302
-    length: 1
-    disabled_by_default: true
-    update_interval: 3600s
-    options:
-      0x00: "HVAC_AUTO"
-      0x01: "HVAC_HEAT"
-      0x02: "HVAC_MRNG_WRMUP"
-      0x03: "HVAC_COOL"
-      0x04: "HVAC_NIGHT_PURGE"
-      0x05: "HVAC_PRE_COOL"
-      0x06: "HVAC_OFF"
-      0x07: "HVAC_TEST"
-      0x08: "HVAC_EMERG_HEAT"
-      0x09: "HVAC_FAN_ONLY"
-      0x0A: "HVAC_FREE_COOL"
-      0x0B: "HVAC_ICE"
-      0x6E: "HVAC_SLAVE_ACTIVE"
-      0x6F: "HVAC_LOW_FIRE"
-      0x70: "HVAC_HIGH_FIRE"
-      0x64: "HVAC_FLOW_TEMP"
-      0xFF: "HVAC_NUL"
-
-  - platform: vitohome
-    name: "Operating mode system⁄boiler"
-    id: nviApplicMode_CFDM
-    address: 0xA382
-    length: 1
-    disabled_by_default: true
-    update_interval: 3600s
-    options:
-      0x00: "HVAC_AUTO"
-      0x01: "HVAC_HEAT"
-      0x02: "HVAC_MRNG_WRMUP"
-      0x03: "HVAC_COOL"
-      0x04: "HVAC_NIGHT_PURGE"
-      0x05: "HVAC_PRE_COOL"
-      0x06: "HVAC_OFF"
-      0x07: "HVAC_TEST"
-      0x08: "HVAC_EMERG_HEAT"
-      0x09: "HVAC_FAN_ONLY"
-      0x0A: "HVAC_FREE_COOL"
-      0x0B: "HVAC_ICE"
-      0x6E: "HVAC_SLAVE_ACTIVE"
-      0x6F: "HVAC_LOW_FIRE"
-      0x70: "HVAC_HIGH_FIRE"
-      0x64: "HVAC_FLOW_TEMP"
-      0xFF: "HVAC_NUL"
 
   # --- Expertlayer / S1 ---
   - platform: vitohome
@@ -23723,88 +23711,6 @@ text_sensor:
       0x0A: "HVAC_FREE_COOL"
       0x0B: "HVAC_ICE"
       0xFF: "HVAC_NUL"
-
-  - platform: vitohome
-    type: enum
-    name: "Operating mode - with external default HC1"
-    id: nviHCC1_ApplicMode
-    address: 0xA400
-    length: 1
-    disabled_by_default: true
-    update_interval: 60s
-    options:
-      0x00: "HVAC_AUTO"
-      0x01: "HVAC_HEAT"
-      0x02: "HVAC_MRNG_WRMUP"
-      0x03: "HVAC_COOL"
-      0x04: "HVAC_NIGHT_PURGE"
-      0x05: "HVAC_PRE_COOL"
-      0x06: "HVAC_OFF"
-      0x07: "HVAC_TEST"
-      0x08: "HVAC_EMERG_HEAT"
-      0x09: "HVAC_FAN_ONLY"
-      0x0A: "HVAC_FREE_COOL"
-      0x0B: "HVAC_ICE"
-      0xFF: "HVAC_NUL"
-      0x64: "HVAC_FLOW_TEMP"
-      0x6E: "HVAC_SLAVE_ACTIVE"
-      0x6F: "HVAC_LOW_FIRE"
-      0x70: "HVAC_HIGH_FIRE"
-      0x71: "HVAC_HEAT_DHW"
-
-  - platform: vitohome
-    type: enum
-    name: "Operating mode - with external default HC2"
-    id: nviHCC2_ApplicMode
-    address: 0xA440
-    length: 1
-    disabled_by_default: true
-    update_interval: 60s
-    options:
-      0x00: "HVAC_AUTO"
-      0x01: "HVAC_HEAT"
-      0x02: "HVAC_MRNG_WRMUP"
-      0x03: "HVAC_COOL"
-      0x04: "HVAC_NIGHT_PURGE"
-      0x05: "HVAC_PRE_COOL"
-      0x06: "HVAC_OFF"
-      0x07: "HVAC_TEST"
-      0x08: "HVAC_EMERG_HEAT"
-      0x09: "HVAC_FAN_ONLY"
-      0x0A: "HVAC_FREE_COOL"
-      0x0B: "HVAC_ICE"
-      0xFF: "HVAC_NUL"
-      0x6E: "HVAC_SLAVE_ACTIVE"
-      0x6F: "HVAC_LOW_FIRE"
-      0x70: "HVAC_HIGH_FIRE"
-      0x71: "HVAC_HEAT_DHW"
-
-  - platform: vitohome
-    type: enum
-    name: "Operating mode - with external default HC3"
-    id: nviHCC3_ApplicMode
-    address: 0xA480
-    length: 1
-    disabled_by_default: true
-    update_interval: 60s
-    options:
-      0x00: "HVAC_AUTO"
-      0x01: "HVAC_HEAT"
-      0x02: "HVAC_MRNG_WRMUP"
-      0x03: "HVAC_COOL"
-      0x04: "HVAC_NIGHT_PURGE"
-      0x05: "HVAC_PRE_COOL"
-      0x06: "HVAC_OFF"
-      0x07: "HVAC_TEST"
-      0x08: "HVAC_EMERG_HEAT"
-      0x09: "HVAC_FAN_ONLY"
-      0x0A: "HVAC_FREE_COOL"
-      0x0B: "HVAC_ICE"
-      0xFF: "HVAC_NUL"
-      0x6E: "HVAC_SLAVE_ACTIVE"
-      0x6F: "HVAC_LOW_FIRE"
-      0x70: "HVAC_HIGH_FIRE"
-      0x71: "HVAC_HEAT_DHW"
 
   # --- Expertlayer / Ausstattung ---
   - platform: vitohome

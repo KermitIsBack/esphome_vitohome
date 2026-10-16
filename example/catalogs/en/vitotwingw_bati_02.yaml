@@ -2325,3 +2325,4 @@ text_sensor:
 # Time program heating circuit 3 @ 0x4100: NoConversion length 56 > 4 bytes -> custom decode
 # Time program 4 DHW @ 0x5100: NoConversion length 56 > 4 bytes -> custom decode
 # Time program 5 (power demand) @ 0x6100: NoConversion length 56 > 4 bytes -> custom decode
+# ecnsysEventType~ErrorIndex @ 0x7561: NoConversion length 10 > 4 bytes -> custom decode

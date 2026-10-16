@@ -2325,3 +2325,4 @@ text_sensor:
 # Zeitprogramm Heizkreis 3 @ 0x4100: NoConversion length 56 > 4 bytes -> custom decode
 # Zeitprogramm 4 Warmwasser @ 0x5100: NoConversion length 56 > 4 bytes -> custom decode
 # Zeitprogramm 5 (Stromanforderung) @ 0x6100: NoConversion length 56 > 4 bytes -> custom decode
+# ecnsysEventType~ErrorIndex @ 0x7561: NoConversion length 10 > 4 bytes -> custom decode

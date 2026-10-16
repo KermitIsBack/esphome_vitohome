@@ -7,7 +7,7 @@
 # include this file via `packages:`. All entities are
 # disabled_by_default; enable the ones you want in Home Assistant.
 #
-# FCRead filter ON: 1 datapoint(s) requiring a non-Optolink
+# FCRead filter ON: 2 datapoint(s) requiring a non-Optolink
 # access method (GFA_READ/RPC/PROZESS/KBUS/OT) were omitted as unreachable
 # via VitoWiFi's read. Re-run with --no-reachable-only to include them.
 #
@@ -2144,4 +2144,5 @@ text_sensor:
 
 # --- datapoints needing custom decode (not auto-emitted) ---
 # Betriebsstunden Brenner Stufe 1 zurücksetzen @ 0x08A7: WRITE-ONLY register (Vitosoft AccessMode 'Write'); a trigger with no read-back -> not auto-emitted.
+# (24) Wartung zuruecksetzen @ 0x5724: WRITE-ONLY register (Vitosoft AccessMode 'Write'); a trigger with no read-back -> not auto-emitted.
 # ecnsysEventType~ErrorIndex @ 0x7561: NoConversion length 10 > 4 bytes -> custom decode

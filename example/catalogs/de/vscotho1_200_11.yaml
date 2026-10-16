@@ -11,6 +11,10 @@
 # access method (GFA_READ/RPC/PROZESS/KBUS/OT) were omitted as unreachable
 # via VitoWiFi's read. Re-run with --no-reachable-only to include them.
 #
+# LON inputs omitted: 16 network-variable input(s) (nvi*). A LON
+# master writes them; without a LON module they hold no data (0xFF
+# 'invalid'). --profile full includes them.
+#
 # 45 entity name(s) repeat within their platform in Vitosoft (e.g. one
 # 'Pegel' per RF participant); each such name carries its id in parentheses,
 # since ESPHome requires a unique name per platform.
@@ -574,6 +578,62 @@ sensor:
     length: 4
     byte_offset: 3
     converter: noconv
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  # --- Diagnose 1 / LANModul ---
+  - platform: vitohome
+    name: "Ladezustand DHW"
+    id: HO2B_Ladezustand_DHW
+    address: 0xE097
+    length: 1
+    converter: noconv
+    unit_of_measurement: "%"
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "Ladezustand Oben"
+    id: HO2B_Ladezustand_Oben
+    address: 0xE098
+    length: 1
+    converter: noconv
+    unit_of_measurement: "%"
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "Ladezustand Unten"
+    id: HO2B_Ladezustand_Unten
+    address: 0xE09A
+    length: 1
+    converter: noconv
+    unit_of_measurement: "%"
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "Wartungsmeldungen"
+    id: HO2B_Wartungsmeldungen
+    entity_category: diagnostic
+    address: 0x7480
+    length: 4
+    converter: noconv
+    state_class: measurement
+    disabled_by_default: true
+    update_interval: 60s
+
+  - platform: vitohome
+    name: "Ladezustand Mitte"
+    id: HO2B_Ladezustand_Mitte
+    address: 0xE099
+    length: 1
+    converter: noconv
+    unit_of_measurement: "%"
     state_class: measurement
     disabled_by_default: true
     update_interval: 60s
@@ -3281,6 +3341,105 @@ number:
     disabled_by_default: true
     update_interval: 3600s
 
+  - platform: vitohome
+    name: "Datum 1"
+    id: HO2B_Datum_1
+    address: 0x5900
+    length: 4
+    converter: noconv
+    # Borders absent, or out of range for this byte width, in
+    # the export. These placeholders pass `esphome config` but
+    # pin the value to 0 - set real min/max/step before use.
+    min_value: 0
+    max_value: 0
+    step: 1
+    mode: box
+    disabled_by_default: true
+    update_interval: 3600s
+
+  - platform: vitohome
+    name: "Datum 2"
+    id: HO2B_Datum_2
+    address: 0x590C
+    length: 4
+    converter: noconv
+    # Borders absent, or out of range for this byte width, in
+    # the export. These placeholders pass `esphome config` but
+    # pin the value to 0 - set real min/max/step before use.
+    min_value: 0
+    max_value: 0
+    step: 1
+    mode: box
+    disabled_by_default: true
+    update_interval: 3600s
+
+  - platform: vitohome
+    name: "Gas-Zählerstand 1"
+    id: HO2B_Gaszaehlerstand_1
+    address: 0x5904
+    length: 4
+    converter: noconv
+    unit_of_measurement: "m³"
+    # Borders absent, or out of range for this byte width, in
+    # the export. These placeholders pass `esphome config` but
+    # pin the value to 0 - set real min/max/step before use.
+    min_value: 0
+    max_value: 0
+    step: 1
+    mode: box
+    disabled_by_default: true
+    update_interval: 3600s
+
+  - platform: vitohome
+    name: "Gas-Zählerstand 2"
+    id: HO2B_Gaszaehlerstand_2
+    address: 0x5910
+    length: 4
+    converter: noconv
+    unit_of_measurement: "m³"
+    # Borders absent, or out of range for this byte width, in
+    # the export. These placeholders pass `esphome config` but
+    # pin the value to 0 - set real min/max/step before use.
+    min_value: 0
+    max_value: 0
+    step: 1
+    mode: box
+    disabled_by_default: true
+    update_interval: 3600s
+
+  - platform: vitohome
+    name: "Gaszustandzahl"
+    id: HO2B_Gaszustandzahl
+    address: 0x5918
+    length: 4
+    converter: noconv
+    # Borders absent, or out of range for this byte width, in
+    # the export. These placeholders pass `esphome config` but
+    # pin the value to 0 - set real min/max/step before use.
+    min_value: 0
+    max_value: 0
+    step: 1
+    mode: box
+    disabled_by_default: true
+    update_interval: 3600s
+
+  - platform: vitohome
+    name: "Gasbrennwert"
+    id: HO2B_Gasbrennwert
+    address: 0x591C
+    length: 4
+    converter: noconv
+    unit_of_measurement: "kWh/m³"
+    # Borders absent, or out of range for this byte width, in
+    # the export. These placeholders pass `esphome config` but
+    # pin the value to 0 - set real min/max/step before use.
+    min_value: 0
+    max_value: 0
+    step: 1
+    mode: box
+    disabled_by_default: true
+    update_interval: 3600s
+
   # --- Codierungen / Alle ---
   - platform: vitohome
     name: "(06) Kesselmaximal-Temperatur"
@@ -4863,120 +5022,6 @@ number:
     disabled_by_default: true
     update_interval: 3600s
 
-  # --- LON Objekte / CFDMObjekt ---
-  - platform: vitohome
-    name: "Vorlauf-Solltemperatur Anlagen ⁄ Kessel"
-    id: nviSetpoint_CFDM
-    address: 0xA383
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    # Borders absent, or out of range for this byte width, in
-    # the export. These placeholders pass `esphome config` but
-    # pin the value to 0 - set real min/max/step before use.
-    min_value: 0
-    max_value: 0
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-    # NOTE: writes are a read-modify-write of the whole 2-byte block
-  - platform: vitohome
-    name: "Anlagen-⁄ Kessel-Sollleistung - Wert"
-    id: nviProdCmd_CFDM_value
-    address: 0xA380
-    length: 2
-    byte_offset: 0
-    converter: div2
-    signed: false  # Vitosoft ParameterType Byte, borders 0..100
-    unit_of_measurement: "%"
-    min_value: 0
-    max_value: 100
-    step: 0.5
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  # --- LON Objekte / HCCObjektA1M1 ---
-  - platform: vitohome
-    name: "Externe Raumsolltemperatur HK1"
-    id: nviHCC1_SpaceSetpt
-    address: 0xA401
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    min_value: 0
-    max_value: 127
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  - platform: vitohome
-    name: "Externe Vorlaufsolltemperatur HK1"
-    id: nviHCC1_FlowSetpt
-    address: 0xA403
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    min_value: 0
-    max_value: 127
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  # --- LON Objekte / HCCObjektM2 ---
-  - platform: vitohome
-    name: "Externe Raumsolltemperatur HK2"
-    id: nviHCC2_SpaceSetpt
-    address: 0xA441
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    min_value: 0
-    max_value: 127
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  - platform: vitohome
-    name: "Externe Vorlaufsolltemperatur HK2"
-    id: nviHCC2_FlowSetpt
-    address: 0xA443
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    min_value: 0
-    max_value: 127
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  # --- LON Objekte / DHWCObjekt ---
-  - platform: vitohome
-    name: "DHWC: Warmwasser-Solltemperatur"
-    id: nviDHWC_Setpt
-    address: 0xA3C0
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    min_value: 0
-    max_value: 90
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
   # --- HC1 ---
   - platform: vitohome
     name: "Externe Raumsolltemperatur Normal A1M1"
@@ -5020,37 +5065,6 @@ number:
     device_class: temperature
     min_value: 0
     max_value: 37
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  # --- LON Objects / HCCObjektM3 ---
-  - platform: vitohome
-    name: "Externe Vorlaufsolltemperatur HK3"
-    id: nviHCC3_FlowSetpt
-    address: 0xA483
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    min_value: 0
-    max_value: 127
-    step: 1
-    mode: box
-    disabled_by_default: true
-    update_interval: 3600s
-
-  - platform: vitohome
-    name: "Externe Raumsolltemperatur HK3"
-    id: nviHCC3_SpaceSetpt
-    address: 0xA481
-    length: 2
-    converter: div100
-    unit_of_measurement: "°C"
-    device_class: temperature
-    min_value: 0
-    max_value: 127
     step: 1
     mode: box
     disabled_by_default: true
@@ -5322,6 +5336,21 @@ select:
       0x00: "Zirkulationspumpe"
       0x01: "Pumpe direkter Heizkreis"
       0x02: "Speicherladepumpe"
+
+  # --- Diagnose 1 / LANModul ---
+  - platform: vitohome
+    name: "(39) Funktion Ausgang 28"
+    id: HO2B_FunktionAusgang28
+    address: 0x74A1
+    length: 1
+    disabled_by_default: true
+    update_interval: 3600s
+    options:
+      0x00: "0: ZP"
+      0x01: "1: HKP"
+      0x02: "2: SLP"
+      0x03: "3: Sammelstörung"
+      0x04: "4: Ladepumpe"
 
   # --- Diagnose 1 / Heizkreis M3 ---
   - platform: vitohome
@@ -6515,70 +6544,6 @@ select:
       0x00: "0: Codierung gibt Funktion vor (Codierung anzeigen)"
       0x01: "1: Zirkulationspumpe (Codierung nicht anzeigen)"
       0x02: "2: Ohne Funktion (Codierung nicht anzeigen)"
-
-  # --- LON Objekte / CFDMObjekt ---
-  - platform: vitohome
-    name: "Betriebsmodus Anlage ⁄ Kessel"
-    id: nviApplicMode_CFDM
-    address: 0xA382
-    length: 1
-    disabled_by_default: true
-    update_interval: 3600s
-    options:
-      0x00: "HVAC_AUTO"
-      0x01: "HVAC_HEAT"
-      0x02: "HVAC_MRNG_WRMUP"
-      0x03: "HVAC_COOL"
-      0x04: "HVAC_NIGHT_PURGE"
-      0x05: "HVAC_PRE_COOL"
-      0x06: "HVAC_OFF"
-      0x07: "HVAC_TEST"
-      0x08: "HVAC_EMERG_HEAT"
-      0x09: "HVAC_FAN_ONLY"
-      0x0A: "HVAC_FREE_COOL"
-      0x0B: "HVAC_ICE"
-      0x6E: "HVAC_SLAVE_ACTIVE"
-      0x6F: "HVAC_LOW_FIRE"
-      0x70: "HVAC_HIGH_FIRE"
-      0x64: "HVAC_FLOW_TEMP"
-      0xFF: "HVAC_NUL"
-
-    # NOTE: writes are a read-modify-write of the whole 2-byte block
-  - platform: vitohome
-    name: "Anlagen-⁄ Kessel-Sollleistung - Status"
-    id: nviProdCmd_CFDM_state
-    address: 0xA380
-    length: 2
-    byte_offset: 1
-    disabled_by_default: true
-    update_interval: 3600s
-    options:
-      0x00: "AUS"
-      0x01: "EIN"
-      0xFF: "AUTO"
-
-  # --- LON Objekte / DHWCObjekt ---
-  - platform: vitohome
-    name: "DHWC: Betriebsmodus - Warmwasser"
-    id: nviDHWC_ApplicMode
-    address: 0xA3C2
-    length: 1
-    disabled_by_default: true
-    update_interval: 3600s
-    options:
-      0x00: "HVAC_AUTO"
-      0x01: "HVAC_HEAT"
-      0x02: "HVAC_MRNG_WRMUP"
-      0x03: "HVAC_COOL"
-      0x04: "HVAC_NIGHT_PURGE"
-      0x05: "HVAC_PRE_COOL"
-      0x06: "HVAC_OFF"
-      0x07: "HVAC_TEST"
-      0x08: "HVAC_EMERG_HEAT"
-      0x09: "HVAC_FAN_ONLY"
-      0x0A: "HVAC_FREE_COOL"
-      0x0B: "HVAC_ICE"
-      0xFF: "HVAC_NUL"
 
   # --- (ohne Gruppenzuordnung) ---
   - platform: vitohome
@@ -8319,6 +8284,60 @@ text_sensor:
       0x00: "AUS"
       0x01: "EIN"
 
+  # --- Diagnose 1 / LANModul ---
+  - platform: vitohome
+    type: enum
+    name: "Funktion Ausgang Interne Erweiterung H1"
+    id: HO2B_FunktionAusgangInterneH1
+    address: 0x74A2
+    length: 1
+    disabled_by_default: true
+    update_interval: 60s
+    options:
+      0x00: "0: Sammelstörung"
+      0x01: "1: Zirkulationspumpe"
+      0x02: "2: Heizkreispumpe A1"
+      0x03: "3: Speicherladepumpe"
+      0x04: "4: Ladepumpe"
+
+  - platform: vitohome
+    type: enum
+    name: "Status Kollektortemperatur-Sensor"
+    id: HO2B_KollektorSensor_Status
+    entity_category: diagnostic
+    address: 0x6580
+    length: 48
+    byte_offset: 4
+    disabled_by_default: true
+    update_interval: 60s
+    options:
+      0x00: "OK"
+      0x01: "Kurzschluss"
+      0x02: "Unterbrechung"
+      0x03: "Referenzfehler"
+      0x04: "Referenzfehler (0x04)"
+      0x05: "unbekannt"
+      0x06: "Nicht vorhanden"
+
+  - platform: vitohome
+    type: enum
+    name: "Status Solarspeichertemperatur-Sensor"
+    id: HO2B_CylinderSensor_Status
+    entity_category: diagnostic
+    address: 0x6580
+    length: 48
+    byte_offset: 7
+    disabled_by_default: true
+    update_interval: 60s
+    options:
+      0x00: "OK"
+      0x01: "Kurzschluss"
+      0x02: "Unterbrechung"
+      0x03: "Referenzfehler"
+      0x04: "Referenzfehler (0x04)"
+      0x05: "unbekannt"
+      0x06: "Nicht vorhanden"
+
   # --- Diagnose 1 / Heizkreis M3 ---
   - platform: vitohome
     type: enum
@@ -9201,62 +9220,7 @@ text_sensor:
       0x0B: "HVAC_ICE"
       0xFF: "HVAC_NUL"
 
-  - platform: vitohome
-    type: enum
-    name: "Betriebsart - bei externer Vorgabe HK1"
-    id: nviHCC1_ApplicMode
-    address: 0xA400
-    length: 1
-    disabled_by_default: true
-    update_interval: 60s
-    options:
-      0x00: "HVAC_AUTO"
-      0x01: "HVAC_HEAT"
-      0x02: "HVAC_MRNG_WRMUP"
-      0x03: "HVAC_COOL"
-      0x04: "HVAC_NIGHT_PURGE"
-      0x05: "HVAC_PRE_COOL"
-      0x06: "HVAC_OFF"
-      0x07: "HVAC_TEST"
-      0x08: "HVAC_EMERG_HEAT"
-      0x09: "HVAC_FAN_ONLY"
-      0x0A: "HVAC_FREE_COOL"
-      0x0B: "HVAC_ICE"
-      0xFF: "HVAC_NUL"
-      0x64: "HVAC_FLOW_TEMP"
-      0x6E: "HVAC_SLAVE_ACTIVE"
-      0x6F: "HVAC_LOW_FIRE"
-      0x70: "HVAC_HIGH_FIRE"
-      0x71: "HVAC_HEAT_DHW"
-
   # --- LON Objekte / HCCObjektM2 ---
-  - platform: vitohome
-    type: enum
-    name: "Betriebsart - bei externer Vorgabe HK2"
-    id: nviHCC2_ApplicMode
-    address: 0xA440
-    length: 1
-    disabled_by_default: true
-    update_interval: 60s
-    options:
-      0x00: "HVAC_AUTO"
-      0x01: "HVAC_HEAT"
-      0x02: "HVAC_MRNG_WRMUP"
-      0x03: "HVAC_COOL"
-      0x04: "HVAC_NIGHT_PURGE"
-      0x05: "HVAC_PRE_COOL"
-      0x06: "HVAC_OFF"
-      0x07: "HVAC_TEST"
-      0x08: "HVAC_EMERG_HEAT"
-      0x09: "HVAC_FAN_ONLY"
-      0x0A: "HVAC_FREE_COOL"
-      0x0B: "HVAC_ICE"
-      0xFF: "HVAC_NUL"
-      0x6E: "HVAC_SLAVE_ACTIVE"
-      0x6F: "HVAC_LOW_FIRE"
-      0x70: "HVAC_HIGH_FIRE"
-      0x71: "HVAC_HEAT_DHW"
-
   - platform: vitohome
     type: enum
     name: "Aktuelle Betriebsart HK2"
@@ -9300,33 +9264,6 @@ text_sensor:
       0x06: "Wiederherstellung"
 
   # --- LON Objects / HCCObjektM3 ---
-  - platform: vitohome
-    type: enum
-    name: "Betriebsart - bei externer Vorgabe HK3"
-    id: nviHCC3_ApplicMode
-    address: 0xA480
-    length: 1
-    disabled_by_default: true
-    update_interval: 60s
-    options:
-      0x00: "HVAC_AUTO"
-      0x01: "HVAC_HEAT"
-      0x02: "HVAC_MRNG_WRMUP"
-      0x03: "HVAC_COOL"
-      0x04: "HVAC_NIGHT_PURGE"
-      0x05: "HVAC_PRE_COOL"
-      0x06: "HVAC_OFF"
-      0x07: "HVAC_TEST"
-      0x08: "HVAC_EMERG_HEAT"
-      0x09: "HVAC_FAN_ONLY"
-      0x0A: "HVAC_FREE_COOL"
-      0x0B: "HVAC_ICE"
-      0xFF: "HVAC_NUL"
-      0x6E: "HVAC_SLAVE_ACTIVE"
-      0x6F: "HVAC_LOW_FIRE"
-      0x70: "HVAC_HIGH_FIRE"
-      0x71: "HVAC_HEAT_DHW"
-
   - platform: vitohome
     type: enum
     name: "Aktuelle Betriebsart HK3"
