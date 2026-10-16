@@ -813,6 +813,11 @@ class Catalog:
         # Consumed only by --order group; both default empty.
         self._groups = groups or {}
         self._glinks = glinks or {}
+        # Whether events_for() adds the datapoints a device carries only in its
+        # own menu tree (see _menu_events_by_dp). On by default; the CLI's
+        # --no-menu-datapoints turns it off.
+        self.menu_datapoints = True
+        self._menu_cache: dict | None = None
         self._group_cache: dict = {}
         self._values = {vid: self._mk_value(f) for vid, f in raw_values.items()}
         self._events = {eid: self._mk_event(eid, f) for eid, f in raw_events.items()}
@@ -946,12 +951,46 @@ class Catalog:
         )
 
     # -- queries --
+    def _menu_events_by_dp(self) -> dict:
+        """dp_id -> event ids in that device's OWN menu tree, sorted by id.
+
+        Vitosoft attaches datapoints to a device in two places: the direct
+        ecnDataPointTypeEventTypeLink table, and the device's menu tree --
+        ecnEventTypeGroup rows carrying its DataPointTypeId, with datapoints hung
+        on them by ecnEventTypeEventTypeGroupLink. Vitosoft shows a device through
+        those menus. 150 devices of the 2026 export carry datapoints ONLY there:
+        2,854 in all, 2,448 at an address the device has no other datapoint for
+        (V200CO1x's whole (A0)..(B5) coding block; CU401B_S's compressor hours and
+        annual performance factors). The menus are strictly per device: every one
+        of the 18,018 groups carries exactly one DataPointTypeId, and its path
+        names that device (its own token, a variant of it, or
+        ecnsysEventTypeGroup~<token>~...). Same idea as VExtractor's "take a
+        controller's datapoints from its own menus too"; no code taken."""
+        if self._menu_cache is None:
+            by_dp: dict = defaultdict(set)
+            for eid, links in self._glinks.items():
+                for gid, _order in links:
+                    g = self._groups.get(gid)
+                    if g is not None and g.get("dp"):
+                        by_dp[g["dp"]].add(eid)
+            self._menu_cache = {
+                dp: sorted(ids, key=lambda e: (len(e), e) if str(e).isdigit() else (0, str(e))) for dp, ids in by_dp.items()
+            }
+        return self._menu_cache
+
     def events_for(self, device_token: str) -> list:
+        """The device's datapoints: its direct links, then -- unless
+        ``menu_datapoints`` is off -- those it carries only in its own menu
+        tree (_menu_events_by_dp), each event once."""
         dp_id = self.devices.get(device_token)
         if dp_id is None:
             return []
+        ids = list(self._links.get(dp_id, []))
+        if self.menu_datapoints:
+            seen = set(ids)
+            ids += [e for e in self._menu_events_by_dp().get(dp_id, ()) if e not in seen]
         out = []
-        for ev_id in self._links.get(dp_id, []):
+        for ev_id in ids:
             ev = self._events.get(ev_id)
             if ev is None:
                 continue
@@ -4100,6 +4139,13 @@ def main(argv=None):
         "Units never change with the language (units.py). Default: de",
     )
     p.add_argument(
+        "--menu-datapoints",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="also take the datapoints a device carries only in its own Vitosoft menu tree, not in its "
+        "direct datapoint list (150 devices, up to 161 datapoints each) (default: on)",
+    )
+    p.add_argument(
         "--device-id",
         action=argparse.BooleanOptionalAction,
         default=True,
@@ -4202,6 +4248,7 @@ def main(argv=None):
         args.order = "group" if args.export_all else "address"
 
     catalog = load_catalog(args.data, culture=args.culture)
+    catalog.menu_datapoints = args.menu_datapoints
 
     if args.export_all:
         if not args.out:

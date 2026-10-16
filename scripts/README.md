@@ -76,6 +76,7 @@ reads up to four files from it:
 | `--[no-]reachable-only` | Emit only datapoints VitoWiFi can read over Optolink; drop `GFA_READ`/`RPC`/`PROZESS`/`KBUS`/`OT` (default: on). `--no-reachable-only` adds them back — they need custom decode |
 | `--order {address,group}` | Entity order: `address` (sorted by Optolink address) or `group` (by the Vitosoft navigation tree, with a section comment per group). Default: `group` with `--export-all`, `address` otherwise |
 | `--culture {cs,da,de,en,es,fr,hr,hu,it,lt,nl,no,pl,ro,ru,sk,sv,tr}` | Language for entity names, option labels and fault texts (default: `de`); see the label-source note above. Units do not change. Home Assistant derives entity IDs from names, so changing the language of an installed catalog creates new entities |
+| `--[no-]menu-datapoints` | Also take the datapoints a device carries only in its own Vitosoft menu tree, not in its direct datapoint list (default: on); see *Where a device's datapoints come from* below |
 | `--[no-]device-id` | Emit a `device_id` diagnostic `text_sensor` and suppress the raw `0xF8`–`0xFB` reads (default: on) |
 | `--[no-]partial-writes` | Emit writable fields that are smaller than their datapoint -- bit fields (`bit_mask`) and fields inside a block (`byte_offset`) -- as `number` / `select` / `switch`; the component writes them as a read-modify-write of the whole byte or block (default: on). `--no-partial-writes` keeps them all read-only. `--[no-]bitfield-writes` is the older spelling. See *Bit fields* and *Fields inside a block* below |
 | `--[no-]error-history` | Emit `error_history` entities for the `FehlerHis*` slots (default: on) |
@@ -149,6 +150,16 @@ itself (`/` is reserved as a URL separator: a warning now, an error from ESPHome
 2027.7.0). The few names the generator makes up itself (`Letzter Fehler`,
 `Geraete-Typ`, the weekday `Schaltzeit` entities) are German in a German
 catalog and English in every other.
+
+### Where a device's datapoints come from
+
+Vitosoft links datapoints to a device in two places: the direct
+device -> datapoint table (`ecnDataPointTypeEventTypeLink`) and the device's
+own menu tree (`ecnEventTypeGroup`), through which Vitosoft shows it. 150
+devices carry datapoints only in their menus -- for `V200CO1x` its whole
+`(A0)..(B5)` coding block, for `CU401B_S` its compressor hours and annual
+performance factors -- so the generator takes both. `--no-menu-datapoints`
+limits it to the direct table. Details: design_notes §8j.
 
 ### Signedness
 

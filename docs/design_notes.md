@@ -1667,6 +1667,54 @@ never precedes its anchor (`_share_codes_blocks`). VScotHO1_72 with
 language; `esphome config` resolves all 30 slots to their full maps (110
 system codes, 72 GFA).
 
+### 8j. A device's datapoints come from two tables, not one
+
+Vitosoft attaches datapoints to a device in two places:
+
+1. `ecnDataPointTypeEventTypeLink` -- the direct device -> datapoint table;
+2. the device's **menu tree** -- `ecnEventTypeGroup` rows carrying the
+   device's `DataPointTypeId`, with datapoints hung on them by
+   `ecnEventTypeEventTypeGroupLink`. Vitosoft shows a device through these
+   menus.
+
+The generator used to read (1) only; (2) served `--order group` alone. In the
+2026 export **150 devices carry datapoints only in their menus: 2,854 in all,
+2,685 Optolink-reachable, 2,448 at an address the device has no other
+datapoint for** (the other 400 are alternative names for an address it has,
+which the field de-duplication folds). Examples: `V200CO1x` lacked its whole
+`(A0)..(B5)` heating-circuit coding block (`0x27A0..`, 161 datapoints);
+`CU401B_S` its compressor run hours (`0x0580`) and annual performance factors
+(JAZ, `0x1680..0x1682`); VScotHO1_72 one (`nviBoilerCmd_BLR_value`, `0xA300`).
+`Catalog.events_for()` now takes both (`--no-menu-datapoints` restores the old
+set); regenerated, 130 of the 201 catalogs gain 2,404 entities (standard
+profile), the set of catalogs is unchanged.
+
+The menus are strictly per device, not shared templates: each of the 18,018
+groups carries exactly one `DataPointTypeId`, and its path names that device --
+its own token (11,901), `ecnsysEventTypeGroup~<token>~...` (5,891, the system
+menus such as the GFA error history), or a variant of the token (226, e.g.
+`V050HK3W_9` under `V050HK3W`). A datapoint DEFINITION may sit in several
+devices' menus (6,691 do), just as it may be linked to several devices
+directly.
+
+**What it does not explain -- issue #19.** The Vitocal 222-S (`CU401B_S`)
+report lists three kinds of addresses "not in the catalog":
+
+- `0xB404..0xB424` and `0x130B` are linked to `CU401B_S` directly in the 2026
+  export and are in its catalog; the report used older (2017) data.
+- `0x0710` exists only as an unrelated KBUS datapoint.
+- the refrigerant block `0x0E03..0x0E74` (suction, superheat, evaporating and
+  condensing, hot-gas, inverter IPM temperatures) exists **nowhere**: not in
+  any XML of the export, not in the menu tree, not in the 825 MB SQL database,
+  in neither UTF-8 nor UTF-16. Vitosoft does not know these addresses; they
+  come from the reporter's own scan and belong in `example/user_curated/`.
+
+The other XML files of a Vitosoft installation (`Checklist.xml`,
+`ErrorTree.xml`, `DocumentIndex.xml`, `SparepartManagement.xml`,
+`deviceSchema(ta).xml`, `coding1Multi.xml`, ...) are development fixtures from
+2009 -- a checklist named "Blubber", "Knoten 1" placeholders, 0.00 EUR spare
+parts -- and carry no datapoint knowledge.
+
 ---
 
 ### 9a. Frame logging belongs in the component, not in `uart: debug:`
