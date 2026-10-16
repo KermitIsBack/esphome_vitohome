@@ -80,3 +80,46 @@ def test_another_devices_menu_does_not_leak(catalog):
     direct = {e.id for e in catalog.events_for("VTestHO1_99")}
     catalog.menu_datapoints = True
     assert {e.id for e in catalog.events_for("VTestHO1_99")} == direct
+
+
+# --- LON inputs and the profiles -----------------------------------------------------------
+
+
+def _lon(token):
+    return gc.Event(
+        id="l",
+        name=token,
+        address=0xA300,
+        conversion="Div2",
+        access_type=3,
+        block_length=2,
+        byte_length=2,
+        byte_position=0,
+        bit_length=0,
+        bit_position=0,
+        token=f"{token}~0xA300",
+        fc_read="Virtual_READ",
+    )
+
+
+@pytest.mark.parametrize(
+    ("token", "is_input"),
+    [
+        ("nviBoilerCmd_BLR_value", True),
+        ("nviHCC1_SpaceSetpt", True),
+        ("nvoAlarm_Fehlercode", False),  # output: the controller's own state
+        ("nciConfig", False),  # configuration
+        ("ddcRPCnviErr", False),  # not a LON input token
+        ("nvidia", False),  # lower-case after the prefix
+    ],
+)
+def test_lon_input_detection(token, is_input):
+    assert gc._is_lon_input(_lon(token)) is is_input
+
+
+def test_lon_inputs_only_in_full():
+    ev = _lon("nviBoilerCmd_BLR_value")
+    assert gc._profile_keep(ev, "full")
+    assert not gc._profile_keep(ev, "standard")
+    assert not gc._profile_keep(ev, "minimal")
+    assert gc._profile_keep(_lon("nvoAlarm_Fehlercode"), "standard")

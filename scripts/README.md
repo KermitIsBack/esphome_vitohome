@@ -71,7 +71,7 @@ reads up to four files from it:
 | `--identify <hex>` | Device identification (`group << 8 \| ident`), e.g. `0x20CB`; auto-selects the revision |
 | `--hw <hex>` / `--sw <hex>` / `--f0 <hex>` | Hardware / software index / protocol offset, used with `--identify` |
 | `--device <token>` | Generate for a named datapoint-type token, e.g. `VScotHO1_72` |
-| `--profile {minimal,standard,full}` | How many datapoints to emit (default: `standard`) |
+| `--profile {minimal,standard,full}` | How many datapoints to emit (default: `standard`). `full`: everything Vitosoft lists for the device. `standard`: the same without LON network-variable inputs (`nvi*`), which only a LON master fills -- without a LON module they read as `0xFF` "invalid". `minimal`: writable values and scaled measurements only |
 | `--include <regex>` / `--exclude <regex>` | Keep / drop events whose name matches |
 | `--[no-]reachable-only` | Emit only datapoints VitoWiFi can read over Optolink; drop `GFA_READ`/`RPC`/`PROZESS`/`KBUS`/`OT` (default: on). `--no-reachable-only` adds them back — they need custom decode |
 | `--order {address,group}` | Entity order: `address` (sorted by Optolink address) or `group` (by the Vitosoft navigation tree, with a section comment per group). Default: `group` with `--export-all`, `address` otherwise |

@@ -1715,6 +1715,23 @@ The other XML files of a Vitosoft installation (`Checklist.xml`,
 2009 -- a checklist named "Blubber", "Knoten 1" placeholders, 0.00 EUR spare
 parts -- and carry no datapoint knowledge.
 
+### 8k. `standard` leaves out LON inputs
+
+Until 0012 the `standard` and `full` profiles produced exactly the same
+entities (80,462 over all 201 catalogs): `standard` only dropped the 600
+datapoints with a conversion the generator cannot decode (`DateBCD`,
+`DateTimeBCD`, `IPAddress`), and `full` turns those into comments, not
+entities. `standard` now also leaves out **LON network-variable inputs**
+(`nvi[A-Z]*`, 3,606 datapoints: 3,565 linked directly, 41 via the menus).
+The controller mirrors its LON objects into memory, so they answer over
+Optolink -- VScotHO1_72 reads `0xA300` (`nviBoilerCmd_BLR_value`) as `00 FF` --
+but an input is written by a LON master; without a LON module it never holds
+data, and `0xFF` is LON's "invalid" marker. Outputs (`nvo*`, e.g. `nvoAlarm`
+at `0xA132`, which carries real state) and configuration (`nci*`) stay. 1,389
+of the inputs are writable, and writing one over Optolink may stand in for a
+LON master, so `full` keeps them; the catalog header says how many were left
+out. `minimal` leaves them out too.
+
 ---
 
 ### 9a. Frame logging belongs in the component, not in `uart: debug:`

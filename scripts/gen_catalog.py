@@ -3192,9 +3192,31 @@ def _mode_select_caveat() -> list[str]:
     ]
 
 
+_LON_INPUT_RE = re.compile(r"^nvi[A-Z]")
+
+
+def _is_lon_input(ev: Event) -> bool:
+    """A LON network-variable INPUT (``nvi*``, e.g. nviBoilerCmd_BLR_value).
+
+    The controller mirrors its LON objects into memory that Optolink reads, so
+    these answer -- but an input is written by a LON master, and without a LON
+    module nothing ever does: VScotHO1_72 reads 0xA300 (nviBoilerCmd) as
+    ``00 FF``, the untouched default with LON's "invalid" marker. 3,606 of the
+    export's datapoints are such inputs (3,565 linked directly, 41 via the
+    menus). Outputs (nvo*, the controller's own state, e.g. nvoAlarm) and
+    configuration (nci*) are unaffected. Many inputs are writable, and writing
+    one over Optolink may stand in for a LON master, so --profile full keeps
+    them.
+    """
+    return bool(_LON_INPUT_RE.match((ev.token or ev.tech or "").split("~", 1)[0]))
+
+
 def _profile_keep(ev: Event, profile: str) -> bool:
     if profile == "full":
         return True
+    # minimal and standard: no LON inputs (_is_lon_input).
+    if _is_lon_input(ev):
+        return False
     conv, conv_kind = CONVERSION_MAP.get(ev.conversion, (None, PLAIN))
     writable = ev.access_type in (2, 3)
     if profile == "standard":
@@ -3393,6 +3415,7 @@ def generate(
     kept = 0
     real_entities = 0  # emitted entities that are NOT the hub-fed device_id
     dropped_unreachable = 0
+    dropped_lon_inputs = 0  # nvi* left out by the profile (_is_lon_input)
     dropped_wide_addr = 0
     history_suppressed = False
     gwg_system_history_suppressed = False
@@ -3474,6 +3497,8 @@ def generate(
             continue
 
         if not _profile_keep(ev, profile):
+            if _is_lon_input(ev) and (not reachable_only or _is_reachable(ev, protocol)):
+                dropped_lon_inputs += 1
             continue
         target = ev.name or ""
         if inc and not inc.search(target):
@@ -3627,6 +3652,11 @@ def generate(
             out.append("#")
             out.append(f"# {dropped_wide_addr} datapoint(s) with an address above 0xFF were dropped")
             out.append("# (GWG addresses a single byte).")
+        out.append("#")
+    if dropped_lon_inputs:
+        out.append(f"# LON inputs omitted: {dropped_lon_inputs} network-variable input(s) (nvi*). A LON")
+        out.append("# master writes them; without a LON module they hold no data (0xFF")
+        out.append("# 'invalid'). --profile full includes them.")
         out.append("#")
     if history_suppressed:
         out.append("# System error history omitted: this unit has NO Optolink-reachable")
@@ -4127,7 +4157,14 @@ def main(argv=None):
     p.add_argument("--sw", help="software index hex (0xFB), used with --identify")
     p.add_argument("--f0", help="protocol identifier offset hex (0xF0), optional, used with --identify")
     p.add_argument("--list-devices", action="store_true", help="list device tokens (+ identification ranges) and exit")
-    p.add_argument("--profile", choices=PROFILES, default="standard", help="how many datapoints to emit (default: standard)")
+    p.add_argument(
+        "--profile",
+        choices=PROFILES,
+        default="standard",
+        help="how many datapoints to emit: full = everything Vitosoft lists; standard = without LON "
+        "network-variable inputs (nvi*), which only a LON master fills; minimal = writable values and "
+        "scaled measurements (default: standard)",
+    )
     p.add_argument("--include", help="regex; only emit events whose name matches")
     p.add_argument("--exclude", help="regex; drop events whose name matches")
     p.add_argument(
