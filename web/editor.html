@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vitohome catalog editor</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --panel: #ffffff; --ink: #1c1f23; --muted: #5d6670; --line: #d9d6cd;
+    --accent: #b4441b; --ok: #1f6f43; --warn: #8a5a00; --stop: #a3261f;
+    --ok-bg: #e6f2ea; --warn-bg: #fbf1d9; --stop-bg: #f9e4e2; --code: #f0eee8;
+    --row-hover: #f3f1eb; --row-sel: #fdf3ee; --th-bg: #faf9f6;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15171a; --panel: #1e2125; --ink: #e8e6e1; --muted: #9aa3ad; --line: #33383f;
+      --accent: #f08a5d; --ok: #7fd3a2; --warn: #e9c46a; --stop: #f29d96;
+      --ok-bg: #18301f; --warn-bg: #33290f; --stop-bg: #3a1a18; --code: #14161a;
+      --row-hover: #252930; --row-sel: #2c211d; --th-bg: #191c20;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  header {
+    background: var(--panel); border-bottom: 1px solid var(--line);
+    padding: 0.85rem 1.25rem; position: sticky; top: 0; z-index: 30;
+  }
+  .top-row {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem;
+  }
+  .title-group { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; }
+  h1 { font-size: 1.25rem; margin: 0; letter-spacing: -0.01em; }
+  .subtitle { font-family: var(--mono); font-size: 0.9rem; color: var(--muted); }
+  .toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.65rem;
+  }
+  .toolbar-spacer { flex: 1 1 auto; }
+  a { color: var(--accent); }
+  code, pre, input, select, textarea { font-family: var(--mono); font-size: 0.84rem; }
+  button, .btn {
+    font: inherit; font-size: 0.84rem; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 6px; padding: 0.35rem 0.75rem;
+    cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;
+  }
+  button:hover, .btn:hover { border-color: var(--muted); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-accent {
+    background: var(--accent); color: #ffffff; border-color: var(--accent); font-weight: 600;
+  }
+  @media (prefers-color-scheme: dark) {
+    .btn-accent { color: #15171a; }
+  }
+  input[type="search"], input[type="text"], select {
+    padding: 0.32rem 0.5rem; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 5px;
+  }
+  input:focus-visible, select:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px;
+  }
+  .badge {
+    display: inline-block; font-size: 0.75rem; font-weight: 600;
+    padding: 0.1rem 0.5rem; border-radius: 999px; white-space: nowrap;
+  }
+  .ok { color: var(--ok); background: var(--ok-bg); }
+  .warn { color: var(--warn); background: var(--warn-bg); }
+  .stop { color: var(--stop); background: var(--stop-bg); }
+  .muted-badge { color: var(--muted); background: var(--code); }
+
+  main { padding: 0.75rem 1.25rem 3rem; }
+  .status-banner {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 1rem 1.2rem; margin-bottom: 1rem;
+  }
+  .table-wrap {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    overflow: auto; max-height: calc(100vh - 10.5rem);
+  }
+  table {
+    border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%;
+    font-size: 0.83rem;
+  }
+  th, td {
+    text-align: left; padding: 0.38rem 0.55rem; border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line); vertical-align: top;
+  }
+  th:last-child, td:last-child { border-right: 0; }
+  thead th {
+    position: sticky; top: 0; background: var(--th-bg); z-index: 10;
+    color: var(--muted); font-weight: 600; font-size: 0.76rem; user-select: none;
+    white-space: nowrap;
+  }
+  thead tr.filter-row th {
+    top: 2.05rem; z-index: 9; padding: 0.25rem 0.35rem; background: var(--th-bg);
+  }
+  thead th.sticky-col, tbody td.sticky-col {
+    position: sticky; left: 0; z-index: 11; background: var(--panel);
+  }
+  thead th.sticky-col { z-index: 15; background: var(--th-bg); }
+  .sort-btn {
+    all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;
+    width: 100%; font-weight: 600; color: var(--ink);
+  }
+  .sort-ind { color: var(--accent); font-size: 0.7rem; }
+  .col-filter { width: 100%; min-width: 4.2rem; font-size: 0.76rem; padding: 0.2rem 0.35rem; }
+  tbody tr:hover td { background: var(--row-hover); }
+  tbody tr.selected td { background: var(--row-sel); }
+  td.mono { font-family: var(--mono); white-space: nowrap; }
+  .cell-edit {
+    width: 100%; min-width: 5rem; font: inherit; color: inherit; background: transparent;
+    border: 1px solid transparent; border-radius: 4px; padding: 0.1rem 0.25rem;
+  }
+  .cell-edit:hover { border-color: var(--line); background: var(--bg); }
+  .cell-edit:focus { border-color: var(--accent); background: var(--bg); outline: none; }
+  .cell-edit.modified { border-color: var(--warn); background: var(--warn-bg); }
+  details.map-details summary {
+    cursor: pointer; color: var(--accent); font-family: var(--mono); font-size: 0.78rem;
+    white-space: nowrap;
+  }
+  .map-list {
+    margin: 0.25rem 0 0; padding: 0.35rem 0.5rem; background: var(--code);
+    border-radius: 4px; font-family: var(--mono); font-size: 0.75rem;
+    max-height: 11rem; overflow-y: auto; white-space: pre-wrap; min-width: 16rem;
+  }
+  .note-text {
+    font-size: 0.76rem; color: var(--muted); max-width: 22rem; white-space: pre-wrap;
+  }
+  input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--accent); cursor: pointer; }
+
+  dialog {
+    background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 10px; padding: 1.1rem 1.25rem; width: min(64rem, 94vw);
+    max-height: 88vh; box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+  }
+  dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .modal-head h2 { margin: 0; font-size: 1.05rem; }
+  #yaml-preview {
+    width: 100%; height: 62vh; font-family: var(--mono); font-size: 0.82rem;
+    background: var(--code); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 6px; padding: 0.75rem; resize: vertical; white-space: pre; overflow: auto;
+  }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top-row">
+    <div class="title-group">
+      <h1>vitohome catalog editor</h1>
+      <span id="catalog-title" class="subtitle">Loading…</span>
+      <span id="stats-badge" class="badge muted-badge">0 entries</span>
+      <span id="selected-badge" class="badge ok">0 selected</span>
+      <a id="gfa-companion-link" class="badge warn hidden" href="#" target="_blank" rel="noopener"></a>
+    </div>
+    <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+      <label style="font-size:0.8rem; color:var(--muted);">
+        Catalog:
+        <select id="catalog-select" style="max-width:14rem;">
+          <option value="">— Select catalog —</option>
+        </select>
+      </label>
+      <label style="font-size:0.8rem; color:var(--muted);">
+        Lang:
+        <select id="lang-select">
+          <option value="de">de (Deutsch)</option>
+          <option value="en">en (English)</option>
+        </select>
+      </label>
+      <label class="btn" title="Open a local catalog YAML file from disk">
+        Load local YAML
+        <input id="file-input" type="file" accept=".yaml,.yml" style="display:none;">
+      </label>
+      <a id="raw-link" class="btn" href="#" target="_blank" rel="noopener">Raw YAML</a>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input id="global-search" type="search" placeholder="Global search across all columns…" style="min-width:16rem;">
+    <button id="clear-filters-btn" type="button" title="Reset global search and all column filters">Clear Filters</button>
+    <label style="display:inline-flex; align-items:center; gap:0.3rem; font-size:0.82rem; color:var(--muted); cursor:pointer;">
+      <input id="show-empty-cols" type="checkbox"> Show empty columns
+    </label>
+
+    <div class="toolbar-spacer"></div>
+
+    <button id="select-filtered-btn" type="button">Select Filtered</button>
+    <button id="deselect-filtered-btn" type="button">Deselect Filtered</button>
+    <button id="invert-filtered-btn" type="button">Invert Filtered</button>
+    <button id="preview-export-btn" type="button" disabled>Preview / Copy YAML</button>
+    <button id="download-export-btn" type="button" class="btn-accent" disabled>Export Selected YAML</button>
+  </div>
+</header>
+
+<main>
+  <div id="status-box" class="status-banner hidden"></div>
+  <div id="table-container" class="table-wrap hidden">
+    <table id="catalog-table">
+      <thead>
+        <tr id="header-row"></tr>
+        <tr id="filter-row" class="filter-row"></tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+</main>
+
+<dialog id="export-dialog">
+  <div class="modal-head">
+    <h2 id="modal-title">Exported YAML (disabled_by_default omitted)</h2>
+    <div style="display:flex; gap:0.5rem;">
+      <button id="copy-yaml-btn" type="button">Copy to Clipboard</button>
+      <button id="modal-download-btn" type="button" class="btn-accent">Download .yaml</button>
+      <button id="close-modal-btn" type="button">Close</button>
+    </div>
+  </div>
+  <textarea id="yaml-preview" readonly spellcheck="false"></textarea>
+</dialog>
+
+<script src="editor.js"></script>
+</body>
+</html>
