@@ -79,8 +79,10 @@ CONF_DRIFT_THRESHOLD = "drift_threshold"
 CONF_SYNC_ON_BOOT = "sync_on_boot"
 
 # Defaults are deliberately conservative: a daily check, a one-minute drift
-# tolerance, and a one-shot sync once the time source is first valid. All three
-# are user-overridable. interval: 0s disables the periodic check (boot-only).
+# tolerance, and a one-shot sync once the time source has first synced (its
+# on_time_sync fired -- a merely valid-looking time is not trusted, see
+# VitoClock::source_synced_). All three are user-overridable. interval: 0s
+# disables the periodic check (boot-only).
 TIME_SYNC_SCHEMA = cv.Schema(
     {
         cv.Optional(CONF_INTERVAL, default="24h"): cv.positive_time_period_milliseconds,

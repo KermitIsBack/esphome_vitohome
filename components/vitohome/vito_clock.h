@@ -67,7 +67,12 @@ class VitoClock final : public VitoEntityBase {
 
   VitoClock();
 
-  void set_time_source(time::RealTimeClock *time_source) { this->time_source_ = time_source; }
+  // Called from to_code(), i.e. before App.setup() -- so the callback is in
+  // place before any time component can deliver its first sync.
+  void set_time_source(time::RealTimeClock *time_source) {
+    this->time_source_ = time_source;
+    time_source->add_on_time_sync_callback([this]() { this->source_synced_ = true; });
+  }
 
   // clock_address is NOT a constant across Viessmann devices: NRF/Vitotronic
   // uses 0x088E (the schema default, hardware-confirmed on a Vitodens 300-W),
@@ -128,9 +133,19 @@ class VitoClock final : public VitoEntityBase {
 
   uint32_t interval_ms_{0};         // 0 = no periodic sync
   uint32_t drift_threshold_s_{60};  // write only above this drift
-  bool sync_on_boot_{true};         // sync once time first becomes valid
-  bool did_boot_{false};            // first-valid-time handling completed
+  bool sync_on_boot_{true};         // sync once the source first syncs
+  bool did_boot_{false};            // first-synced-time handling completed
   uint32_t next_sync_ms_{0};        // next periodic deadline
+
+  // Set by the time source's on_time_sync callback, never cleared. now() being
+  // is_valid() is not enough to write the boiler: it only checks year >= 2019,
+  // and on ESP32 the system clock survives a software reset (RTC timer), so a
+  // stale or wrong time can be "valid" at boot before any sync has happened --
+  // the 43 h boiler shift in issue #28. Requiring an actual sync since boot
+  // closes that. Caveat: on platforms where SNTP cannot signal a sync
+  // (RP2040, LibreTiny) the callback fires as soon as now() is valid, so there
+  // this is no stronger than the old check -- but no weaker either.
+  bool source_synced_{false};
 
   // Deliberately not next_due_ms_: that field belongs to the poll scheduler,
   // and refresh_all() resets it across every entity. The clock is not polled,

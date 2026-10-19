@@ -44,8 +44,9 @@ void VitoClock::tick(uint32_t now_ms) {
     return;
 
   if (!this->did_boot_) {
-    // Defer the first sync until the time source has a valid time at least once.
-    if (!this->time_source_->now().is_valid())
+    // Defer the first sync until the time source has actually synced since
+    // boot (see source_synced_), not merely reports a plausible time.
+    if (!this->source_synced_ || !this->time_source_->now().is_valid())
       return;
 
     this->did_boot_ = true;
@@ -269,8 +270,10 @@ void VitoClock::dump_config() {
                 "  Datapoint: 0x%04X, %u bytes\n"
                 "  Periodic sync: %s\n"
                 "  Drift threshold: %" PRIu32 " s\n"
-                "  Sync on boot: %s",
-                this->clock_address_, CLOCK_LEN, periodic, this->drift_threshold_s_, YESNO(this->sync_on_boot_));
+                "  Sync on boot: %s\n"
+                "  Time source synced: %s",
+                this->clock_address_, CLOCK_LEN, periodic, this->drift_threshold_s_, YESNO(this->sync_on_boot_),
+                YESNO(this->source_synced_));
 }
 
 }  // namespace esphome::vitohome

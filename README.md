@@ -100,12 +100,14 @@ provides several things you would otherwise have to build by hand:
 
 - **Device-clock sync ("boiler NTP").** With a `time:` source and
   `time_sync:`, the hub keeps the controller's own real-time clock aligned
-  with Home Assistant / SNTP time. It reads the device clock, compares it,
-  and writes the corrected time **only when the drift exceeds a configurable
-  threshold** — then reads it back to verify. The Viessmann weekday byte is
-  written with the device's own convention. So the heater's built-in clock
-  (which drives its Schaltzeiten) stays correct without ever touching the
-  front panel.
+  with Home Assistant / SNTP time. Nothing is written until the time source
+  has actually synced since boot (its `on_time_sync` fired); a time the ESP
+  merely carried over a reboot is not trusted. It reads the device clock,
+  compares it, and writes the corrected time **only when the drift exceeds a
+  configurable threshold** — then reads it back to verify. The Viessmann
+  weekday byte is written with the device's own convention. So the heater's
+  built-in clock (which drives its Schaltzeiten) stays correct without ever
+  touching the front panel.
 - **Native `climate` entity.** A heating circuit is exposed as a Home
   Assistant climate card: the target temperature drives the room setpoint,
   and the controller's operating modes (Betriebsart) are exposed as presets.
