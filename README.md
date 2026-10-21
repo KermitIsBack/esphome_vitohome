@@ -163,6 +163,12 @@ Find the matching datapoint catalog: https://soulsolistice.github.io/esphome_vit
 one). It selects the burner-control fault texts, which the finder adds as a
 small companion file next to the catalog.
 
+`F0=0xXXYY` appears on units that have Vitosoft's extended identification at
+`0x00F0` (on P300/KW; the link then carries `&f0=XXYY`). The hub passes the two
+bytes on raw; the finder uses them where a software-index range covers several
+variants (the Vitodens/Vitocrossal `VScotHO1_200*` and `VScotHC1_200*` families
+at software index `0xC8` and above) and ignores them everywhere else.
+
 Open the link, or paste the `Device` line into the finder, to get the catalog
 file for that controller. The device id alone is not enough: most ids cover
 several catalogs that differ by software index. The finder runs in the browser

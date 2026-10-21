@@ -1074,8 +1074,15 @@ are logged at DEBUG only. In the whole 2026 export `0x7650` is `GFA_Kennung`
 and nothing else. GWG addresses one byte, so the step does not exist there.
 Hardware, VScotHO1_72 (P300): `0x7650` = `0x24` (NEC).
 
+Then, on P300 and KW too, **`0x00F0`, two bytes: F0** (below). Read on every
+unit the same way and for the same reason; the hub does not interpret it. A
+unit without it answers with an error frame (P300) or `FF FF` fill (KW), which
+leaves it unknown; `00 00` is a value (the generic variant of a family F0
+subdivides). It is logged raw in register order (`F0=0x3000`: `0x30` at
+`0x00F0`, `0x00` at `0x00F1`) and linked as `&f0=3000`.
+
 Each field that can't be read is left unknown; the result (`group`,
-`controller`, `hw`, `sw`, and the chip) is logged at INFO --
+`controller`, `hw`, `sw`, the chip and F0) is logged at INFO --
 `Device identification: 0x20CB (VScotHO1) HW=0x03 SW=0x51 GFA=0x24 (NEC)` --
 and pushed to any `device_id` text sensors. A small built-in table names the families seen on the
 wire (`0x20CB` → VScotHO1, plus `0x2098`/`0x2094`/`0x2053`/`0x2054`); everything else is
@@ -1103,16 +1110,33 @@ the devices that need it. In the 2026 export that is the software-index range
 | `0x20C9` | `VScotHC1_200` (00..09), `_10` (10..19), `_30` (30..39) |
 
 (`0x20CA` has a single F0-keyed type, and `0x2621` is OpenTherm, which is not
-driven.) The hub does not read `0x00F0`, so for those two ranges the resolver
-and the finder fall back to the lowest-F0 variant and list the others
-("F0 decides: generic variant shown"). The variants are not interchangeable:
-`VScotHO1_200_01` declares 74 addresses the generic `VScotHO1_200` lacks, and
-`_10` .. `_30` lack 30..61 of the generic's. The finder already accepts an F0
-value (`&f0=`); what is missing is the read and the link parameter (§11). Not
-yet settled without a unit: which of the two bytes at `0x00F0` carries the
-value the export's `F0` column holds (`30..39`, read as hex by the resolver).
-Every other family, the reference `VScotHO1_72` (SW `0x51`) included, is
-decided by `0xF8..0xFB` alone.
+driven.) The variants are not interchangeable: `VScotHO1_200_01` declares 74
+addresses the generic `VScotHO1_200` lacks, and `_10` .. `_30` lack 30..61 of
+the generic's.
+
+**Evaluated in the finder, not on the device.** The hub reads the two bytes at
+`0x00F0` and passes them on raw (above); what they select is decided where the
+catalog knowledge is, by the same rule in two places that the parity test
+(`tests/unit/test_resolve_index.py`) holds together: `f0_bytes()` /
+`resolve_device()` in `scripts/vitocatalog/identify.py` and `f0Bytes()` /
+`lookup()` in `web/lookup.js`.
+
+- One or two hex digits are one byte -- the export's `F0` column, as a person
+  types it from a catalog (`--f0 30`, or the finder's F0 field).
+- Three or four are the two raw bytes the hub reads. Which of them carries a
+  device's F0 is **not settled on a unit**, so both are tried: the `0x00F0`
+  byte first, the register that carries the name, then `0x00F1`. The first
+  that falls inside a variant's range decides, and the answer names the byte
+  ("F0 match (0x00F0)").
+- Without F0, or when neither byte matches, the lowest-F0 variant is shown and
+  the others listed ("F0 decides: generic variant shown").
+
+One consequence to keep in mind until a unit settles the byte: `VScotHO1_200`
+owns F0 `00`, so a raw value whose first byte is `00` always selects it, even
+if the second byte would have matched another variant. When a unit of these
+families confirms the byte, the try order (`F0_ADDRESSES`, both files) is the
+one thing to change. Every other family, the reference `VScotHO1_72` (SW
+`0x51`) included, is decided by `0xF8..0xFB` alone, and F0 is ignored there.
 
 The load-bearing fact for anyone **adding new datapoints**:
 
@@ -2228,12 +2252,11 @@ happen in production.
   are side-effect-free to poll; and no action button has been pressed on a
   unit. Left out until the export or a capture says how: `WPR3MldgsHistExtTn1..3`
   (a parameter *and* 30 records) and the `*ErrorIndex` tables.
-- **F0 for the `VScotHO1_200*` / `VScotHC1_200*` variants (§6).** The hub does
-  not read `0x00F0`, so a unit of those two families at SW >= `0xC8` resolves to
-  the generic variant. The read would be one 2-byte Virtual_READ at boot, only
-  for idents `0x20C9`/`0x20CB` at SW >= `0xC8`, logged and appended to the
-  finder link as `&f0=` (the finder already takes it). Which of the two bytes
-  holds the `F0` value wants a unit of that family.
+- **F0 on a unit (§6).** The hub reads `0x00F0` (2 bytes) at boot and links it
+  raw; the finder and `--identify` try the `0x00F0` byte, then `0x00F1`. Open:
+  which byte carries F0 on a `VScotHO1_200*` / `VScotHC1_200*` unit, and what
+  the other families answer there (the read is fail-soft, but unconfirmed on
+  any unit, the reference one included).
 - **Bit-field writes on hardware (§5b).** Confirmed on VScotHO1_72 (P300) on
   2026-10-14: fail-closed, the read / merge / write / read-back sequence,
   preservation of non-zero neighbouring bits, and adjacency during a poll burst.
