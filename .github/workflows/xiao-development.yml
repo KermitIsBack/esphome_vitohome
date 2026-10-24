@@ -1,0 +1,32 @@
+name: XIAO development checks
+on:
+  push:
+    branches: [develop/xiao-esp32s3-20c2]
+    paths:
+      - 'devices/xiao-esp32s3/**'
+      - 'components/**'
+      - 'scripts/*_xiao.sh'
+      - 'requirements*.txt'
+      - '.github/workflows/xiao-development.yml'
+  pull_request:
+    paths:
+      - 'devices/xiao-esp32s3/**'
+      - 'components/**'
+      - 'scripts/*_xiao.sh'
+      - 'requirements*.txt'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Isolated environment
+        run: bash scripts/setup_xiao.sh
+      - name: Unit tests
+        run: .venv/bin/python -m pytest tests/unit -q

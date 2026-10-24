@@ -1,0 +1,54 @@
+# Development only. No production MQTT topics or heater writes.
+esphome:
+  name: vitodens-xiao-dev
+  friendly_name: Vitodens XIAO Entwicklung
+
+esp32:
+  board: seeed_xiao_esp32s3
+  variant: esp32s3
+  flash_size: 8MB
+  toolchain: platformio
+  framework:
+    type: esp-idf
+
+external_components:
+  - source:
+      type: local
+      path: ../../components
+    components: [vitohome]
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+# Native USB belongs to the CH340 host, logs are read over Wi-Fi.
+logger:
+  baud_rate: 0
+  level: INFO
+
+api:
+  encryption:
+    key: !secret api_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+usb_uart:
+  - type: ch340
+    vid: 0x1A86
+    pid: 0x7523
+    channels:
+      - id: optolink_usb
+        baud_rate: 4800
+        data_bits: 8
+        parity: EVEN
+        stop_bits: "2"
+        buffer_size: 1024
+
+vitohome:
+  id: boiler
+  uart_id: optolink_usb
+  protocol: P300
+  update_interval: 30s
+  identify_device: true

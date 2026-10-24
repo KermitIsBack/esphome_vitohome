@@ -1,0 +1,15 @@
+# Explicit opt-in. Offers only the three already verified 20C2 modes.
+# Do not flash until USB and read-only measurements have been tested.
+packages:
+  reader: !include read-only.yaml
+
+select:
+  - platform: vitohome
+    name: Betriebsart
+    address: 0x2323
+    length: 1
+    read_back: true
+    options:
+      1: Nur Warmwasser
+      2: Heizung + Warmwasser
+      0: Aus

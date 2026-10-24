@@ -90,3 +90,9 @@ Thumbs.db
 # VS Code / JetBrains / PlatformIO IDE folders
 .vscode/
 .idea/
+
+# XIAO development credentials and local build records
+**/secrets.yaml
+**/secrets.local.yaml
+.validation/
+.platformio/

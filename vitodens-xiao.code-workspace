@@ -1,0 +1,19 @@
+{
+  "folders": [{"path": "."}],
+  "settings": {
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": ["tests/unit"],
+    "files.exclude": {"**/.validation": true, "**/.platformio": true}
+  },
+  "extensions": {"recommendations": ["ms-python.python", "redhat.vscode-yaml"]},
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {"label": "XIAO: Umgebung einrichten", "type": "process", "command": "bash", "args": ["scripts/setup_xiao.sh"]},
+      {"label": "XIAO: Konfiguration pruefen", "type": "process", "command": "bash", "args": ["scripts/check_xiao.sh"]},
+      {"label": "XIAO: Firmware bauen (ohne Flashen)", "type": "process", "command": "bash", "args": ["scripts/build_xiao.sh"], "group": "build"},
+      {"label": "XIAO: Unit-Tests", "type": "process", "command": "${workspaceFolder}/.venv/bin/python", "args": ["-m", "pytest", "tests/unit", "-q"], "group": "test"}
+    ]
+  }
+}

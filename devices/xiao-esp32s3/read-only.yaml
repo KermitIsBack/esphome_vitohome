@@ -1,0 +1,62 @@
+# Default bring-up firmware. Only the verified 20C2 read addresses.
+packages:
+  base: !include base.yaml
+
+sensor:
+  - platform: vitohome
+    name: Aussentemperatur
+    address: 0x0800
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    name: Kesseltemperatur
+    address: 0x0802
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    name: Warmwassertemperatur
+    address: 0x0804
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+  - platform: vitohome
+    name: Abgastemperatur
+    address: 0x0808
+    length: 2
+    converter: div10
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+
+text_sensor:
+  - platform: vitohome
+    name: Betriebsart Rueckmeldung
+    type: enum
+    address: 0x2301
+    length: 1
+    options:
+      0: Nur Warmwasser
+      3: Heizung + Warmwasser
+      4: Heizung + Warmwasser (Frostschutz)
+      5: Aus
+  - platform: vitohome
+    name: Internes Umschaltventil
+    type: enum
+    address: 0x0A10
+    length: 1
+    options:
+      1: Heizen
+      2: Mittelstellung
+      3: Warmwasser
